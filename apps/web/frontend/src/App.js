@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+
+
+
 import Login from "./Login";
 import Register from "./Register";
+import ForgotPassword from "./ForgotPassword";
+import ResetPassword from "./ResetPassword";
+import ChangePassword from "./ChangePassword";
+import Verify from "./Verify";
+
+
 import "./styles.css";
 
 function App() {
-  const [page, setPage] = useState("login");
+  
+  const navigate = useNavigate();
 
   return (
     <>
@@ -13,12 +23,29 @@ function App() {
       <div className="bubble"></div>
       <div className="bubble"></div>
 
+      {/* Top Bar */}
       <div className="switch-bar">
-        <button onClick={() => setPage("login")}>Login</button>
-        <button onClick={() => setPage("register")}>Register</button>
-      </div>
+  <button onClick={() => navigate("/")}>Login</button>
+  <button onClick={() => navigate("/register")}>Register</button>
 
-      {page === "login" ? <Login /> : <Register />}
+  {localStorage.getItem("token") && (
+    <button onClick={() => navigate("/change-password")}>
+      Change Password
+    </button>
+  )}
+</div>
+
+
+      {/* Routes */}
+      <Routes>
+  <Route path="/" element={<Login />} />
+  <Route path="/register" element={<Register />} />
+  <Route path="/forgot" element={<ForgotPassword />} />
+  <Route path="/reset/:token" element={<ResetPassword />} />
+  <Route path="/verify/:token" element={<Verify />} />
+  <Route path="/change-password" element={<ChangePassword />} />
+</Routes>
+
     </>
   );
 }

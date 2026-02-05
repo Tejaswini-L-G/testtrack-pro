@@ -4,72 +4,148 @@ import axios from "axios";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [show, setShow] = useState(false);
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(false);
+ const [remember, setRemember] = useState(false);
+const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post("http://localhost:5000/login", {
-        email,
-        password,
-      });
+  e.preventDefault();
 
-      localStorage.setItem("token", res.data.token);
-      setError(false);
-      setMessage("Login successful!");
+  try {
+    const res = await axios.post("http://localhost:5000/login", {
+      email,
+      password,
+      remember,
+    });
 
-      if (res.data.role === "tester") {
-        window.location.href = "/tester";
-      } else {
-        window.location.href = "/developer";
-      }
-    } catch {
-      setError(true);
-      setMessage("Invalid email or password");
+    console.log("LOGIN RESPONSE:", res.data);
+
+    if (!res.data.accessToken) {
+      setMessage("Token not received from server");
+      return;
     }
+
+    localStorage.setItem("token", res.data.accessToken);
+
+    if (res.data.refreshToken) {
+      localStorage.setItem("refreshToken", res.data.refreshToken);
+    }
+
+    setMessage("Login successful!");
+
+    window.location.href = "/";
+  } catch (err) {
+    console.log(err.response);
+    setMessage(err.response?.data?.message || "Login failed");
+  }
+  const res = await axios.post("http://localhost:5000/login", {
+  email,
+  password,
+  remember,
+});
+
+console.log("LOGIN RESPONSE:", res.data);   // 👈 ADD THIS
+
+};
+
+  // 🔐 Forgot password redirect
+  
+  // 🌍 OAuth redirects
+  const loginWithGoogle = () => {
+    window.location.href = "http://localhost:5000/auth/google";
   };
 
-  const forgotPassword = () => {
-    alert("Password reset feature coming soon! (We’ll connect this to email next)");
+  const loginWithGitHub = () => {
+    window.location.href = "http://localhost:5000/auth/github";
   };
 
   return (
     <div className="auth-container">
-      <h2>Welcome Back</h2>
-      <p className="subtitle">Sign in to TestTrack Pro</p>
+      <h2>Login</h2>
 
       <form onSubmit={handleLogin}>
         <input
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
 
-        <input
-          type={show ? "text" : "password"}
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        
+  <div className="password-wrapper">
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+  />
+  <span
+    className="password-eye"
+    onClick={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? "🙈" : "👁️"}
+  </span>
+</div>
 
-        <div className="forgot">
-          <span onClick={() => setShow(!show)}>
-            {show ? "Hide password" : "Show password"}
-          </span>
-        </div>
-
-        <div className="forgot">
-          <span onClick={forgotPassword}>Forgot password?</span>
-        </div>
+<label style={{ display: "block", marginTop: "8px", fontSize: "14px" }}>
+  <input
+    type="checkbox"
+    checked={remember}
+    onChange={(e) => setRemember(e.target.checked)}
+    style={{ marginRight: "6px" }}
+  />
+  Remember Me
+</label>
 
         <button type="submit">Login</button>
       </form>
+<a
+  href="/forgot"
+  style={{
+    marginTop: "10px",
+    display: "inline-block",
+    cursor: "pointer",
+    color: "#4facfe",
+    textDecoration: "underline",
+  }}
+>
+  Forgot Password?
+</a>
 
-      <p className={`message ${error ? "error" : "success"}`}>
-        {message}
-      </p>
+
+      
+
+      {/* Divider */}
+      <div style={{ margin: "15px 0", textAlign: "center", color: "#aaa" }}>
+        — OR —
+      </div>
+
+      {/* OAuth Buttons */}
+      <button
+        onClick={loginWithGoogle}
+        style={{
+          width: "100%",
+          background: "#fff",
+          color: "#444",
+          border: "1px solid #ddd",
+          marginBottom: "10px",
+        }}
+      >
+        Login with Google
+      </button>
+
+      <button
+        onClick={loginWithGitHub}
+        style={{
+          width: "100%",
+          background: "#24292e",
+          color: "#fff",
+        }}
+      >
+        Login with GitHub
+      </button>
+
+      <p className="message">{message}</p>
     </div>
   );
 }
