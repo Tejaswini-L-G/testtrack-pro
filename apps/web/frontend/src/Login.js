@@ -33,7 +33,8 @@ const [showPassword, setShowPassword] = useState(false);
 
     setMessage("Login successful!");
 
-    window.location.href = "/";
+    window.location.href = "/dashboard";
+
   } catch (err) {
     console.log(err.response);
     setMessage(err.response?.data?.message || "Login failed");

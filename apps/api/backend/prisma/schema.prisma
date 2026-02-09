@@ -8,20 +8,145 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(uuid())
-  name           String
-  email          String   @unique
-  password       String
-  role           String   @default("tester")
-  isVerified     Boolean  @default(false)
-  verifyToken   String?
-  resetToken    String?
-  resetExpiry   DateTime?
+  id              String       @id @default(uuid())
+  name            String
+  email           String       @unique
+  password        String
+  role            String       @default("tester")
+  isVerified      Boolean      @default(false)
+  verifyToken     String?
+  resetToken      String?
+  resetExpiry     DateTime?
   passwordHistory String[]
-  failedAttempts Int      @default(0)
-  lockUntil     DateTime?
-  refreshToken  String?
-  createdAt     DateTime @default(now())
+  failedAttempts  Int          @default(0)
+  lockUntil       DateTime?
+  refreshToken    String?
+  createdAt       DateTime     @default(now())
+  testCases       TestCase[]
+  testSuites      TestSuite[]
+  attachments     Attachment[]
+
+  TestCaseTemplate TestCaseTemplate[]
 }
 
+model TestCase {
+  id          String @id @default(uuid())
+  testCaseId  String @unique
+  title       String
+  description String
+  module      String
+  priority    String
+  severity    String
+  type        String
+  status      String
 
+  preconditions String?
+  testData      String?
+  environment   String?
+
+  postconditions String?
+  cleanupSteps   String?
+
+  createdById      String
+  assignedTesterId String?
+
+  version Int      @default(1)
+  tags    String[] @default([])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  steps       TestStep[]
+  versions    TestCaseVersion[]
+  suiteId     String?
+  suite       TestSuite?        @relation("SuiteTestCases", fields: [suiteId], references: [id])
+  attachments Attachment[]
+}
+
+model TestStep {
+  id         String  @id @default(uuid())
+  testCaseId String
+  stepNumber Int
+  action     String
+  testData   String?
+  expected   String
+
+  testCase    TestCase     @relation(fields: [testCaseId], references: [id])
+  attachments Attachment[]
+}
+
+model Attachment {
+  id       String @id @default(uuid())
+  fileName String
+  fileType String
+  filePath String
+
+  // Relations
+  testCaseId String?
+  testCase   TestCase? @relation(fields: [testCaseId], references: [id])
+
+  testStepId String?
+  testStep   TestStep? @relation(fields: [testStepId], references: [id])
+
+  uploadedById String
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+
+  isDeleted Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model TestCaseVersion {
+  id         String   @id @default(uuid())
+  testCaseId String
+  version    Int
+  changeLog  String
+  snapshot   Json
+  createdAt  DateTime @default(now())
+
+  testCase TestCase @relation(fields: [testCaseId], references: [id])
+}
+
+model TestSuite {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  createdById String
+  createdBy   User    @relation(fields: [createdById], references: [id])
+
+  testCases TestCase[] @relation("SuiteTestCases")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TestCaseTemplate {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  module      String
+  priority    String
+  severity    String
+  type        String
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  steps TemplateStep[]
+
+  createdAt DateTime @default(now())
+}
+
+model TemplateStep {
+  id         String           @id @default(uuid())
+  templateId String
+  template   TestCaseTemplate @relation(fields: [templateId], references: [id])
+
+  stepNumber Int
+  action     String
+  testData   String?
+  expected   String
+}

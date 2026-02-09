@@ -8,6 +8,8 @@ import ForgotPassword from "./ForgotPassword";
 import ResetPassword from "./ResetPassword";
 import ChangePassword from "./ChangePassword";
 import Verify from "./Verify";
+import Dashboard from "./Dashboard";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 import "./styles.css";
@@ -44,6 +46,16 @@ function App() {
   <Route path="/reset/:token" element={<ResetPassword />} />
   <Route path="/verify/:token" element={<Verify />} />
   <Route path="/change-password" element={<ChangePassword />} />
+ <Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  }
+/>
+
+
 </Routes>
 
     </>
