@@ -1,4 +1,13 @@
 /* ===== GLOBAL BACKGROUND ===== */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+
+
+
 body {
   margin: 0;
   font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -223,3 +232,128 @@ body {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
 }
 
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.table th {
+  background: #f3f4f6;
+  font-size: 13px;
+  color: #374151;
+}
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  min-width: 150px;
+  font-weight: 600;
+}
+body {
+  margin: 0;
+  background-color: #f9fafb;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #111827;
+}
+
+h1, h2, h3 {
+  margin: 0 0 16px 0;
+  font-weight: 600;
+}
+
+button {
+  cursor: pointer;
+}
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+  background: #f9fafb;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #111827;
+  color: #ffffff;
+  padding: 20px;
+}
+
+.logo {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.sidebar nav button {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #d1d5db;
+  text-align: left;
+  padding: 10px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sidebar nav button:hover {
+  color: #ffffff;
+}
+
+/* Main content */
+.dashboard-content {
+  flex: 1;
+  padding: 30px;
+}
+
+.dashboard-content h1 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #111827;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.stat-card span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.stat-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+  color: #111827;
+}
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}

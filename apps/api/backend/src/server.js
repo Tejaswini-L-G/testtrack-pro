@@ -12,6 +12,7 @@ const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
 
+const xlsx = require("xlsx");
 
 
 
@@ -23,6 +24,28 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
+async function generateTestCaseId() {
+  const year = new Date().getFullYear();
+
+  const last = await prisma.testCase.findFirst({
+    where: {
+      testCaseId: {
+        startsWith: `TC-${year}-`,
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  let next = 1;
+
+  if (last) {
+    next = parseInt(last.testCaseId.split("-")[2], 10) + 1;
+  }
+
+  return `TC-${year}-${String(next).padStart(5, "0")}`;
+}
 
 app.use(express.json());
 
@@ -132,8 +155,15 @@ app.get("/verify/:token", async (req, res) => {
 // 👉 PASTE REGISTER API BELOW THIS LINE
 app.post("/register", async (req, res) => {
   try {
-    let { name, email, password } = req.body;
+    // ✅ NEW: accept role
+    let { name, email, password, role } = req.body;
     email = email.toLowerCase().trim();
+
+    // ✅ NEW: validate role
+    const allowedRoles = ["tester", "developer", "admin"];
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role selected" });
+    }
 
     if (!isStrongPassword(password)) {
       return res.status(400).json({
@@ -148,18 +178,20 @@ app.post("/register", async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+
     const verifyToken = jwt.sign(
       { email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    // ✅ CREATE USER FIRST
+    // ✅ CREATE USER FIRST (role added)
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashed,
+        role,              // ✅ NEW (THIS FIXES EVERYTHING)
         verifyToken,
         isVerified: false,
         passwordHistory: [hashed],
@@ -177,28 +209,26 @@ app.post("/register", async (req, res) => {
       const link = `${process.env.FRONTEND_URL}/verify/${verifyToken}`;
 
       const info = await transporter.sendMail({
-  from: '"TestTrack Pro" <no-reply@testtrack.pro>',
-  to: email,
-  subject: "TestTrack Pro - Verify Your Account",
-  text: `Verify your account by opening this link:\n\n${link}`,
-  html: `
-    <div style="font-family: Arial, sans-serif;">
-      <h2>TestTrack Pro</h2>
-      <p>Click the button below to verify your account:</p>
-      <a href="${link}" 
-         style="display:inline-block;padding:10px 20px;background:#4facfe;color:white;text-decoration:none;border-radius:5px;">
-         Verify Account
-      </a>
-      <p style="margin-top:10px;">Or copy this link:</p>
-      <p>${link}</p>
-    </div>
-  `
-});
+        from: '"TestTrack Pro" <no-reply@testtrack.pro>',
+        to: email,
+        subject: "TestTrack Pro - Verify Your Account",
+        text: `Verify your account by opening this link:\n\n${link}`,
+        html: `
+          <div style="font-family: Arial, sans-serif;">
+            <h2>TestTrack Pro</h2>
+            <p>Click the button below to verify your account:</p>
+            <a href="${link}" 
+               style="display:inline-block;padding:10px 20px;background:#4facfe;color:white;text-decoration:none;border-radius:5px;">
+               Verify Account
+            </a>
+            <p style="margin-top:10px;">Or copy this link:</p>
+            <p>${link}</p>
+          </div>
+        `,
+      });
 
-// 👇 THIS PRINTS PREVIEW URL
-console.log("📩 Preview URL:", nodemailer.getTestMessageUrl(info));
-
-
+      // 👇 Preview link (Ethereal)
+      console.log("📩 Preview URL:", nodemailer.getTestMessageUrl(info));
     } catch (mailErr) {
       console.error("EMAIL SEND FAILED:", mailErr);
     }
@@ -207,8 +237,6 @@ console.log("📩 Preview URL:", nodemailer.getTestMessageUrl(info));
     res.status(500).json({ message: "Registration failed" });
   }
 });
-
-
 
 
 app.post("/login", async (req, res) => {
@@ -699,11 +727,8 @@ app.post("/testcases", authenticate, async (req, res) => {
     } = req.body;
 
     // ✅ Ignore deleted test cases
-    const count = await prisma.testCase.count({
-      where: { isDeleted: false }
-    });
+    const testCaseId = await generateTestCaseId();
 
-    const testCaseId = `TC-${new Date().getFullYear()}-${String(count + 1).padStart(5, "0")}`;
 
     const newTestCase = await prisma.testCase.create({
       data: {
@@ -821,54 +846,58 @@ app.put("/testcases/:id", authenticate, async (req, res) => {
 
 app.post("/testcases/:id/clone", authenticate, async (req, res) => {
   try {
-    if (req.user.role !== "tester") {
-      return res.status(403).json({ message: "Only testers can clone test cases" });
-    }
+    const { id } = req.params;
 
+    // 1️⃣ Find original test case
     const original = await prisma.testCase.findUnique({
-      where: { id: req.params.id },
-      include: { steps: true }
+      where: { id },
+      include: { steps: true },
     });
 
     if (!original) {
-      return res.status(404).json({ message: "Original test case not found" });
+      return res.status(404).json({ message: "Test case not found" });
     }
 
-    // 🔥 Generate new Test Case ID
+    // 2️⃣ Generate NEW Test Case ID properly
     const count = await prisma.testCase.count();
-    const newTestCaseId = `TC-${new Date().getFullYear()}-${String(count + 1).padStart(5, "0")}`;
 
+    const newTestCaseId = `TC-${new Date().getFullYear()}-${String(
+      count + 1
+    ).padStart(5, "0")}`;
+
+    // 3️⃣ Create clone
     const cloned = await prisma.testCase.create({
       data: {
         testCaseId: newTestCaseId,
-        title: `${original.title} (Clone)`,
+        title: original.title + " (Clone)",
         description: original.description,
         module: original.module,
         priority: original.priority,
         severity: original.severity,
         type: original.type,
         status: "Draft",
-        createdById: req.user.id,
-
+        createdBy: {
+          connect: { id: req.user.id },
+        },
         steps: {
-          create: original.steps.map(step => ({
+          create: original.steps.map((step) => ({
             stepNumber: step.stepNumber,
             action: step.action,
             testData: step.testData,
-            expected: step.expected
-          }))
-        }
+            expected: step.expected,
+          })),
+        },
       },
-      include: { steps: true }
+      include: { steps: true },
     });
 
     res.json(cloned);
-
   } catch (err) {
     console.error("CLONE TEST CASE ERROR:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Failed to clone test case" });
   }
 });
+
 
 app.delete("/testcases/:id", authenticate, async (req, res) => {
   try {
@@ -904,9 +933,21 @@ app.delete("/testcases/:id", authenticate, async (req, res) => {
 app.get("/testcases/:id", authenticate, async (req, res) => {
   try {
     const testCase = await prisma.testCase.findUnique({
-      where: { id: req.params.id },
-      include: { steps: true }
-    });
+  where: { id: req.params.id },
+  include: {
+    steps: true,
+    attachments: {
+      where: { isDeleted: false },
+    },
+    createdBy: {
+      select: {
+        id: true,
+        name: true
+      }
+    }
+  }
+});
+
 
     if (!testCase || testCase.isDeleted) {
       return res.status(404).json({ message: "Test case not found" });
@@ -918,6 +959,29 @@ app.get("/testcases/:id", authenticate, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+app.get("/testcases", authenticate, async (req, res) => {
+  const testCases = await prisma.testCase.findMany({
+  where: { isDeleted: false },
+  include: {
+    steps: true,
+    attachments: true,
+    createdBy: {
+      select: {
+        id: true,
+        name: true
+      }
+    }
+  },
+  orderBy: {
+    createdAt: "desc"
+  }
+});
+
+
+  res.json(testCases);
+});
+
 
 app.put("/testcases/:id", authenticate, async (req, res) => {
   try {
@@ -1017,16 +1081,32 @@ app.post(
 );
 
 
-app.get("/testcases/:id/attachments", authenticate, async (req, res) => {
-  const attachments = await prisma.attachment.findMany({
-    where: {
+app.post("/testcases/:id/attachments", authenticate, upload.single("file"), async (req, res) => {
+  try {
+  if (!req.file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  const attachment = await prisma.attachment.create({
+    data: {
+      fileName: req.file.originalname,     // required
+      fileType: req.file.mimetype,         // required
+     
+        filePath: req.file.path, // stored file name
       testCaseId: req.params.id,
-      isDeleted: false,
+       uploadedById: req.user.id,
     },
   });
 
-  res.json(attachments);
+  res.json(attachment);
+
+} catch (err) {
+  console.error("ATTACHMENT ERROR:", err);
+  res.status(500).json({ message: "Failed to upload attachment" });
+}
+
 });
+
 
 app.delete("/attachments/:id", authenticate, async (req, res) => {
   await prisma.attachment.update({
@@ -1081,6 +1161,23 @@ app.post("/testcases/:id/template", authenticate, async (req, res) => {
   }
 });
 
+app.get("/templates", authenticate, async (req, res) => {
+  try {
+    const templates = await prisma.testCaseTemplate.findMany({
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    res.json(templates);
+  } catch (err) {
+    console.error("TEMPLATE FETCH ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch templates" });
+  }
+});
+
+
+
 app.post("/templates/:id/create-testcase", authenticate, async (req, res) => {
   try {
     if (req.user.role !== "tester") {
@@ -1096,8 +1193,7 @@ app.post("/templates/:id/create-testcase", authenticate, async (req, res) => {
       return res.status(404).json({ message: "Template not found" });
     }
 
-    const count = await prisma.testCase.count();
-    const testCaseId = `TC-${new Date().getFullYear()}-${String(count + 1).padStart(5, "0")}`;
+    const testCaseId = await generateTestCaseId();
 
     const testCase = await prisma.testCase.create({
       data: {
@@ -1132,77 +1228,73 @@ app.post("/templates/:id/create-testcase", authenticate, async (req, res) => {
 
 
 
+
+
 app.post(
   "/testcases/import/preview",
   authenticate,
-  upload.single("file"),   // ← reuse existing upload
+  upload.single("file"),
   async (req, res) => {
     try {
-      if (req.user.role !== "tester") {
-        return res
-          .status(403)
-          .json({ message: "Only testers can import test cases" });
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const rows = [];
+      const filePath = req.file.path;
+      const ext = req.file.originalname.split(".").pop();
 
-      fs.createReadStream(req.file.path)
-        .pipe(csv())
-        .on("data", (data) => rows.push(data))
-        .on("end", () => {
-          const grouped = {};
+      let testCases = [];
 
-          rows.forEach((row) => {
-            if (!grouped[row.title]) {
-              grouped[row.title] = {
-                title: row.title,
-                module: row.module,
-                priority: row.priority,
-                severity: row.severity,
-                type: row.type,
-                status: row.status,
-                steps: [],
-              };
-            }
+      if (ext === "csv") {
+        const csv = fs.readFileSync(filePath, "utf8");
+        const rows = csv.split("\n").map(r => r.split(","));
 
-            grouped[row.title].steps.push({
-              stepNumber: Number(row.stepNumber),
-              action: row.action,
-              testData: row.testData || null,
-              expected: row.expected,
-            });
-          });
+        testCases = rows.slice(1).map(row => ({
+          title: row[0],
+          module: row[1],
+          priority: row[2],
+          severity: row[3],
+          type: row[4],
+          status: row[5],
+        }));
+      }
 
-          fs.unlinkSync(req.file.path);
+      if (ext === "xlsx") {
+        const workbook = xlsx.readFile(filePath);
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = xlsx.utils.sheet_to_json(sheet);
 
-          res.json({
-            message: "Preview successful",
-            totalTestCases: Object.keys(grouped).length,
-            preview: Object.values(grouped),
-          });
-        });
+        testCases = jsonData.map(row => ({
+          title: row.Title,
+          module: row.Module,
+          priority: row.Priority,
+          severity: row.Severity,
+          type: row.Type,
+          status: row.Status,
+        }));
+      }
+
+      fs.unlinkSync(filePath);
+
+      res.json({
+        message: "Preview successful",
+        totalTestCases: testCases.length,
+        preview: testCases,
+      });
+
     } catch (err) {
       console.error("IMPORT PREVIEW ERROR:", err);
-      res.status(500).json({ message: "Failed to preview import" });
+      res.status(500).json({ message: "Preview failed" });
     }
   }
 );
 
+
 app.post("/testcases/import/confirm", authenticate, async (req, res) => {
   try {
-    if (req.user.role !== "tester") {
-      return res
-        .status(403)
-        .json({ message: "Only testers can import test cases" });
-    }
-
     const { testCases } = req.body;
 
-    if (!Array.isArray(testCases) || testCases.length === 0) {
-      return res.status(400).json({ message: "No test cases to import" });
-    }
-
-    const created = [];
+    let imported = [];
 
     for (const tc of testCases) {
       const count = await prisma.testCase.count();
@@ -1211,49 +1303,110 @@ app.post("/testcases/import/confirm", authenticate, async (req, res) => {
         count + 1
       ).padStart(5, "0")}`;
 
-      const saved = await prisma.testCase.create({
-  data: {
-    testCaseId,
-    title: tc.title,
-    description:
-      tc.description || `Imported test case: ${tc.title}`,
-    module: tc.module,
-    priority: tc.priority,
-    severity: tc.severity,
-    type: tc.type,
-    status: tc.status || "Draft",
+      const created = await prisma.testCase.create({
+        data: {
+          testCaseId,
+          title: tc.title,
+          description: tc.description || "",
+          module: tc.module,
+          priority: tc.priority,
+          severity: tc.severity,
+          type: tc.type,
+          status: tc.status || "Draft",
 
-    createdBy: {
-      connect: { id: req.user.id },
-    },
+          createdBy: {
+            connect: { id: req.user.id }
+          },
 
-    steps: {
-      create: tc.steps.map((s) => ({
-        stepNumber: s.stepNumber,
-        action: s.action,
-        testData: s.testData || null,
-        expected: s.expected,
-      })),
-    },
-  },
-  include: { steps: true },
-});
+          steps: {
+  create: (tc.steps || []).map((step, index) => ({
+    stepNumber: index + 1,
+    action: step.action,
+    testData: step.testData || "",
+    expected: step.expected || ""
+  }))
+}
 
-      created.push(saved);
+        },
+        include: { steps: true }
+      });
+
+      imported.push(created);
     }
 
     res.json({
       message: "Import completed successfully",
-      importedCount: created.length,
-      testCases: created,
+      importedCount: imported.length,
+      testCases: imported
     });
+
   } catch (err) {
     console.error("IMPORT CONFIRM ERROR:", err);
-    res.status(500).json({ message: "Failed to import test cases" });
+    res.status(500).json({ message: "Import failed" });
+  }
+});
+
+app.get("/dashboard/tester", authenticate, async (req, res) => {
+  try {
+    const total = await prisma.testCase.count({
+      where: { isDeleted: false },
+    });
+
+    const draft = await prisma.testCase.count({
+      where: { status: "Draft", isDeleted: false },
+    });
+
+    const approved = await prisma.testCase.count({
+      where: { status: "Approved", isDeleted: false },
+    });
+
+    res.json({
+      total,
+      draft,
+      approved,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to load stats" });
   }
 });
 
 
+app.put("/testcases/bulk-status", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, status } = req.body;
+
+    await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+      },
+      data: { status },
+    });
+
+    res.json({ message: "Status updated successfully" });
+  } catch (err) {
+    console.error("BULK STATUS ERROR:", err);
+    res.status(500).json({ message: "Failed to update status" });
+  }
+});
+
+
+app.put("/testcases/bulk-priority", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, priority } = req.body;
+
+    await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+      },
+      data: { priority },
+    });
+
+    res.json({ message: "Priority updated successfully" });
+  } catch (err) {
+    console.error("BULK PRIORITY ERROR:", err);
+    res.status(500).json({ message: "Failed to update priority" });
+  }
+});
 
 
 
