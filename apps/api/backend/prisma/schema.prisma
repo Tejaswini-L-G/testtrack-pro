@@ -8,10 +8,123 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("tester")
-  createdAt DateTime @default(now())
+  id               String             @id @default(uuid())
+  name             String
+  email            String             @unique
+  password         String
+  role             String             @default("tester")
+  createdAt        DateTime           @default(now())
+  resetExpiry      DateTime?
+  resetToken       String?
+  failedAttempts   Int                @default(0)
+  isVerified       Boolean            @default(false)
+  lockUntil        DateTime?
+  passwordHistory  String[]
+  refreshToken     String?
+  verifyToken      String?
+  attachments      Attachment[]
+  testCases        TestCase[]
+  TestCaseTemplate TestCaseTemplate[]
+  testSuites       TestSuite[]
+}
+
+model TestCase {
+  id               String            @id @default(uuid())
+  testCaseId       String            @unique
+  title            String
+  description      String
+  module           String
+  priority         String
+  severity         String
+  type             String
+  status           String
+  preconditions    String?
+  testData         String?
+  environment      String?
+  postconditions   String?
+  cleanupSteps     String?
+  createdById      String
+  assignedTesterId String?
+  version          Int               @default(1)
+  tags             String[]          @default([])
+  isDeleted        Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  suiteId          String?
+  attachments      Attachment[]
+  createdBy        User              @relation(fields: [createdById], references: [id])
+  suite            TestSuite?        @relation("SuiteTestCases", fields: [suiteId], references: [id])
+  versions         TestCaseVersion[]
+  steps            TestStep[]
+}
+
+model TestStep {
+  id          String       @id @default(uuid())
+  testCaseId  String
+  stepNumber  Int
+  action      String
+  testData    String?
+  expected    String
+  attachments Attachment[]
+  testCase    TestCase     @relation(fields: [testCaseId], references: [id])
+}
+
+model Attachment {
+  id           String    @id @default(uuid())
+  fileName     String
+  fileType     String
+  filePath     String
+  testCaseId   String?
+  testStepId   String?
+  uploadedById String
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  testCase     TestCase? @relation(fields: [testCaseId], references: [id])
+  testStep     TestStep? @relation(fields: [testStepId], references: [id])
+  uploadedBy   User      @relation(fields: [uploadedById], references: [id])
+}
+
+model TestCaseVersion {
+  id         String   @id @default(uuid())
+  testCaseId String
+  version    Int
+  changeLog  String
+  snapshot   Json
+  createdAt  DateTime @default(now())
+  testCase   TestCase @relation(fields: [testCaseId], references: [id])
+}
+
+model TestSuite {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  createdById String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  testCases   TestCase[] @relation("SuiteTestCases")
+  createdBy   User       @relation(fields: [createdById], references: [id])
+}
+
+model TestCaseTemplate {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  module      String
+  priority    String
+  severity    String
+  type        String
+  createdById String
+  createdAt   DateTime       @default(now())
+  steps       TemplateStep[]
+  createdBy   User           @relation(fields: [createdById], references: [id])
+}
+
+model TemplateStep {
+  id         String           @id @default(uuid())
+  templateId String
+  stepNumber Int
+  action     String
+  testData   String?
+  expected   String
+  template   TestCaseTemplate @relation(fields: [templateId], references: [id])
 }

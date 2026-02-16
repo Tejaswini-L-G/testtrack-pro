@@ -1,0 +1,41 @@
+.import-container {
+  padding: 30px;
+  background: #f9fafb;
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.import-container h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+.import-container input[type="file"] {
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.import-container button {
+  margin-top: 10px;
+}
+
+.import-container h3 {
+  margin-top: 30px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.import-container pre {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 15px;
+  margin-top: 10px;
+  border-radius: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #111827;
+}

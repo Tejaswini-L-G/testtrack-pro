@@ -1,0 +1,95 @@
+/* View Test Case Container */
+.tc-form-container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  font-family: "Segoe UI", sans-serif;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+
+/* Sections */
+.tc-section {
+  margin-bottom: 24px;
+}
+
+.tc-section h3 {
+  margin-bottom: 12px;
+  font-size: 16px;
+  color: #111827;
+}
+
+/* Fields */
+.tc-field {
+  margin-bottom: 12px;
+}
+
+.tc-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.tc-value {
+  font-size: 14px;
+  color: #111827;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Steps */
+.tc-step {
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  background: #f9fafb;
+  font-size: 14px;
+}
+
+.tc-step strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  background: #ffffff;
+}
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9fafb;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+.attachment-item a {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.attachment-item a:hover {
+  text-decoration: underline;
+}
+
+.attachment-item .delete {
+  color: #dc2626;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
