@@ -1,0 +1,102 @@
+/* Page Layout */
+
+.versions-page {
+  padding: 24px;
+}
+
+/* Title */
+
+.versions-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color:white;}
+
+/* Card Container */
+
+.versions-card {
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 12px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Empty State */
+
+.empty-msg {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* Table */
+
+.versions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Header */
+
+.versions-table th {
+  text-align: left;
+  padding: 12px;
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Rows */
+
+.versions-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+/* Hover */
+
+.versions-table tr:hover {
+  background: #f9fafb;
+}
+
+/* Version Badge */
+
+.version-badge {
+  background: #e0e7ff;
+  color: #3730a3;
+
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Change Summary */
+
+.change-log {
+  max-width: 400px;
+  word-break: break-word;
+}
+
+/* View Button */
+
+.btn-view {
+  background: #2563eb;
+  color: white;
+
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+
+  cursor: pointer;
+  font-size: 13px;
+
+  transition: background 0.2s;
+}
+
+.btn-view:hover {
+  background: #1e40af;
+}

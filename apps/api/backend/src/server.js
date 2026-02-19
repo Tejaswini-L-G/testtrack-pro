@@ -4,7 +4,7 @@ require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const passport = require("./passport");
+const passport = require("./Passport");
 const upload = require("./upload");
 const path = require("path");
 
@@ -13,6 +13,8 @@ const csv = require("csv-parser");
 const fs = require("fs");
 
 const xlsx = require("xlsx");
+
+
 
 
 
@@ -705,6 +707,340 @@ app.put("/testcases/bulk-delete", authenticate, async (req, res) => {
   }
 });
 
+app.put("/testcases/bulk-status", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, status } = req.body;
+
+    if (!testCaseIds?.length)
+      return res.status(400).json({ message: "No test case IDs provided" });
+
+    const result = await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      },
+      data: { status },
+    });
+
+    res.json({
+      message:
+        result.count === 0
+          ? "No changes applied (same status)"
+          : "Status updated successfully",
+      updatedCount: result.count
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update status" });
+  }
+});
+
+
+
+
+app.put("/testcases/bulk-priority", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, priority } = req.body;
+
+    if (!testCaseIds?.length)
+      return res.status(400).json({ message: "No test case IDs provided" });
+
+    const result = await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      },
+      data: { priority },
+    });
+
+    if (result.count === 0) {
+      return res.status(404).json({
+        message: "No test cases updated — check IDs"
+      });
+    }
+
+    res.json({
+      message: "Priority updated successfully",
+      updatedCount: result.count
+    });
+
+  } catch (err) {
+    console.error("BULK PRIORITY ERROR:", err);
+    res.status(500).json({ message: "Failed to update priority" });
+  }
+});
+
+app.put("/testcases/bulk-severity", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, severity } = req.body;
+
+    if (!testCaseIds?.length)
+      return res.status(400).json({ message: "No test case IDs provided" });
+
+    const result = await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      },
+      data: { severity },
+    });
+
+    res.json({
+      message:
+        result.count === 0
+          ? "No changes applied"
+          : "Severity updated successfully",
+      updatedCount: result.count
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update severity" });
+  }
+});
+
+app.put("/testcases/bulk-assignee", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, assignedTesterId } = req.body;
+
+    if (!testCaseIds?.length)
+      return res.status(400).json({ message: "No test case IDs provided" });
+
+    const result = await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      },
+      data: { assignedTesterId },
+    });
+
+    res.json({
+      message:
+        result.count === 0
+          ? "No changes applied"
+          : "Assignee updated successfully",
+      updatedCount: result.count
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update assignee" });
+  }
+});
+
+app.put("/testcases/bulk-module", authenticate, async (req, res) => {
+  const { testCaseIds, module } = req.body;
+
+  const result = await prisma.testCase.updateMany({
+    where: { id: { in: testCaseIds }, isDeleted: false },
+    data: { module }
+  });
+
+  res.json({
+    message: `${result.count} test cases moved to module "${module}"`
+  });
+});
+
+app.put("/testcases/bulk-suite", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds, suiteId } = req.body;
+
+    if (!suiteId)
+      return res.status(400).json({ message: "Suite not selected" });
+
+    // ✅ Check suite exists
+    const suite = await prisma.testSuite.findUnique({
+      where: { id: suiteId }
+    });
+
+    if (!suite) {
+      return res.status(400).json({
+        message: "Selected suite not found"
+      });
+    }
+
+    const result = await prisma.testCase.updateMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      },
+      data: { suiteId }
+    });
+
+    res.json({
+      message: `${result.count} test cases moved to "${suite.name}"`
+    });
+
+  } catch (err) {
+    console.error("Bulk suite error:", err);
+    res.status(500).json({
+      message: "Failed to move test cases"
+    });
+  }
+});
+
+
+
+
+app.post("/testcases/export/csv", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds } = req.body;
+
+    const testCases = await prisma.testCase.findMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      }
+    });
+
+    const header = [
+      "TestCaseID",
+      "Title",
+      "Module",
+      "Priority",
+      "Severity",
+      "Type",
+      "Status"
+    ];
+
+    const rows = testCases.map(tc => [
+      tc.testCaseId,
+      tc.title,
+      tc.module,
+      tc.priority,
+      tc.severity,
+      tc.type,
+      tc.status
+    ]);
+
+    const csv =
+      [header, ...rows].map(r => r.join(",")).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=testcases.csv"
+    );
+
+    res.send(csv);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Export failed" });
+  }
+});
+
+
+
+app.post("/testcases/export/excel", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds } = req.body;
+
+    const testCases = await prisma.testCase.findMany({
+      where: {
+        id: { in: testCaseIds },
+        isDeleted: false
+      }
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(testCases);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "TestCases");
+
+    const buffer = XLSX.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx"
+    });
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=testcases.xlsx"
+    );
+
+    res.send(buffer);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Export failed" });
+  }
+});
+
+
+
+app.post("/testcases/import/json", authenticate, async (req, res) => {
+  try {
+    const testCases = req.body;
+
+    // 🔴 Must be array
+    if (!Array.isArray(testCases)) {
+      return res.status(400).json({
+        message:
+          "Invalid JSON format. Expected an array of test cases."
+      });
+    }
+
+    // 🔴 Validate each test case
+    for (const tc of testCases) {
+
+      if (!tc.title || !tc.module) {
+        return res.status(400).json({
+          message:
+            "Invalid JSON format. Each test case must include at least 'title' and 'module'."
+        });
+      }
+
+      if (tc.steps && !Array.isArray(tc.steps)) {
+        return res.status(400).json({
+          message:
+            "Invalid JSON format. 'steps' must be an array."
+        });
+      }
+    }
+
+    // ✅ If validation passed → insert data
+    let createdCount = 0;
+
+    for (const tc of testCases) {
+
+      await prisma.testCase.create({
+        data: {
+          testCaseId:
+            "TC-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+
+          title: tc.title,
+          description: tc.description || "",
+          module: tc.module,
+          priority: tc.priority || "Medium",
+          severity: tc.severity || "Major",
+          type: tc.type || "Functional",
+          status: tc.status || "Draft",
+          createdById: req.user.id,
+
+          steps: {
+            create: (tc.steps || []).map((s, i) => ({
+              stepNumber: s.stepNumber || i + 1,
+              action: s.action || "",
+              expected: s.expected || ""
+            }))
+          }
+        }
+      });
+
+      createdCount++;
+    }
+
+    res.json({
+      message: `${createdCount} test cases imported successfully`
+    });
+
+  } catch (err) {
+    console.error("JSON IMPORT ERROR:", err);
+    res.status(500).json({ message: "Import failed" });
+  }
+});
+
 
 app.post("/testcases", authenticate, async (req, res) => {
   try {
@@ -721,6 +1057,9 @@ app.post("/testcases", authenticate, async (req, res) => {
       type,
       status,
       preconditions,
+     
+postconditions,
+
       testData,
       environment,
       steps
@@ -741,8 +1080,14 @@ app.post("/testcases", authenticate, async (req, res) => {
         type,
         status,
         preconditions,
+        postconditions,
         testData,
         environment,
+        impactIfFails,
+  testDataRequirements,
+  environment,
+  cleanupSteps,
+        
 
         createdBy: {
           connect: { id: req.user.id }
@@ -781,6 +1126,16 @@ app.put("/testcases/:id", authenticate, async (req, res) => {
       include: { steps: true }
     });
 
+   const { changeLog } = req.body;
+
+if (!changeLog || changeLog.trim() === "") {
+  return res.status(400).json({
+    message: "Change summary is required"
+  });
+}
+
+
+
     if (!existing) {
       return res.status(404).json({ message: "Test case not found" });
     }
@@ -791,9 +1146,23 @@ app.put("/testcases/:id", authenticate, async (req, res) => {
         testCaseId: existing.id,
         version: existing.version,
         changeLog: req.body.changeLog || "Test case updated",
-        snapshot: existing   // 👈 FULL JSON SNAPSHOT
+        snapshot: {
+  title: existing.title,
+  description: existing.description,
+  module: existing.module,
+  priority: existing.priority,
+  severity: existing.severity,
+  type: existing.type,
+  status: existing.status,
+  steps: existing.steps,
+  version: existing.version
+}
+  // 👈 FULL JSON SNAPSHOT
       }
     });
+
+
+    
 
     const {
       title,
@@ -803,6 +1172,13 @@ app.put("/testcases/:id", authenticate, async (req, res) => {
       severity,
       type,
       status,
+      preconditions,
+postconditions,
+impactIfFails,
+  testDataRequirements,
+  environment,
+  cleanupSteps,
+
       steps
     } = req.body;
 
@@ -822,6 +1198,9 @@ app.put("/testcases/:id", authenticate, async (req, res) => {
         severity,
         type,
         status,
+        preconditions,
+postconditions,
+
         version: { increment: 1 },
 
         steps: {
@@ -846,57 +1225,72 @@ app.put("/testcases/:id", authenticate, async (req, res) => {
 
 app.post("/testcases/:id/clone", authenticate, async (req, res) => {
   try {
-    const { id } = req.params;
+    const { includeAttachments } = req.body;
 
-    // 1️⃣ Find original test case
     const original = await prisma.testCase.findUnique({
-      where: { id },
-      include: { steps: true },
+      where: { id: req.params.id },
+      include: {
+        steps: true,
+        attachments: true,
+      },
     });
 
-    if (!original) {
+    if (!original)
       return res.status(404).json({ message: "Test case not found" });
-    }
 
-    // 2️⃣ Generate NEW Test Case ID properly
-    const count = await prisma.testCase.count();
-
-    const newTestCaseId = `TC-${new Date().getFullYear()}-${String(
-      count + 1
-    ).padStart(5, "0")}`;
-
-    // 3️⃣ Create clone
     const cloned = await prisma.testCase.create({
       data: {
-        testCaseId: newTestCaseId,
-        title: original.title + " (Clone)",
+        testCaseId:
+          "TC-" +
+          new Date().getFullYear() +
+          "-" +
+          Date.now().toString().slice(-5),
+
+        title: original.title + " (Copy)",
         description: original.description,
         module: original.module,
         priority: original.priority,
         severity: original.severity,
         type: original.type,
         status: "Draft",
-        createdBy: {
-          connect: { id: req.user.id },
-        },
+
+        createdById: req.user.id,
+
         steps: {
-          create: original.steps.map((step) => ({
-            stepNumber: step.stepNumber,
-            action: step.action,
-            testData: step.testData,
-            expected: step.expected,
+          create: original.steps.map((s) => ({
+            stepNumber: s.stepNumber,
+            action: s.action,
+            testData: s.testData,
+            expected: s.expected,
           })),
         },
+
+        attachments: includeAttachments
+          ? {
+              create: original.attachments.map((a) => ({
+                fileName: a.fileName,
+                fileType: a.fileType,
+                filePath: a.filePath,
+                uploadedById: req.user.id,
+              })),
+            }
+          : undefined,
       },
-      include: { steps: true },
     });
 
-    res.json(cloned);
+    res.json({
+      message: "Test case cloned successfully",
+      id: cloned.id,
+    });
+
   } catch (err) {
-    console.error("CLONE TEST CASE ERROR:", err);
-    res.status(500).json({ message: "Failed to clone test case" });
+    console.error("Clone error:", err);
+    res.status(500).json({ message: "Clone failed" });
   }
 });
+
+
+
 
 
 app.delete("/testcases/:id", authenticate, async (req, res) => {
@@ -1294,55 +1688,64 @@ app.post("/testcases/import/confirm", authenticate, async (req, res) => {
   try {
     const { testCases } = req.body;
 
-    let imported = [];
+    if (!Array.isArray(testCases) || testCases.length === 0) {
+      return res.status(400).json({
+        message: "No valid test cases to import"
+      });
+    }
+
+    let createdCount = 0;
 
     for (const tc of testCases) {
-      const count = await prisma.testCase.count();
 
-      const testCaseId = `TC-${new Date().getFullYear()}-${String(
-        count + 1
-      ).padStart(5, "0")}`;
+      // 🔴 Skip invalid objects
+      if (!tc || typeof tc !== "object") continue;
 
-      const created = await prisma.testCase.create({
+      await prisma.testCase.create({
         data: {
-          testCaseId,
-          title: tc.title,
+          testCaseId:
+            "TC-" +
+            new Date().getFullYear() +
+            "-" +
+            Date.now().toString().slice(-5),
+
+          // ⭐ REQUIRED FIELDS WITH DEFAULTS
+          title: tc.title?.trim() || "Untitled Test Case",
           description: tc.description || "",
-          module: tc.module,
-          priority: tc.priority,
-          severity: tc.severity,
-          type: tc.type,
+          module: tc.module || "General",
+
+          priority: tc.priority || "Medium",
+          severity: tc.severity || "Major",
+          type: tc.type || "Functional",
           status: tc.status || "Draft",
 
-          createdBy: {
-            connect: { id: req.user.id }
-          },
+          createdById: req.user.id,
 
+          // ⭐ SAFE STEP CREATION
           steps: {
-  create: (tc.steps || []).map((step, index) => ({
-    stepNumber: index + 1,
-    action: step.action,
-    testData: step.testData || "",
-    expected: step.expected || ""
-  }))
-}
-
-        },
-        include: { steps: true }
+            create: Array.isArray(tc.steps)
+              ? tc.steps.map((s, i) => ({
+                  stepNumber: s?.stepNumber || i + 1,
+                  action: s?.action || "",
+                  expected: s?.expected || ""
+                }))
+              : []
+          }
+        }
       });
 
-      imported.push(created);
+      createdCount++;
     }
 
     res.json({
-      message: "Import completed successfully",
-      importedCount: imported.length,
-      testCases: imported
+      message: `${createdCount} test cases imported successfully`
     });
 
   } catch (err) {
     console.error("IMPORT CONFIRM ERROR:", err);
-    res.status(500).json({ message: "Import failed" });
+    res.status(500).json({
+      message: "Import failed due to invalid data format"
+    });
   }
 });
 
@@ -1370,41 +1773,258 @@ app.get("/dashboard/tester", authenticate, async (req, res) => {
   }
 });
 
-
-app.put("/testcases/bulk-status", authenticate, async (req, res) => {
+app.get("/testcases/:id/versions", authenticate, async (req, res) => {
   try {
-    const { testCaseIds, status } = req.body;
 
-    await prisma.testCase.updateMany({
-      where: {
-        id: { in: testCaseIds },
-      },
-      data: { status },
+    const versions = await prisma.testCaseVersion.findMany({
+      where: { testCaseId: req.params.id },
+      orderBy: { version: "desc" }
     });
 
-    res.json({ message: "Status updated successfully" });
+    res.json(versions);
+
   } catch (err) {
-    console.error("BULK STATUS ERROR:", err);
-    res.status(500).json({ message: "Failed to update status" });
+    console.error("VERSION LIST ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch versions" });
+  }
+});
+
+app.get("/versions/:versionId", authenticate, async (req, res) => {
+  try {
+
+    const version = await prisma.testCaseVersion.findUnique({
+      where: { id: req.params.versionId }
+    });
+
+    if (!version)
+      return res.status(404).json({ message: "Version not found" });
+
+    res.json(version);
+
+  } catch (err) {
+    console.error("VERSION DETAIL ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch version" });
   }
 });
 
 
-app.put("/testcases/bulk-priority", authenticate, async (req, res) => {
+
+
+
+
+
+app.post("/suites", authenticate, async (req, res) => {
   try {
-    const { testCaseIds, priority } = req.body;
+    const { name, description } = req.body;
+
+    const suite = await prisma.testSuite.create({
+      data: {
+        name,
+        description,
+        createdById: req.user.id,
+      },
+    });
+
+    res.json(suite);
+  } catch (err) {
+    console.error("CREATE SUITE ERROR:", err);
+    res.status(500).json({ message: "Failed to create suite" });
+  }
+});
+
+app.get("/suites", authenticate, async (req, res) => {
+  try {
+    const suites = await prisma.testSuite.findMany({
+  where: {
+    isDeleted: false   // ✅ ADD THIS
+  },
+  include: {
+    _count: {
+      select: { testCases: true }
+    }
+  }
+});
+
+
+    res.json(suites);
+  } catch (err) {
+    console.error("FETCH SUITES ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch suites" });
+  }
+});
+
+app.put("/testcases/:id/assign-suite", authenticate, async (req, res) => {
+  try {
+    const { suiteId } = req.body;
+
+    const updated = await prisma.testCase.update({
+      where: { id: req.params.id },
+      data: { suiteId },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error("ASSIGN SUITE ERROR:", err);
+    res.status(500).json({ message: "Failed to assign suite" });
+  }
+});
+
+app.put("/suites/:id", authenticate, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+
+    const updated = await prisma.testSuite.update({
+      where: { id: req.params.id },
+      data: {
+        name,
+        description,
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("UPDATE SUITE ERROR:", error);
+    res.status(500).json({ message: "Failed to update suite" });
+  }
+});
+
+app.delete("/suites/:id", authenticate, async (req, res) => {
+  try {
+    await prisma.testSuite.update({
+      where: { id: req.params.id },
+      data: { isDeleted: true },
+    });
+
+    res.json({ message: "Suite deleted successfully" });
+  } catch (error) {
+    console.error("DELETE SUITE ERROR:", error);
+    res.status(500).json({ message: "Failed to delete suite" });
+  }
+});
+
+app.put("/suites/:id/assign", authenticate, async (req, res) => {
+  try {
+    const { testCaseIds } = req.body;
 
     await prisma.testCase.updateMany({
       where: {
         id: { in: testCaseIds },
       },
-      data: { priority },
+      data: {
+        suiteId: req.params.id,
+      },
     });
 
-    res.json({ message: "Priority updated successfully" });
+    res.json({ message: "Test cases assigned to suite" });
+  } catch (error) {
+    console.error("ASSIGN ERROR:", error);
+    res.status(500).json({ message: "Failed to assign test cases" });
+  }
+});
+
+app.get("/suites/:id", authenticate, async (req, res) => {
+  try {
+    const suite = await prisma.testSuite.findUnique({
+      where: { id: req.params.id },
+      include: {
+        testCases: {
+          where: { isDeleted: false },
+        },
+      },
+    });
+
+    res.json(suite);
+  } catch (error) {
+    console.error("FETCH SUITE DETAIL ERROR:", error);
+    res.status(500).json({ message: "Failed to fetch suite" });
+  }
+});
+
+app.get("/testsuites", authenticate, async (req, res) => {
+  const suites = await prisma.testSuite.findMany({
+    where: { isDeleted: false },
+    select: {
+      id: true,
+      name: true
+    },
+    orderBy: { name: "asc" }
+  });
+
+  res.json(suites);
+});
+
+app.get("/templates/categories", authenticate, async (req, res) => {
+  const categories = await prisma.testCaseTemplate.findMany({
+    distinct: ["category"],
+    select: { category: true },
+    orderBy: { category: "asc" }
+  });
+
+  res.json(categories.map(c => c.category));
+});
+
+app.get("/templates", authenticate, async (req, res) => {
+  const { category } = req.query;
+
+  const templates = await prisma.testCaseTemplate.findMany({
+    where: {
+      category: category || undefined,
+      isGlobal: true
+    },
+    include: { steps: true },
+    orderBy: { name: "asc" }
+  });
+
+  res.json(templates);
+});
+
+app.post("/templates", authenticate, async (req, res) => {
+  const {
+    name,
+    description,
+    module,
+    priority,
+    severity,
+    type,
+    category,
+    steps
+  } = req.body;
+
+  const template = await prisma.testCaseTemplate.create({
+    data: {
+      name,
+      description,
+      module,
+      priority,
+      severity,
+      type,
+      category,
+      isGlobal: true,
+      createdById: req.user.id,
+
+      steps: {
+        create: steps || []
+      }
+    }
+  });
+
+  res.json(template);
+});
+
+app.put("/templates/:id", authenticate, async (req, res) => {
+  try {
+    const { category } = req.body;
+
+    const updated = await prisma.testCaseTemplate.update({
+      where: { id: req.params.id },
+      data: { category },
+    });
+
+    res.json(updated);
+
   } catch (err) {
-    console.error("BULK PRIORITY ERROR:", err);
-    res.status(500).json({ message: "Failed to update priority" });
+    console.error("Template update error:", err);
+    res.status(500).json({ message: "Failed to update template" });
   }
 });
 
