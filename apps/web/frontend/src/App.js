@@ -22,8 +22,12 @@ import SuitesList from "./Dashboard/Tester/Suites/SuitesList";
 
 import VersionsList from "./Dashboard/Tester/TestCases/VersionsList";
 import VersionDetail from "./Dashboard/Tester/TestCases/VersionDetail";
+import AdminTestCases from "./Dashboard/AdminTestCases";
+import AdminDashboard from "./Dashboard/AdminDashboard"
+import DashboardLayout from "./Dashboard/DashboardLayout";
+import DeveloperDashboard from "./Dashboard/DeveloperDashboard";
 
-
+import HomePage from "./Dashboard/HomePage";
 
 
 import "./styles.css";
@@ -48,16 +52,7 @@ function App() {
       <div className="bubble"></div>
 
       {/* Top Bar */}
-      <div className="switch-bar">
-  <button onClick={() => navigate("/")}>Login</button>
-  <button onClick={() => navigate("/register")}>Register</button>
-
-  {localStorage.getItem("token") && (
-    <button onClick={() => navigate("/change-password")}>
-      Change Password
-    </button>
-  )}
-</div>
+     
 
 
       {/* Routes */}
@@ -68,11 +63,14 @@ function App() {
   <Route path="/reset/:token" element={<ResetPassword />} />
   <Route path="/verify/:token" element={<Verify />} />
   <Route path="/change-password" element={<ChangePassword />} />
-  <Route path="/testcases" element={<TestCases />} />
-   <Route path="/testcases/create" element={<CreateTestCase />} />
+  
    <Route path="/testcases/:id/edit" element={<EditTestCase />} />
-  <Route path="/suites" element={<SuitesList />} />
-
+ 
+   <Route path="/admin/dashboard" element={<AdminDashboard />}>
+  <Route path="testcases" element={<AdminTestCases />} />
+</Route>
+<Route path="/developer/dashboard" element={<DeveloperDashboard />} />
+<Route path="/dashboard/home" element={<HomePage />} />
   <Route
   path="/dashboard/testcases/:id/versions"
   element={<VersionsList />}
@@ -85,23 +83,6 @@ function App() {
 
 
 
-
-   <Route
-path="/dashboard/testcases/edit/:id"
-  element={<EditTestCase />}
-/>
-<Route
-  path="/dashboard"
-  element={
-    <ProtectedRoute>
-      <TesterDashboard />
-    </ProtectedRoute>
-  }
->
-  <Route path="testcases/:id" element={<ViewTestCase />} />
-</Route>
-<Route path="/templates" element={<TemplateList />} />
-<Route path="/import" element={<ImportTestCases />} />
 <Route
   path="/dashboard"
   element={
@@ -110,6 +91,29 @@ path="/dashboard/testcases/edit/:id"
     </ProtectedRoute>
   }
 />
+
+<Route
+  path="/dashboard"
+  element={
+    <ProtectedRoute>
+      <TesterDashboard />
+    </ProtectedRoute>
+  }
+>
+  <Route index element={null} />
+
+  <Route path="home" element={<HomePage />} />
+  <Route path="testcases" element={<TestCases />} />
+ <Route path="testcases/edit/:id" element={<EditTestCase />} />
+  <Route path="testcases/view/:id" element={<ViewTestCase />} />
+  <Route path="testcases/create" element={<CreateTestCase />} />
+  <Route path="templates" element={<TemplateList />} />
+  <Route path="import" element={<ImportTestCases />} />
+  <Route path="suites" element={<SuitesList />} />
+</Route>
+
+
+
 </Routes>
 
     </>

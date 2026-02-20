@@ -631,6 +631,7 @@ const fetchSuites = async () => {
   Template
 </button>
 
+
 <button
   className="btn-link"
   onClick={() =>
@@ -640,10 +641,9 @@ const fetchSuites = async () => {
   History
 </button>
 
-
 <button
   className="btn-link"
-  onClick={() => navigate(`/dashboard/testcases/${tc.id}`)}
+  onClick={() => navigate(`/dashboard/testcases/view/${tc.id}`)}
 >
   View
 </button>
@@ -663,12 +663,10 @@ const fetchSuites = async () => {
 
       <h3>Clone Test Case</h3>
 
-      <div className="clone-options">
-
-  <label className="clone-option">
+      <label className="clone-option">
     <input
       type="radio"
-      name="cloneType"
+      name="attachments"
       checked={includeAttachments === true}
       onChange={() => setIncludeAttachments(true)}
     />
@@ -678,16 +676,12 @@ const fetchSuites = async () => {
   <label className="clone-option">
     <input
       type="radio"
-      name="cloneType"
+      name="attachments"
       checked={includeAttachments === false}
       onChange={() => setIncludeAttachments(false)}
     />
     Clone WITHOUT attachments
   </label>
-
-</div>
-
-
       <div className="modal-actions">
         <button
           className="btn-primary"

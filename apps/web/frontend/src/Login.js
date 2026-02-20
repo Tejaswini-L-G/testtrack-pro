@@ -7,8 +7,9 @@ function Login() {
   const [message, setMessage] = useState("");
  const [remember, setRemember] = useState(false);
 const [showPassword, setShowPassword] = useState(false);
+const [data , setData] = useState({});
 
-  const handleLogin = async (e) => {
+ const handleLogin = async (e) => {
   e.preventDefault();
 
   try {
@@ -18,14 +19,18 @@ const [showPassword, setShowPassword] = useState(false);
       remember,
     });
 
-    console.log("LOGIN RESPONSE:", res.data);
-
     if (!res.data.accessToken) {
       setMessage("Token not received from server");
       return;
     }
 
+    // ✅ Save token
     localStorage.setItem("token", res.data.accessToken);
+
+    // ✅ Decode role from token
+    const payload = JSON.parse(atob(res.data.accessToken.split(".")[1]));
+
+    localStorage.setItem("role", payload.role);   // ⭐ FIXED
 
     if (res.data.refreshToken) {
       localStorage.setItem("refreshToken", res.data.refreshToken);
@@ -33,20 +38,21 @@ const [showPassword, setShowPassword] = useState(false);
 
     setMessage("Login successful!");
 
-    window.location.href = "/dashboard";
+    // ✅ Redirect based on role
+    if (payload.role === "admin") {
+  window.location.href = "/admin/dashboard";
+
+} else if (payload.role === "developer") {
+  window.location.href = "/developer/dashboard";
+
+} else {
+  // tester (default)
+  window.location.href = "/dashboard";
+}
 
   } catch (err) {
-    console.log(err.response);
     setMessage(err.response?.data?.message || "Login failed");
   }
-  const res = await axios.post("http://localhost:5000/login", {
-  email,
-  password,
-  remember,
-});
-
-console.log("LOGIN RESPONSE:", res.data);   // 👈 ADD THIS
-
 };
 
   // 🔐 Forgot password redirect
