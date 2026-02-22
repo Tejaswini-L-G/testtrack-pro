@@ -26,10 +26,21 @@ import AdminTestCases from "./Dashboard/AdminTestCases";
 import AdminDashboard from "./Dashboard/AdminDashboard"
 import DashboardLayout from "./Dashboard/DashboardLayout";
 import DeveloperDashboard from "./Dashboard/DeveloperDashboard";
-
+import ExecutionPage from "./Execution/ExecutionPage";
 import HomePage from "./Dashboard/HomePage";
+import ExecutionList from "./Execution/ExecutionList";
+import CreateTestRun from "./TestRun/CreateTestRun";
+import TestRunList from "./TestRun/TestRunList";
+import MyRuns from "./TestRun/MyRuns";
+import RunDetails from "./TestRun/RunDetails";
+import RunProgressDashboard from "./TestRun/RunProgressDashboard";
+import EditTestRun from "./TestRun/EditTestRun";
+import TesterExecutions from "./Execution/TesterExecutions";
+import BugReport from "./Bugs/BugReport";
+import BugDashboard from "./Bugs/BugDashboard";
 
-
+import ExecutionHistory from "./Execution/ExecutionHistory";
+import ExecutionCompare from "./Execution/ExecutionCompare";
 import "./styles.css";
 
 
@@ -63,11 +74,17 @@ function App() {
   <Route path="/reset/:token" element={<ResetPassword />} />
   <Route path="/verify/:token" element={<Verify />} />
   <Route path="/change-password" element={<ChangePassword />} />
+ 
+
   
    <Route path="/testcases/:id/edit" element={<EditTestCase />} />
  
    <Route path="/admin/dashboard" element={<AdminDashboard />}>
   <Route path="testcases" element={<AdminTestCases />} />
+
+ <Route path="testruns" element={<TestRunList />} />
+  <Route path="testruns/create" element={<CreateTestRun />} />
+  <Route path="/admin/dashboard/bugs" element={<BugDashboard />} />
 </Route>
 <Route path="/developer/dashboard" element={<DeveloperDashboard />} />
 <Route path="/dashboard/home" element={<HomePage />} />
@@ -75,6 +92,22 @@ function App() {
   path="/dashboard/testcases/:id/versions"
   element={<VersionsList />}
 />
+
+<Route
+  path="/admin/dashboard/testruns/:id"
+  element={<RunProgressDashboard />}
+/>
+
+<Route
+  path="/admin/dashboard/testruns/edit/:id"
+  element={<EditTestRun />}
+/>
+
+<Route
+  path="/admin/dashboard/testruns/edit/:id"
+  element={<EditTestRun />}
+/>
+
 
 <Route
   path="/dashboard/version/:id"
@@ -110,7 +143,36 @@ function App() {
   <Route path="templates" element={<TemplateList />} />
   <Route path="import" element={<ImportTestCases />} />
   <Route path="suites" element={<SuitesList />} />
+
+   <Route path="execution" element={<ExecutionList />} />
+
+  <Route path="execution/:id" element={<ExecutionPage />} />
+  <Route path="/dashboard/bugs" element={<BugDashboard />} />
+
+   <Route
+  path="my-runs"
+  element={<MyRuns />}
+/>
+<Route path="my-runs/:id" element={<RunDetails />} />
+<Route
+  path="my-executions"
+  element={<TesterExecutions />}
+/>
+<Route
+  path="/dashboard/bug-report"
+  element={<BugReport />}
+/>
+<Route
+  path="/dashboard/compare"
+  element={<ExecutionCompare />}
+/>
+
 </Route>
+
+<Route
+  path="/dashboard/execution-history/:testCaseId"
+  element={<ExecutionHistory />}
+/>
 
 
 

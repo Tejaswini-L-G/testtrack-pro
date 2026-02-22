@@ -27,6 +27,8 @@ app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 
+
+
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -154,6 +156,31 @@ app.get("/", (req, res) => {
   res.send("TestTrack Pro Backend is running 🚀");
 });
 
+app.get("/api/me", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, name: true, role: true },
+    });
+
+    res.json(user);
+
+  } catch (err) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+});
+
+
+
 app.get("/verify/:token", async (req, res) => {
   try {
     const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
@@ -188,6 +215,28 @@ app.get("/users", authenticate, async (req, res) => {
   } catch (err) {
     console.error("FETCH USERS ERROR:", err);
     res.status(500).json({ message: "Failed to fetch users" });
+  }
+});
+
+app.get("/api/users", async (req, res) => {
+  try {
+
+    const { role } = req.query;
+
+    const users = await prisma.user.findMany({
+      where: role ? { role } : {},
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    });
+
+    res.json(users);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -2128,6 +2177,606 @@ app.get("/admin/testcases/deleted", authenticate, async (req, res) => {
   });
 
   res.json(deleted);
+});
+
+
+app.post("/api/executions/start", async (req, res) => {
+  try {
+    const { testCaseId, userId, testRunId } = req.body;
+
+    if (!testCaseId || !userId) {
+      return res.status(400).json({
+        error: "testCaseId and userId required"
+      });
+    }
+
+    const execution = await prisma.testExecution.create({
+      data: {
+        testCaseId,
+        executedById: userId,
+        
+        testRunId: testRunId || null,   // ⭐ IMPORTANT
+        status: "InProgress"
+      }
+    });
+
+    res.json(execution);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/api/executions/step", async (req, res) => {
+  try {
+    const {
+      executionId,
+      stepNumber,
+      action,
+      expected,
+      actual,
+      status
+    } = req.body;
+
+    const step = await prisma.executionStep.create({
+      data: {
+        executionId,
+        stepNumber,
+        action,
+        expected,
+        actual,
+        status
+      }
+    });
+
+    res.json(step);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/executions/complete", async (req, res) => {
+  try {
+    const { executionId, finalStatus } = req.body;
+
+    const execution = await prisma.testExecution.update({
+      where: { id: executionId },
+      data: {
+        status: finalStatus,
+        completedAt: new Date()
+      }
+    });
+
+    res.json(execution);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get("/api/executions/:id", async (req, res) => {
+  try {
+    const execution = await prisma.testExecution.findUnique({
+      where: { id: req.params.id },
+      include: { steps: true }
+    });
+
+    res.json(execution);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Get all test cases for tester
+app.get("/api/testcases", async (req, res) => {
+  try {
+    const testCases = await prisma.testCase.findMany({
+      include: { steps: true },
+      where: { status: "Approved" } // Only executable
+    });
+
+    res.json(testCases);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/testcases/:id", async (req, res) => {
+  try {
+    const testCase = await prisma.testCase.findUnique({
+      where: { id: req.params.id },
+      include: { steps: true }
+    });
+
+    if (!testCase) {
+      return res.status(404).json({ message: "Test case not found" });
+    }
+
+    res.json(testCase);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/execution/save", async (req, res) => {
+  try {
+    const { executionId, steps } = req.body;
+
+    for (const step of steps) {
+      await prisma.executionStep.upsert({
+        where: {
+          executionId_stepNumber: {
+            executionId,
+            stepNumber: step.stepNumber,
+          },
+        },
+        update: {
+          actual: step.actual,
+          status: step.status,
+        },
+        create: {
+          executionId,
+          stepNumber: step.stepNumber,
+          actual: step.actual,
+          status: step.status,
+        },
+      });
+    }
+
+    res.json({ message: "Progress saved" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+app.post(
+  "/api/execution/upload",
+  upload.single("file"),
+  async (req, res) => {
+
+    try {
+
+      const { testCaseId, stepNumber } = req.body;
+
+      const evidence = await prisma.executionEvidence.create({
+        data: {
+          testCaseId,
+          stepNumber: parseInt(stepNumber),
+          filePath: req.file.filename,
+          fileType: req.file.mimetype,
+        },
+      });
+
+      res.json(evidence);  // ✅ REQUIRED
+
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+app.post("/api/testruns", async (req, res) => {
+  try {
+
+    const {
+      name,
+      description,
+      startDate,
+      endDate,
+      testCaseIds,
+      testerIds
+    } = req.body;
+
+    const run = await prisma.testRun.create({
+      data: {
+        name,
+        description,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+
+        testCases: {
+          create: testCaseIds.map(id => ({
+            testCaseId: id
+          }))
+        },
+
+        assignments: {
+          create: testerIds.map(id => ({
+            testerId: id
+          }))
+        }
+      }
+    });
+
+    res.json(run);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/testruns", async (req, res) => {
+
+  const runs = await prisma.testRun.findMany({
+    include: {
+      testCases: true,
+      assignments: true
+    }
+  });
+
+  res.json(runs);
+});
+
+app.get("/api/testruns/:id/progress", async (req, res) => {
+
+  const runId = req.params.id;
+
+  // Total test cases in run
+  const total = await prisma.testRunCase.count({
+    where: { testRunId: runId }
+  });
+
+  // Completed executions for this run
+  const completed = await prisma.testExecution.count({
+    where: {
+      testRunId: runId,
+      completedAt: { not: null }
+    }
+  });
+
+  const progress =
+    total === 0 ? 0 : Math.round((completed / total) * 100);
+
+  res.json({ total, completed, progress });
+
+});
+
+
+app.get("/api/testruns/my/:testerId", async (req, res) => {
+
+  const runs = await prisma.testRun.findMany({
+    where: {
+      assignments: {
+        some: { testerId: req.params.testerId }
+      }
+    },
+    include: {
+      testCases: true
+    }
+  });
+
+  res.json(runs);
+});
+
+
+
+
+
+
+app.get("/api/testruns/:id", async (req, res) => {
+
+  const run = await prisma.testRun.findUnique({
+    where: { id: req.params.id },
+    include: {
+      testCases: true,
+      assignments: {
+        include: {
+          tester: true
+        }
+
+      }
+    }
+  });
+
+  res.json(run);
+});
+
+app.put("/api/testruns/:id", async (req, res) => {
+
+  const {
+    name,
+    description,
+    startDate,
+    endDate,
+    testCaseIds,
+    testerIds
+  } = req.body;
+
+  const id = req.params.id;
+
+  // Remove old assignments
+  await prisma.testRunCase.deleteMany({
+    where: { testRunId: id }
+  });
+
+  await prisma.testRunAssignment.deleteMany({
+    where: { testRunId: id }
+  });
+
+  // Update run + add new relations
+  const updated = await prisma.testRun.update({
+    where: { id },
+    data: {
+      name,
+      description,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+
+      testCases: {
+        create: testCaseIds.map(tcId => ({
+          testCaseId: tcId
+        }))
+      },
+
+      assignments: {
+        create: testerIds.map(tid => ({
+          testerId: tid
+        }))
+      }
+    }
+  });
+
+  res.json(updated);
+});
+
+
+app.delete("/api/testruns/:id", async (req, res) => {
+
+  const id = req.params.id;
+
+  // Remove relations first
+  await prisma.testRunCase.deleteMany({
+    where: { testRunId: id }
+  });
+
+  await prisma.testRunAssignment.deleteMany({
+    where: { testRunId: id }
+  });
+
+  // Delete run
+  await prisma.testRun.delete({
+    where: { id }
+  });
+
+  res.json({ success: true });
+});
+
+
+app.get("/api/my-runs/:testerId", async (req, res) => {
+
+  const testerId = req.params.testerId;
+
+  const runs = await prisma.testRun.findMany({
+    where: {
+      assignments: {
+        some: { testerId }
+      }
+    },
+    include: {
+      assignments: true,
+      testCases: true
+    }
+  });
+
+  res.json(runs);
+});
+
+
+
+app.get("/api/executions/by-run/:runId", async (req, res) => {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testRunId: req.params.runId }
+  });
+
+  res.json(executions);
+
+});
+
+app.get("/api/testruns/:id/executions", async (req, res) => {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testRunId: req.params.id },
+    orderBy: { startedAt: "desc" }
+  });
+
+  // Fetch tester details manually
+  const userIds = executions.map(e => e.executedById);
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true }
+  });
+
+  const userMap = {};
+  users.forEach(u => userMap[u.id] = u.name);
+
+  const result = executions.map(e => ({
+    ...e,
+    testerName: userMap[e.executedById] || "Unknown"
+  }));
+
+  res.json(result);
+
+});
+
+app.get("/api/testruns/:id/executions", async (req, res) => {
+
+  const runId = req.params.id;
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testRunId: runId },
+    orderBy: { startedAt: "desc" }
+  });
+
+  if (executions.length === 0) return res.json([]);
+
+  // ⭐ Get testers
+  const testerIds = executions
+    .map(e => e.executedById)
+    .filter(Boolean);
+
+  const testers = await prisma.user.findMany({
+    where: { id: { in: testerIds } },
+    select: { id: true, name: true }
+  });
+
+  const testerMap = {};
+  testers.forEach(t => {
+    testerMap[t.id] = t.name;
+  });
+
+  // ⭐ Add tester name + time taken
+  const result = executions.map(exec => {
+
+    let timeTaken = null;
+
+    if (exec.completedAt) {
+      const diff =
+        new Date(exec.completedAt) - new Date(exec.startedAt);
+
+      const seconds = Math.floor(diff / 1000);
+      const mins = Math.floor(seconds / 60);
+      const hrs = Math.floor(mins / 60);
+
+      timeTaken = `${hrs}h ${mins % 60}m ${seconds % 60}s`;
+    }
+
+    return {
+      ...exec,
+      testerName: testerMap[exec.executedById] || "Unknown",
+      timeTaken
+    };
+  });
+
+  res.json(result);
+
+});
+
+app.get("/api/executions/my/:testerId", async (req, res) => {
+
+  const testerId = req.params.testerId;
+
+  const executions = await prisma.testExecution.findMany({
+    where: { executedById: testerId },
+
+    orderBy: { startedAt: "desc" }
+  });
+
+  res.json(executions);
+
+});
+
+app.get("/api/executions/run/:runId/:testerId", async (req, res) => {
+
+  const { runId, testerId } = req.params;
+
+  const executions = await prisma.testExecution.findMany({
+    where: {
+      testRunId: runId,
+      executedById: testerId
+    },
+    orderBy: { startedAt: "desc" }
+  });
+
+  res.json(executions);
+
+});
+
+app.post(
+  "/api/bugs",
+  
+  upload.single("evidence"),   // ⭐ REQUIRED
+  async (req, res) => {
+
+    try {
+
+      const {
+        title,
+        description,
+        severity,
+        priority,
+        testCaseId,
+        runId,
+        stepNumber
+      } = req.body;
+
+      const userId = req.user?.id; // from JWT middleware
+
+      const bug = await prisma.bug.create({
+        data: {
+          title,
+          description,
+          severity,
+          priority,
+          testCaseId,
+          runId,
+          stepNumber: parseInt(stepNumber),
+          reportedById: req.body.userId,
+          evidence: req.file?.filename
+        }
+      });
+
+      res.json(bug);
+
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+app.get("/api/bugs", async (req, res) => {
+
+  const bugs = await prisma.bug.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(bugs);
+
+});
+app.get("/api/bugs/my/:testerId", async (req, res) => {
+
+  const testerId = req.params.testerId;
+
+  const bugs = await prisma.bug.findMany({
+    where: {
+      reportedById: testerId
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  res.json(bugs);
+
+});
+
+
+app.get("/api/executions/history/:testCaseId", async (req, res) => {
+
+  const testCaseId = req.params.testCaseId;
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testCaseId },
+    orderBy: { startedAt: "desc" }
+  });
+
+  res.json(executions);
+
+});
+
+app.get("/api/executions/details/:id", async (req, res) => {
+
+  const execution = await prisma.testExecution.findUnique({
+    where: { id: req.params.id },
+    include: { steps: true }
+  });
+
+  res.json(execution);
+
 });
 
 

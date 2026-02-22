@@ -83,6 +83,28 @@ function TesterDashboard() {
             Test Suites
           </button>
 
+          <button
+  onClick={() => navigate("/dashboard/execution")}
+>
+  Execute Test Cases
+</button>
+
+<button
+  onClick={() => navigate("/dashboard/my-runs")}
+>
+  My Test Runs
+</button>
+
+<button
+  onClick={() => navigate("/dashboard/my-executions")}
+>
+  My Executions
+</button>
+
+<button onClick={() => navigate("/dashboard/bugs")}>
+  My Bugs
+</button>
+
           <hr />
 
           <button

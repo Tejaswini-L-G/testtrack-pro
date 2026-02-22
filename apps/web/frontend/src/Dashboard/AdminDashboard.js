@@ -42,6 +42,34 @@ function AdminDashboard() {
             View Test Cases
           </button>
 
+         
+<button
+  className={
+    isActive("/admin/dashboard/testruns/create") ? "active" : ""
+  }
+  onClick={() =>
+    navigate("/admin/dashboard/testruns/create")
+  }
+>
+  Create Test Run
+</button>
+
+
+<button
+  className={
+    isActive("/admin/dashboard/testruns") ? "active" : ""
+  }
+  onClick={() =>
+    navigate("/admin/dashboard/testruns")
+  }
+>
+  View Test Runs
+</button>
+
+<button onClick={() => navigate("/admin/dashboard/bugs")}>
+  View Bugs
+</button>
+
           <hr />
 
           {/* LOGOUT */}
