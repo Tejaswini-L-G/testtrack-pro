@@ -41,6 +41,13 @@ import BugDashboard from "./Bugs/BugDashboard";
 
 import ExecutionHistory from "./Execution/ExecutionHistory";
 import ExecutionCompare from "./Execution/ExecutionCompare";
+import SuiteExecute from "./Dashboard/Tester/Suites/SuiteExecute";
+import SuiteReport from "./Dashboard/Tester/Suites/SuiteReport";
+
+
+import DevTestCases from "./Dashboard/DevTestCases";
+import DevReports from "./Dashboard/DevReports";
+
 import "./styles.css";
 
 
@@ -86,7 +93,17 @@ function App() {
   <Route path="testruns/create" element={<CreateTestRun />} />
   <Route path="/admin/dashboard/bugs" element={<BugDashboard />} />
 </Route>
-<Route path="/developer/dashboard" element={<DeveloperDashboard />} />
+<Route path="/developer" element={<DeveloperDashboard />}>
+
+  <Route path="dashboard" element={<div />} />
+
+  <Route path="testcases" element={<DevTestCases />} />
+
+  <Route path="reports" element={<DevReports />} />
+
+</Route>
+
+
 <Route path="/dashboard/home" element={<HomePage />} />
   <Route
   path="/dashboard/testcases/:id/versions"
@@ -174,8 +191,15 @@ function App() {
   element={<ExecutionHistory />}
 />
 
+<Route
+  path="/dashboard/suites/:suiteId/execute"
+  element={<SuiteExecute />}
+/>
 
-
+<Route
+  path="/dashboard/suite-report/suite/:suiteId"
+  element={<SuiteReport />}
+/>
 </Routes>
 
     </>

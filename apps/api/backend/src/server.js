@@ -1914,12 +1914,14 @@ app.get("/versions/:versionId", authenticate, async (req, res) => {
 
 app.post("/suites", authenticate, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, module, parentId } = req.body;
 
     const suite = await prisma.testSuite.create({
       data: {
         name,
         description,
+        module,
+         parentId,
         createdById: req.user.id,
       },
     });
@@ -1931,26 +1933,7 @@ app.post("/suites", authenticate, async (req, res) => {
   }
 });
 
-app.get("/suites", authenticate, async (req, res) => {
-  try {
-    const suites = await prisma.testSuite.findMany({
-  where: {
-    isDeleted: false   // ✅ ADD THIS
-  },
-  include: {
-    _count: {
-      select: { testCases: true }
-    }
-  }
-});
 
-
-    res.json(suites);
-  } catch (err) {
-    console.error("FETCH SUITES ERROR:", err);
-    res.status(500).json({ message: "Failed to fetch suites" });
-  }
-});
 
 app.put("/testcases/:id/assign-suite", authenticate, async (req, res) => {
   try {
@@ -1970,13 +1953,15 @@ app.put("/testcases/:id/assign-suite", authenticate, async (req, res) => {
 
 app.put("/suites/:id", authenticate, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, module, parentId } = req.body;
 
     const updated = await prisma.testSuite.update({
       where: { id: req.params.id },
       data: {
         name,
         description,
+        module,
+        parentId,
       },
     });
 
@@ -2686,47 +2671,36 @@ app.get("/api/executions/run/:runId/:testerId", async (req, res) => {
 
 });
 
-app.post(
-  "/api/bugs",
-  
-  upload.single("evidence"),   // ⭐ REQUIRED
-  async (req, res) => {
+app.post("/api/bugs", upload.single("evidence"), async (req, res) => {
 
-    try {
+  const {
+    title,
+    description,
+    severity,
+    priority,
+    testCaseId,
+    runId,
+    stepNumber,
+    reportedById   // ⭐ REQUIRED
+  } = req.body;
 
-      const {
-        title,
-        description,
-        severity,
-        priority,
-        testCaseId,
-        runId,
-        stepNumber
-      } = req.body;
-
-      const userId = req.user?.id; // from JWT middleware
-
-      const bug = await prisma.bug.create({
-        data: {
-          title,
-          description,
-          severity,
-          priority,
-          testCaseId,
-          runId,
-          stepNumber: parseInt(stepNumber),
-          reportedById: req.body.userId,
-          evidence: req.file?.filename
-        }
-      });
-
-      res.json(bug);
-
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+  const bug = await prisma.bug.create({
+    data: {
+      title,
+      description,
+      severity,
+      priority,
+      testCaseId,
+      runId,
+      stepNumber: parseInt(stepNumber),
+      evidence: req.file?.filename,
+      reportedById   // ⭐ LINK TO TESTER
     }
-  }
-);
+  });
+
+  res.json(bug);
+
+});
 
 app.get("/api/bugs", async (req, res) => {
 
@@ -2779,6 +2753,424 @@ app.get("/api/executions/details/:id", async (req, res) => {
 
 });
 
+
+app.post("/suites/:id/execute", authenticate, async (req, res) => {
+
+  try {
+
+    const suiteId = req.params.id;
+    const { mode } = req.body;
+
+    // Get suite + test cases
+    const suite = await prisma.testSuite.findUnique({
+      where: { id: suiteId },
+      include: { testCases: true }
+    });
+
+    if (!suite) {
+      return res.status(404).json({
+        message: "Suite not found"
+      });
+    }
+
+    if (suite.testCases.length === 0) {
+      return res.status(400).json({
+        message: "No test cases in suite"
+      });
+    }
+
+    // 🔥 Create Test Run from suite
+    const run = await prisma.testRun.create({
+      data: {
+        name: `${suite.name} Execution`,
+        description: `Execution of suite: ${suite.name}`,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 86400000),
+        status: "InProgress",
+
+        testCases: {
+          create: suite.testCases.map(tc => ({
+            testCaseId: tc.id
+          }))
+        }
+      }
+    });
+
+    res.json({
+      runId: run.id,
+      mode
+    });
+
+  } catch (err) {
+    console.error("SUITE EXECUTION ERROR:", err);
+    res.status(500).json({
+      message: "Failed to execute suite"
+    });
+  }
+});
+
+app.get("/suites/:id", authenticate, async (req, res) => {
+  try {
+
+    const suite = await prisma.testSuite.findFirst({
+      where: { id: req.params.id , isArchived: false }
+    });
+
+    if (!suite) {
+      return res.status(404).json({ message: "Suite not found" });
+    }
+
+    res.json(suite);
+
+  } catch (err) {
+    console.error("FETCH SUITE ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch suite" });
+  }
+});
+
+
+
+app.get("/api/suites/:suiteId/report", async (req, res) => {
+  try {
+
+    const { suiteId } = req.params;
+
+    // 1️⃣ Get all test cases in suite
+    const cases = await prisma.testCase.findMany({
+      where: { suiteId }
+    });
+
+    if (cases.length === 0) {
+      return res.json({
+        total: 0,
+        passed: 0,
+        failed: 0,
+        blocked: 0,
+        skipped: 0,
+        executions: []
+      });
+    }
+
+    const caseIds = cases.map(c => c.id);
+
+    // 2️⃣ Get executions for those test cases
+    const executions = await prisma.testExecution.findMany({
+      where: {
+        testCaseId: { in: caseIds }
+      },
+      include: {
+        executedBy: true   // if relation exists
+      },
+      orderBy: { startedAt: "desc" }
+    });
+
+    // 3️⃣ Calculate summary
+    const summary = {
+      total: executions.length,
+      passed: executions.filter(e => e.status === "Passed").length,
+      failed: executions.filter(e => e.status === "Failed").length,
+      blocked: executions.filter(e => e.status === "Blocked").length,
+      skipped: executions.filter(e => e.status === "Skipped").length
+    };
+
+    res.json({
+      ...summary,
+      executions
+    });
+
+  } catch (err) {
+    console.error("SUITE REPORT ERROR:", err);
+    res.status(500).json({ message: "Failed to get report" });
+  }
+});
+
+
+
+app.put("/api/suites/:suiteId/reorder", async (req, res) => {
+
+  const { suiteId } = req.params;
+  const { orderedIds } = req.body;
+  // orderedIds = array of testCaseIds in new order
+
+  try {
+
+    const updates = orderedIds.map((id, index) =>
+      prisma.testCase.update({
+        where: { id },
+        data: { order: index + 1 }
+      })
+    );
+
+    await Promise.all(updates);
+
+    res.json({ message: "Order updated" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Reorder failed" });
+  }
+
+});
+
+app.get("/api/suites/:suiteId/testcases", async (req, res) => {
+
+  const { suiteId } = req.params;
+
+  try {
+
+    const cases = await prisma.testCase.findMany({
+      where: { suiteId },
+      orderBy: { order: "asc" }   // ⭐ ADD HERE
+    });
+
+    res.json(cases);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load suite cases" });
+  }
+
+});
+
+
+app.post("/api/suites/:suiteId/clone", async (req, res) => {
+
+  const { suiteId } = req.params;
+
+  try {
+
+    // 1️⃣ Get original suite
+    const original = await prisma.testSuite.findUnique({
+      where: { id: suiteId }
+    });
+
+    if (!original)
+      return res.status(404).json({ message: "Suite not found" });
+
+    // 2️⃣ Create new suite
+    const newSuite = await prisma.testSuite.create({
+      data: {
+        name: original.name + " (Copy)",
+        description: original.description,
+        module: original.module,
+        parentId: original.parentId,
+        createdById: original.createdById
+      }
+    });
+
+    // 3️⃣ Get original test cases
+    const cases = await prisma.testCase.findMany({
+      where: { suiteId },
+      include: { steps: true },
+      orderBy: { order: "asc" }
+    });
+
+    // 4️⃣ Duplicate test cases + steps
+    for (const tc of cases) {
+
+      const newCase = await prisma.testCase.create({
+        data: {
+          testCaseId: tc.testCaseId + "-COPY",
+          title: tc.title,
+          description: tc.description,
+          module: tc.module,
+          priority: tc.priority,
+          severity: tc.severity,
+          type: tc.type,
+          status: tc.status,
+          preconditions: tc.preconditions,
+          suiteId: newSuite.id,
+          createdById: tc.createdById,
+          order: tc.order
+        }
+      });
+
+      // copy steps
+      if (tc.steps?.length) {
+        await prisma.testStep.createMany({
+          data: tc.steps.map(step => ({
+            testCaseId: newCase.id,
+            stepNumber: step.stepNumber,
+            action: step.action,
+            expected: step.expected,
+            testData: step.testData
+          }))
+        });
+      }
+    }
+
+    res.json({
+      message: "Suite cloned successfully",
+      newSuite
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Clone failed" });
+  }
+
+});
+
+app.put("/api/suites/:suiteId/archive", async (req, res) => {
+
+  const { suiteId } = req.params;
+
+  try {
+
+    await prisma.testSuite.update({
+      where: { id: suiteId },
+      data: { isArchived: true }
+    });
+
+    res.json({ message: "Suite archived" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Archive failed" });
+  }
+
+});
+
+app.put("/api/suites/:suiteId/restore", async (req, res) => {
+
+  const { suiteId } = req.params;
+
+  try {
+
+    await prisma.testSuite.update({
+      where: { id: suiteId },
+      data: { isArchived: false }
+    });
+
+    res.json({ message: "Suite restored" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Restore failed" });
+  }
+
+});
+
+app.get("/suites", authenticate, async (req, res) => {
+  try {
+
+    const archived =
+      req.query.archived === "true";
+
+    const suites = await prisma.testSuite.findMany({
+      where: {
+        isArchived: archived,
+        isDeleted: false
+      },
+      include: {
+        parent: true,
+        _count: {
+          select: { testCases: true }
+        }
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    res.json(suites);
+
+  } catch (err) {
+    console.error("FETCH SUITES ERROR:", err);
+    res.status(500).json({
+      message: "Failed to fetch suites"
+    });
+  }
+});
+
+
+
+
+app.get("/dashboard/developer", authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const assigned = await prisma.bug.count({
+      where: { assignedToId: userId }
+    });
+
+    const inProgress = await prisma.bug.count({
+      where: {
+        assignedToId: userId,
+        status: "In Progress"
+      }
+    });
+
+    const fixed = await prisma.bug.count({
+      where: {
+        assignedToId: userId,
+        status: "Fixed"
+      }
+    });
+
+    const retest = await prisma.bug.count({
+      where: {
+        assignedToId: userId,
+        status: "Pending Retest"
+      }
+    });
+
+    res.json({
+      assigned,
+      inProgress,
+      fixed,
+      retest
+    });
+
+  } catch (err) {
+    console.error("DEV DASHBOARD ERROR:", err);
+    res.status(500).json({ message: "Failed to load developer stats" });
+  }
+});
+
+app.get("/bugs/assigned", authenticate, async (req, res) => {
+  try {
+    const bugs = await prisma.bug.findMany({
+      where: {
+        assignedToId: req.user.id
+      },
+      orderBy: {
+        createdAt: "desc"
+      }
+    });
+
+    res.json(bugs);
+
+  } catch (err) {
+    console.error("FETCH ASSIGNED BUGS ERROR:", err);
+    res.status(500).json({ message: "Failed to load bugs" });
+  }
+});
+
+app.get("/developer/issues", authenticate, async (req, res) => {
+
+  const userId = req.user.id;
+
+  const issues = await prisma.bug.findMany({
+    where: {
+      assignedToId: userId
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(issues);
+
+});
+
+app.get("/api/reports", authenticate, async (req, res) => {
+
+  const runs = await prisma.testRun.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(runs);
+
+});
 
 // Server start
 const PORT = process.env.PORT || 5000;

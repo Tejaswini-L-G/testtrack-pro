@@ -24,6 +24,9 @@ const runId = params.get("runId");
   const [currentStep, setCurrentStep] = useState(0);
   const [seconds, setSeconds] = useState(0);
 
+  const suiteId = params.get("suiteId");
+const index = parseInt(params.get("index") || 0);
+
 const [manualTime, setManualTime] = useState("");
 const [running, setRunning] = useState(true); 
 const formatTime = (totalSeconds) => {
@@ -230,18 +233,73 @@ const completeExecution = async () => {
 
   alert("Execution Completed Successfully ✅");
 
+
+// ⭐ Sequential suite flow
+if (suiteId) {
+
+ const res = await fetch(
+  "http://localhost:5000/testcases",
+  {
+    headers: {
+      Authorization:
+        "Bearer " + localStorage.getItem("token"),
+    },
+  }
+);
+
+const data = await res.json();
+
+// ⭐ Ensure array
+const allCases = Array.isArray(data)
+  ? data
+  : data.testCases || data.data || [];
+
+const suiteCases = allCases.filter(
+  tc => tc.suiteId === suiteId
+);
+
+  const nextIndex = index + 1;
+
+  if (nextIndex < suiteCases.length) {
+
+    navigate(
+      `/dashboard/execution/${suiteCases[nextIndex].id}` +
+      `?suiteId=${suiteId}&index=${nextIndex}`
+    );
+
+    return;
+  }
+
+  alert("Suite execution completed 🎉");
+
+  navigate("/dashboard/execution");
+
+  return;
+}
+  
+
   navigate("/dashboard/execution");
 };
   /* ===============================
      LOADING STATE
   =============================== */
 
-  if (!testCase) {
-    return <h2 style={{ padding: "20px" }}>Loading...</h2>;
-  }
+if (!testCase) {
+  return <h2 style={{ padding: "20px" }}>Loading...</h2>;
+}
 
-  const step = stepsData[currentStep];
+if (!stepsData || stepsData.length === 0) {
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>No steps found for this test case</h2>
+    </div>
+  );
+}
 
+const step =
+  stepsData.length > 0
+    ? stepsData[currentStep]
+    : null;
   /* ===============================
      UI
   =============================== */
@@ -310,102 +368,116 @@ const completeExecution = async () => {
         Step {currentStep + 1} of {stepsData.length}
       </div>
 
-      {/* STEP CARD */}
+     {/* STEP CARD */}
 
-      <div className="step-card">
+<div className="step-card">
 
-        <div className="step-header">
-          Step {step.stepNumber}
+  {step ? (
+
+    <>
+      {/* HEADER */}
+      <div className="step-header">
+        Step {step.stepNumber}
+      </div>
+
+      {/* BODY */}
+      <div className="step-body">
+
+        <div className="step-block">
+          <label>Action</label>
+          <div className="step-box">
+            {step.action}
+          </div>
         </div>
 
-        <div className="step-body">
-
-          <div className="step-block">
-            <label>Action</label>
-            <div className="step-box">
-              {step.action}
-            </div>
+        <div className="step-block">
+          <label>Expected Result</label>
+          <div className="step-box expected">
+            {step.expected}
           </div>
+        </div>
 
-          <div className="step-block">
-            <label>Expected Result</label>
-            <div className="step-box expected">
-              {step.expected}
-            </div>
-          </div>
+        <div className="step-block">
+          <label>Actual Result</label>
 
-          <div className="step-block">
-            <label>Actual Result</label>
+          <textarea
+            className="actual-input"
+            placeholder="Enter what actually happened..."
+            value={step.actual}
+            onChange={(e) =>
+              updateStep(currentStep, "actual", e.target.value)
+            }
+          />
+        </div>
 
-            <textarea
-              className="actual-input"
-              placeholder="Enter what actually happened..."
-              value={step.actual}
-              onChange={(e) =>
-                updateStep(currentStep, "actual", e.target.value)
-              }
-            />
-          </div>
-
-          {/* STATUS BUTTONS */}
-
+        {/* UPLOAD */}
         <label className="upload-btn">
-  Upload Evidence
-  <input
-    type="file"
-    accept=".png,.jpg,.jpeg,.mp4,.txt,.log,.har"
-    onChange={(e) => {
-      const file = e.target.files[0];
-      uploadEvidence(file, step.stepNumber);
-    }}
-  />
-</label>
+          Upload Evidence
+          <input
+            type="file"
+            accept=".png,.jpg,.jpeg,.mp4,.txt,.log,.har"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              uploadEvidence(file, step?.stepNumber);
+            }}
+          />
+        </label>
 
-          <div className="status-buttons">
+        {/* STATUS BUTTONS */}
+        <div className="status-buttons">
 
-            {["Pass", "Fail", "Blocked", "Skipped"].map(status => (
+          {["Pass", "Fail", "Blocked", "Skipped"].map(status => (
 
-              <button
-                key={status}
-                className={`status-btn ${status.toLowerCase()} ${
-                  step.status === status ? "active" : ""
-                }`}
-                onClick={() =>
-                  updateStep(currentStep, "status", status)
-                }
-              >
-                {status}
-              </button>
+            <button
+              key={status}
+              className={`status-btn ${status.toLowerCase()} ${
+                step.status === status ? "active" : ""
+              }`}
+              onClick={() =>
+                updateStep(currentStep, "status", status)
+              }
+            >
+              {status}
+            </button>
 
-            ))}
+          ))}
 
-<button
-    className="bug-btn"
-    onClick={() => {
+          {/* BUG REPORT */}
+          <button
+            className="bug-btn"
+            onClick={() => {
 
-      updateStep(currentStep, "status", "Fail");
+              updateStep(currentStep, "status", "Fail");
 
-      navigate(
-        `/dashboard/bug-report?` +
-        `testCaseId=${id}` +
-        `&runId=${runId}` +
-        `&step=${step.stepNumber}` +
-        `&action=${encodeURIComponent(step.action)}` +
-        `&expected=${encodeURIComponent(step.expected)}`
-      );
+              navigate(
+                `/dashboard/bug-report?` +
+                `testCaseId=${id}` +
+                `&runId=${runId}` +
+                `&step=${step?.stepNumber || 1}` +
+                `&action=${encodeURIComponent(step?.action || "")}` +
+                `&expected=${encodeURIComponent(step?.expected || "")}`
+              );
 
-    }}
-  >
-    🐞 Fail & Report Bug
-  </button>
-
-
-          </div>
+            }}
+          >
+            🐞 Fail & Report Bug
+          </button>
 
         </div>
 
       </div>
+    </>
 
+  ) : (
+
+    <div className="no-steps">
+      <h3>No steps available for this test case</h3>
+      <p>This test case cannot be executed.</p>
+    </div>
+
+  )}
+
+</div>
       {/* NAVIGATION */}
 
       <div className="step-navigation">
@@ -433,7 +505,7 @@ const completeExecution = async () => {
 
           <button
   className="complete-btn"
-  disabled={!executionId}
+ 
   onClick={completeExecution}
 >
   Complete Execution

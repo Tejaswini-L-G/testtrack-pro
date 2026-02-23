@@ -28,7 +28,9 @@ model User {
   testSuites       TestSuite[]
   assignments      TestRunAssignment[]
 
-  reportedBugs  Bug[] 
+  reportedBugs  Bug[]
+  TestExecution TestExecution[]
+  assignedBugs Bug[] @relation("AssignedBugs")
 }
 
 model TestCase {
@@ -67,6 +69,7 @@ model TestCase {
 
   suiteId String?
   suite   TestSuite? @relation(fields: [suiteId], references: [id])
+  order Int?
 }
 
 model TestStep {
@@ -106,13 +109,20 @@ model TestCaseVersion {
 }
 
 model TestSuite {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
+  module      String?
+  parentId    String?
   createdById String
-  createdBy   User       @relation(fields: [createdById], references: [id])
-  testCases   TestCase[]
-  createdAt   DateTime   @default(now())
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  parent   TestSuite?  @relation("SuiteHierarchy", fields: [parentId], references: [id])
+  children TestSuite[] @relation("SuiteHierarchy")
+
+  createdBy User       @relation(fields: [createdById], references: [id])
+  testCases TestCase[]
 
   isDeleted Boolean @default(false)
 }
@@ -155,8 +165,10 @@ model TestExecution {
 
   steps ExecutionStep[]
 
-  testRunId    String?
+  testRunId String?
   testRun   TestRun? @relation(fields: [testRunId], references: [id])
+
+  executedBy User @relation(fields: [executedById], references: [id])
 }
 
 model ExecutionStep {
@@ -220,23 +232,26 @@ model TestRunAssignment {
   tester  User    @relation(fields: [testerId], references: [id])
 }
 
-
 model Bug {
-  id            String   @id @default(uuid())
-  title         String
-  description   String
-  severity      String
-  priority      String
-  status        String   @default("Open")
+  id          String @id @default(uuid())
+  title       String
+  description String
+  severity    String
+  priority    String
+  status      String @default("Open")
 
-  testCaseId    String?
-  runId         String?
-  stepNumber    Int?
+  testCaseId String?
+  runId      String?
+  stepNumber Int?
 
-  evidencePath  String?   // ⭐ NEW
+  evidencePath String? // ⭐ NEW
 
-  createdAt     DateTime @default(now())
-  createdById String?
+  createdAt    DateTime @default(now())
+  createdById  String?
   reportedById String?
-  reportedBy   User?  @relation(fields: [reportedById], references: [id])
+  reportedBy   User?    @relation(fields: [reportedById], references: [id])
+
+  assignedToId String?
+assignedTo   User? @relation("AssignedBugs", fields: [assignedToId], references: [id])
 }
+
