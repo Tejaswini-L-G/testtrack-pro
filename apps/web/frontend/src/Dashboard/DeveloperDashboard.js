@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./Dashboard.css";
+import ProfileMenu from "../Dashboard/Profile";
 
 function DeveloperDashboard() {
   const navigate = useNavigate();
@@ -29,6 +30,11 @@ function DeveloperDashboard() {
   return (
     <div className="dashboard-layout">
 
+      {/* 🔵 TOPBAR */}
+<div className="topbar">
+  <ProfileMenu />
+</div>
+
       {/* 🔵 SIDEBAR */}
       <aside className="sidebar">
 
@@ -38,7 +44,7 @@ function DeveloperDashboard() {
 
           <button
             className={isActive("/developer/home") ? "active" : ""}
-            onClick={() => navigate("/developer/home")}
+            onClick={() => navigate("/dashboard/home")}
           >
             Home
           </button>
@@ -72,17 +78,7 @@ function DeveloperDashboard() {
             View Test Case Details
           </button>
 
-          <button
-            onClick={() => navigate("/developer/commits")}
-          >
-            Link Code Commits
-          </button>
-
-          <button
-            onClick={() => navigate("/developer/export")}
-          >
-            Export Reports
-          </button>
+         
 
           <hr />
 
@@ -131,10 +127,7 @@ function DeveloperDashboard() {
 
             </div>
 
-            <div className="dashboard-section">
-              <h2>Assigned Issues</h2>
-              <p>Select "Assigned Issues" from sidebar to manage bugs.</p>
-            </div>
+            
           </>
         )}
 

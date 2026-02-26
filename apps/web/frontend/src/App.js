@@ -47,6 +47,17 @@ import SuiteReport from "./Dashboard/Tester/Suites/SuiteReport";
 
 import DevTestCases from "./Dashboard/DevTestCases";
 import DevReports from "./Dashboard/DevReports";
+import DevAssigedIssues from "./Dashboard/DevAssignedIssues";
+import AdminControls from "./Dashboard/AdminControls";
+import Profile from "./Dashboard/Profile";
+
+import AdminRoles from "./Dashboard/AdminRoles";
+import AdminUsers from "./Dashboard/AdminUsers";
+import AdminSettings from "./Dashboard/AdminSettings";
+import AdminAudit from "./Dashboard/AdminAudit";
+import AdminBackup from "./Dashboard/AdminBackup";
+import AdminProjects from "./Dashboard/AdminProjects";
+
 
 import "./styles.css";
 
@@ -86,23 +97,35 @@ function App() {
   
    <Route path="/testcases/:id/edit" element={<EditTestCase />} />
  
-   <Route path="/admin/dashboard" element={<AdminDashboard />}>
+  
   <Route path="testcases" element={<AdminTestCases />} />
 
  <Route path="testruns" element={<TestRunList />} />
   <Route path="testruns/create" element={<CreateTestRun />} />
-  <Route path="/admin/dashboard/bugs" element={<BugDashboard />} />
+
+
+  <Route path="/admin/dashboard" element={<AdminDashboard />}>
+
+  {/* DEFAULT */}
+  <Route index element={<div />} />
+
+  {/* TEST MANAGEMENT */}
+  <Route path="testcases" element={<AdminTestCases />} />
+  <Route path="testruns" element={<TestRunList />} />
+  <Route path="testruns/create" element={<CreateTestRun />} />
+  <Route path="bugs" element={<BugDashboard />} />
+
+  {/* ⭐ ADMIN CONTROLS */}
+  <Route path="users" element={<AdminUsers />} />
+  <Route path="projects" element={<AdminProjects />} />
+  <Route path="roles" element={<AdminRoles />} />
+  <Route path="audit" element={<AdminAudit />} />
+  <Route path="settings" element={<AdminSettings />} />
+  <Route path="backup" element={<AdminBackup />} />
+
 </Route>
-<Route path="/developer" element={<DeveloperDashboard />}>
 
-  <Route path="dashboard" element={<div />} />
-
-  <Route path="testcases" element={<DevTestCases />} />
-
-  <Route path="reports" element={<DevReports />} />
-
-</Route>
-
+<Route path="/profile" element={<Profile />} />
 
 <Route path="/dashboard/home" element={<HomePage />} />
   <Route
@@ -200,6 +223,27 @@ function App() {
   path="/dashboard/suite-report/suite/:suiteId"
   element={<SuiteReport />}
 />
+
+
+
+
+<Route path="/developer" element={<DeveloperDashboard />}>
+
+  <Route path="dashboard" element={<div />} />
+
+  <Route path="testcases" element={<DevTestCases />} />
+
+  <Route path="reports" element={<DevReports />} />
+
+  <Route path="issues" element={<DevAssigedIssues />} />
+
+  
+
+</Route>
+
+
+
+
 </Routes>
 
     </>

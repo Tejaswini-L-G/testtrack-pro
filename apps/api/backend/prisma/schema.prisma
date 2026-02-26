@@ -30,7 +30,13 @@ model User {
 
   reportedBugs  Bug[]
   TestExecution TestExecution[]
-  assignedBugs Bug[] @relation("AssignedBugs")
+  assignedBugs  Bug[]           @relation("AssignedBugs")
+
+  bugComments BugComment[]
+  active      Boolean      @default(true)
+
+  Role   Role?   @relation(fields: [roleId], references: [id])
+  roleId String?
 }
 
 model TestCase {
@@ -69,7 +75,7 @@ model TestCase {
 
   suiteId String?
   suite   TestSuite? @relation(fields: [suiteId], references: [id])
-  order Int?
+  order   Int?
 }
 
 model TestStep {
@@ -252,6 +258,55 @@ model Bug {
   reportedBy   User?    @relation(fields: [reportedById], references: [id])
 
   assignedToId String?
-assignedTo   User? @relation("AssignedBugs", fields: [assignedToId], references: [id])
+  assignedTo   User?   @relation("AssignedBugs", fields: [assignedToId], references: [id])
+
+  bugId String? @unique // Human-readable ID (BUG-2026-0001)
+
+  stepsToReproduce String? // Exact reproduction steps
+  expectedBehavior String? // What should happen
+  actualBehavior   String? // What actually happened
+
+  environment     String? // Browser / OS / env
+  affectedVersion String? // App version
+  type            String?
+
+  fixNotes       String?
+  commitLink     String?
+  resolutionNote String?
+  fixedAt        DateTime?
+  startedAt      DateTime?
+
+  comments BugComment[]
 }
 
+model BugComment {
+  id       String   @id @default(uuid())
+  content  String
+  bugId    String
+  authorId String
+  parentId String?
+  mentions String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bug    Bug  @relation(fields: [bugId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+
+  parent  BugComment?  @relation("Thread", fields: [parentId], references: [id])
+  replies BugComment[] @relation("Thread")
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+}
+
+model Permission {
+  id     String @id @default(uuid())
+  name   String
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+}

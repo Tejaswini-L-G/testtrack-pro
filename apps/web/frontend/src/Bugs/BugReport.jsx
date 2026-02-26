@@ -6,6 +6,12 @@ function BugReport() {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const [stepsToReproduce, setSteps] = useState("");
+const [expectedBehavior, setExpected] = useState("");
+const [actualBehavior, setActual] = useState("");
+const [type, setType] = useState("Functional");
+const [environment, setEnvironment] = useState("");
+const [affectedVersion, setVersion] = useState("");
 
   const params = new URLSearchParams(location.search);
 
@@ -55,6 +61,13 @@ Actual:
   formData.append("runId", runId);
   formData.append("stepNumber", step);
   formData.append("reportedById", userId); // ⭐ CRITICAL
+formData.append("stepsToReproduce", stepsToReproduce);
+formData.append("expectedBehavior", expectedBehavior);
+formData.append("actualBehavior", actualBehavior);
+formData.append("type", type);
+formData.append("environment", environment);
+formData.append("affectedVersion", affectedVersion);
+
 
   if (evidence) {
     formData.append("evidence", evidence);
@@ -103,6 +116,54 @@ Actual:
             value={description}
             onChange={e => setDescription(e.target.value)}
           />
+
+
+          <label>Steps to Reproduce</label>
+<textarea
+  rows="6"
+  value={stepsToReproduce}
+  onChange={e => setSteps(e.target.value)}
+/>
+
+<label>Expected Behavior</label>
+<textarea
+  rows="4"
+  value={expectedBehavior}
+  onChange={e => setExpected(e.target.value)}
+/>
+
+<label>Actual Behavior</label>
+<textarea
+  rows="4"
+  value={actualBehavior}
+  onChange={e => setActual(e.target.value)}
+/>
+
+<label>Type</label>
+<select
+  value={type}
+  onChange={e => setType(e.target.value)}
+>
+  <option>Functional</option>
+  <option>UI</option>
+  <option>Performance</option>
+  <option>Security</option>
+  <option>Compatibility</option>
+</select>
+
+<label>Environment</label>
+<input
+  placeholder="Chrome 120, Windows 11, Production"
+  value={environment}
+  onChange={e => setEnvironment(e.target.value)}
+/>
+
+<label>Affected Version</label>
+<input
+  placeholder="v2.4.1"
+  value={affectedVersion}
+  onChange={e => setVersion(e.target.value)}
+/>
 
           <div className="bug-row">
 

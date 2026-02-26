@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./Developer.css";
 
 function DevReports() {
 
@@ -18,26 +19,48 @@ function DevReports() {
   }, []);
 
   return (
-    <div>
+    <div className="dev-page">
 
-      <h2>Test Execution Reports</h2>
+      <h2 className="dev-title">Test Execution Reports</h2>
 
-      {reports.length === 0 && <p>No reports available</p>}
+      {reports.length === 0 && (
+        <p className="empty-msg">No reports available</p>
+      )}
 
       {reports.map(r => (
 
-        <div key={r.id} className="report-card">
+        <div key={r.id} className="dev-card">
 
-          <h3>{r.name || "Test Run"}</h3>
+          {/* HEADER */}
+          <div className="dev-card-header">
 
-          <p><strong>Status:</strong> {r.status}</p>
+            <h3>{r.name || "Test Run"}</h3>
 
-          <p>
-            <strong>Duration:</strong>{" "}
-            {new Date(r.startDate).toLocaleString()}
-            {" — "}
-            {new Date(r.endDate).toLocaleString()}
-          </p>
+            <span className={`badge ${r.status?.toLowerCase()}`}>
+              {r.status}
+            </span>
+
+          </div>
+
+          {/* DETAILS */}
+          <div className="dev-grid">
+
+            <div>
+              <label>Start Date</label>
+              <p>{new Date(r.startDate).toLocaleString()}</p>
+            </div>
+
+            <div>
+              <label>End Date</label>
+              <p>{new Date(r.endDate).toLocaleString()}</p>
+            </div>
+
+          </div>
+
+          <div className="dev-section">
+            <label>Description</label>
+            <p>{r.description || "—"}</p>
+          </div>
 
         </div>
 

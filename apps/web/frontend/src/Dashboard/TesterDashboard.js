@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./Dashboard.css";
+import ProfileMenu from "../Dashboard/Profile";
 
 function TesterDashboard() {
   const navigate = useNavigate();
@@ -27,6 +28,11 @@ function TesterDashboard() {
 
   return (
     <div className="dashboard-layout">
+
+    {/* 🔵 TOPBAR */}
+<div className="topbar">
+  <ProfileMenu />
+</div>
 
       {/* SIDEBAR */}
       <aside className="sidebar">

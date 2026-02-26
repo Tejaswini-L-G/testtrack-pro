@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import "./Developer.css";
 
 function DevTestCases() {
 
@@ -18,36 +19,81 @@ function DevTestCases() {
   }, []);
 
   return (
-    <div>
+    <div className="dev-page">
 
-      <h2>Test Case Repository</h2>
+      <h2 className="dev-title">Test Case Repository</h2>
 
-      {cases.length === 0 && <p>No test cases found</p>}
+      {cases.length === 0 && (
+        <p className="empty-msg">No test cases found</p>
+      )}
 
       {cases.map(tc => (
-        <div key={tc.id} className="report-card">
 
-          <h3>{tc.testCaseId} — {tc.title}</h3>
+        <div key={tc.id} className="dev-card">
 
-          <p><strong>Module:</strong> {tc.module}</p>
+          {/* HEADER */}
+          <div className="dev-card-header">
 
-          <p>
-            <strong>Priority:</strong>{" "}
-            <span className={`badge ${tc.priority?.toLowerCase()}`}>
-              {tc.priority}
-            </span>
-          </p>
+            <h3>
+              {tc.testCaseId} — {tc.title}
+            </h3>
 
-          <p>
-            <strong>Status:</strong>{" "}
             <span className={`badge ${tc.status?.toLowerCase()}`}>
               {tc.status}
             </span>
-          </p>
 
-          <p>{tc.description}</p>
+          </div>
+
+          {/* DETAILS GRID */}
+          <div className="dev-grid">
+
+            <div>
+              <label>Module</label>
+              <p>{tc.module}</p>
+            </div>
+
+            <div>
+              <label>Priority</label>
+              <span className={`badge ${tc.priority?.toLowerCase()}`}>
+                {tc.priority}
+              </span>
+            </div>
+
+            <div>
+              <label>Severity</label>
+              <p>{tc.severity}</p>
+            </div>
+
+            <div>
+              <label>Type</label>
+              <p>{tc.type}</p>
+            </div>
+
+          </div>
+
+          {/* DESCRIPTION */}
+          <div className="dev-section">
+            <label>Description</label>
+            <p>{tc.description}</p>
+          </div>
+
+          {/* ATTACHMENTS */}
+          {tc.attachments?.length > 0 && (
+            <div className="dev-section">
+              <label>Attachments</label>
+
+              <ul className="attachment-list">
+                {tc.attachments.map(a => (
+                  <li key={a.id}>
+                    📎 {a.fileName}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
         </div>
+
       ))}
 
     </div>

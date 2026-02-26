@@ -331,3 +331,1115 @@ html, body, #root {
 .btn-secondary:hover {
   background: #059669;
 }
+
+.admin-controls {
+  padding: 20px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.control-card {
+  background: rgb(21, 4, 60);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.control-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+.admin-topbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 15px 25px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+
+.admin-controls-panel {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #0f172a;
+  border-left: 4px solid #2563eb;
+}
+
+.admin-controls-panel button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin: 6px 0;
+  border: none;
+  border-radius: 8px;
+  background: #1e293b;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.admin-controls-panel button:hover {
+  background: #2563eb;
+  transform: translateX(4px);
+}
+
+
+
+
+
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== SIDEBAR ===== */
+
+.admin-sidebar {
+  width: 260px;
+  background: #111827;
+  color: #e5e7eb;
+  padding: 24px 18px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.admin-logo {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.admin-nav button {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  text-align: left;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.admin-nav button:hover {
+  background: #1f2937;
+  color: white;
+}
+
+.logout-btn {
+  color: #f87171;
+}
+
+/* ===== ADMIN CONTROLS PANEL ===== */
+
+.admin-controls-panel {
+  background: #0f172a;
+  border-left: 4px solid #2563eb;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 10px;
+}
+
+.admin-controls-panel button {
+  background: #1e293b;
+  color: white;
+  margin: 6px 0;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.admin-controls-panel button:hover {
+  background: #2563eb;
+}
+
+/* ===== MAIN AREA ===== */
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== TOPBAR ===== */
+
+
+
+
+.admin-content {
+  flex: 1;
+  padding: 25px;
+  background: #f5f7fb;
+  overflow-y: auto;
+}
+
+
+
+
+.admin-topbar {
+  position: fixed;
+  top: 0;
+  left: 260px;        /* same as sidebar width */
+  right: 0;
+  height: 64px;
+
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  padding: 0 24px;
+  z-index: 1000;
+}
+
+.topbar-right {
+  position: relative;
+}
+
+.profile-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+
+  font-weight: 700;
+  font-size: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+}
+
+.profile-menu {
+  position: absolute;
+  top: 60px;
+  right: 0;
+
+  width: 260px;
+  background: #ffffff;
+
+  border-radius: 12px;
+  padding: 18px;
+
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+}
+
+.profile-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.profile-menu h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.profile-menu p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.profile-role {
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.avatar-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+
+  background: #2563eb;
+  color: white;
+
+  font-weight: bold;
+  font-size: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-menu .logout-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.profile-menu .logout-btn:hover {
+  background: #dc2626;
+}
+
+.admin-content {
+  margin-left: 260px;
+  margin-top: 64px;   /* space for topbar */
+  padding: 24px;
+  background: #f5f7fb;
+  min-height: calc(100vh - 64px);
+}
+
+.admin-users-page {
+  padding: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.admin-users-page {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.admin-users-page h2 {
+  margin-bottom: 20px;
+}
+
+/* ===== SUCCESS ALERT ===== */
+
+.success-alert {
+  background: #d1fae5;
+  color: #065f46;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+/* ===== CREATE USER CARD ===== */
+
+.create-user-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 160px auto;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.create-user-card input,
+.create-user-card select {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  width: 100%;
+}
+
+/* PASSWORD FIELD */
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  padding-right: 42px;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* BUTTON */
+
+.create-user-card button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.create-user-card button:hover {
+  background: #1d4ed8;
+}
+
+/* ===== TABLE WRAPPER WITH SCROLL ===== */
+
+.users-table-wrapper {
+  max-height: 400px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* ===== TABLE ===== */
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table thead {
+  background: #f3f4f6;
+  position: sticky;
+  top: 0;
+}
+
+.users-table th,
+.users-table td {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.users-table tr:hover {
+  background: #f9fafb;
+}
+
+/* ===== STATUS BADGES ===== */
+
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ===== ACTION BUTTONS ===== */
+
+.btn-deactivate {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-deactivate:hover {
+  background: #dc2626;
+}
+
+.btn-activate {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-activate:hover {
+  background: #16a34a;
+}
+
+/* SEARCH */
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 14px;
+  margin: 15px 0;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+/* ACTION BUTTONS */
+
+.actions button {
+  margin-right: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.edit-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.deactivate-btn {
+  background: #ef4444;
+  color: white;
+}
+
+/* MODAL */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  width: 350px;
+}
+
+.modal input,
+.modal select {
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.save-btn {
+  background: #10b981;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+}
+
+.cancel-btn {
+  background: #9ca3af;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+}
+.admin-users-page {
+  padding: 20px;
+}
+
+.admin-users-page h2 {
+  margin-bottom: 18px;
+  color: #1f2937;
+}
+
+
+.users-toolbar {
+  background: white;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.users-toolbar input {
+  width: 320px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+.users-table-wrapper {
+  max-height: 420px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  background: #f3f4f6;
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+}
+
+.users-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.users-table tr:hover {
+  background: #f9fafb;
+}
+.badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge.inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.edit-btn {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-right: 6px;
+  cursor: pointer;
+}
+
+.btn-deactivate {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-activate {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  width: 380px;
+}
+
+.modal h3 {
+  margin-bottom: 12px;
+}
+
+.modal input,
+.modal select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.save-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.cancel-btn {
+  background: #9ca3af;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================= */
+/* ROLES PAGE */
+/* ========================= */
+
+/* ===== ROLES PAGE ===== */
+
+.admin-roles-page {
+  padding: 20px;
+}
+
+/* ===== LAYOUT ===== */
+
+.roles-container {
+  display: flex;
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* ===== LEFT: ROLES LIST ===== */
+
+.roles-list {
+  width: 240px;
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+
+.roles-list h3 {
+  margin-bottom: 15px;
+}
+
+/* ROLE ITEM */
+
+.role-item {
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  background: #f1f5f9;
+  transition: 0.2s;
+  font-weight: 500;
+}
+
+.role-item:hover {
+  background: #e2e8f0;
+}
+
+.role-item.active {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+/* ===== RIGHT: EDITOR ===== */
+
+.role-editor {
+  flex: 1;
+  background: white;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+
+/* ===== PERMISSION GRID ===== */
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 20px;
+  margin-top: 15px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+/* ===== BEAUTIFUL CHECKBOX ITEM ===== */
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: 0.2s;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.permission-item:hover {
+  background: #e2e8f0;
+}
+
+/* CUSTOM CHECKBOX */
+
+.permission-item input {
+  accent-color: #2563eb;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* ===== SAVE BUTTON ===== */
+
+.save-role-btn {
+  margin-top: 20px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.save-role-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ===== PAGE ===== */
+
+.admin-roles-page {
+  padding: 20px;
+}
+
+/* ===== LAYOUT ===== */
+
+.roles-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+/* ===== LEFT PANEL ===== */
+
+.roles-list {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.role-item {
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.role-item:hover {
+  background: #e5e7eb;
+}
+
+.role-item.active {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+/* ===== RIGHT PANEL ===== */
+
+.role-editor {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+/* INPUT */
+
+.role-editor input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  margin-bottom: 18px;
+}
+
+/* ===== PERMISSIONS GRID ===== */
+
+/* ===== PERMISSIONS GRID ===== */
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 28px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+/* ===== EACH PERMISSION ITEM ===== */
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.permission-item:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
+}
+
+/* ===== HIDE DEFAULT CHECKBOX ===== */
+
+.permission-item input[type="checkbox"] {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* ===== CHECKED STATE ===== */
+
+.permission-item input[type="checkbox"]:checked {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+/* CHECKMARK */
+
+.permission-item input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+}
+
+/* ===== TEXT STYLE ===== */
+
+.permission-item span {
+  text-transform: capitalize;
+}
+
+.checkmark {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  transition: 0.2s;
+}
+
+.perm-checkbox input:checked ~ .checkmark {
+  background: #2563eb;
+}
+
+.checkmark::after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.perm-checkbox input:checked ~ .checkmark::after {
+  display: block;
+}
+
+.checkmark::after {
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* ===== BUTTON ===== */
+
+.create-role-btn {
+  padding: 10px 18px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.create-role-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ===== ROLE INPUT WRAPPER ===== */
+
+.role-input-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.role-name-input {
+  width: 100%;
+  padding: 12px 40px 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.role-name-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+/* Dropdown arrow */
+
+.dropdown-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+}
+
+/* ===== PERMISSIONS PANEL ===== */
+
+.permissions-panel {
+  margin-top: 16px;
+  padding: 16px;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+
+  /* 🔥 Fill entire width */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
+  gap: 16px;
+
+  /* Scroll if many permissions */
+  max-height: 320px;
+  overflow-y: auto;
+}
+/* Individual permission */
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* Custom checkbox */
+
+.permission-item input[type="checkbox"] {
+  accent-color: #2563eb;
+  width: 16px;
+  height: 16px;
+}
