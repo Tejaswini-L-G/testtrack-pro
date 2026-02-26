@@ -2,6 +2,7 @@ import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./AdminDashboard.css";
 import { useState } from "react";
 import { useEffect } from "react";
+import DashboardWidgets from "../Reports/DashboardWidgets";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -9,6 +10,8 @@ function AdminDashboard() {
   const [showAdminControls, setShowAdminControls] = useState(false);
 const [showProfile, setShowProfile] = useState(false);
 const [userInfo, setUserInfo] = useState(null);
+const [user, setUser] = useState(null);
+
 
 
 const token = localStorage.getItem("token");
@@ -16,7 +19,7 @@ const payload = token
   ? JSON.parse(atob(token.split(".")[1]))
   : null;
 
-const user = payload;
+
 
 // ADD STATE
 const [profileOpen, setProfileOpen] = useState(false);
@@ -41,6 +44,15 @@ useEffect(() => {
   loadUser();
 }, []);
   
+
+
+
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
+}, []);
 
   const isActive = (path) => location.pathname === path;
 
@@ -157,7 +169,39 @@ useEffect(() => {
   </div>
 )}
     
+<div className="reports-panel">
 
+  <h4>Reports & Analytics</h4>
+
+  <div className="reports-buttons">
+
+    <button
+      onClick={() =>navigate("/admin/dashboard/reports/execution")}
+    >
+      📊 Execution Report
+    </button>
+
+    <button
+      onClick={() => navigate("/admin/dashboard/reports/bugs")}
+    >
+      🐞 Bug Report
+    </button>
+
+    <button
+      onClick={() => navigate("/admin/dashboard/reports/developer-performance")}
+    >
+      👨‍💻 Developer Performance
+    </button>
+
+    <button
+      onClick={() => navigate("/admin/dashboard/reports/tester-performance")}
+    >
+      🧪 Tester Performance
+    </button>
+
+  </div>
+
+</div>
     {/* ⭐ PROFILE BUTTON */}
    
 
@@ -197,6 +241,9 @@ useEffect(() => {
           <>
             <h2>Admin Dashboard</h2>
             <p>Manage users, roles and system settings.</p>
+
+             <DashboardWidgets user={user} />
+
           </>
         )}
 
@@ -205,6 +252,7 @@ useEffect(() => {
 
       </main>
 
+     
     </div>
      
   );

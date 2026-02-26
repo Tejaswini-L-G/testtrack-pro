@@ -57,6 +57,10 @@ import AdminSettings from "./Dashboard/AdminSettings";
 import AdminAudit from "./Dashboard/AdminAudit";
 import AdminBackup from "./Dashboard/AdminBackup";
 import AdminProjects from "./Dashboard/AdminProjects";
+import ExecutionReport from "./Reports/ExecutionReport";
+import BugReportAnalytics from "./Reports/BugReportAnalytics";
+import DeveloperPerformanceReport from "./Reports/DeveloperPerformanceReport";
+import TesterPerformanceReport from "./Reports/TesterPerformanceReport";
 
 
 import "./styles.css";
@@ -123,6 +127,16 @@ function App() {
   <Route path="settings" element={<AdminSettings />} />
   <Route path="backup" element={<AdminBackup />} />
 
+  <Route path="reports/execution" element={<ExecutionReport />} />
+  <Route path="reports/bugs" element={<BugReportAnalytics />} />
+  <Route
+  path="reports/developer-performance"
+  element={<DeveloperPerformanceReport />}
+/>
+<Route
+  path="reports/tester-performance"
+  element={<TesterPerformanceReport />}
+/>
 </Route>
 
 <Route path="/profile" element={<Profile />} />
@@ -174,6 +188,17 @@ function App() {
   }
 >
   <Route index element={null} />
+
+  <Route path="reports/execution" element={<ExecutionReport />} />
+  <Route path="reports/bugs" element={<BugReportAnalytics />} />
+  <Route
+  path="reports/developer-performance"
+  element={<DeveloperPerformanceReport />}
+/>
+<Route
+  path="reports/tester-performance"
+  element={<TesterPerformanceReport />}
+/>
 
   <Route path="home" element={<HomePage />} />
   <Route path="testcases" element={<TestCases />} />
@@ -237,9 +262,21 @@ function App() {
 
   <Route path="issues" element={<DevAssigedIssues />} />
 
+  <Route path="reports/execution" element={<ExecutionReport />} />
+  <Route path="reports/bugs" element={<BugReportAnalytics />} />
+  <Route
+  path="reports/developer-performance"
+  element={<DeveloperPerformanceReport />}
+/>
+<Route
+  path="reports/tester-performance"
+  element={<TesterPerformanceReport />}
+/>
+
   
 
 </Route>
+
 
 
 

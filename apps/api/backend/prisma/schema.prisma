@@ -35,8 +35,9 @@ model User {
   bugComments BugComment[]
   active      Boolean      @default(true)
 
-  Role   Role?   @relation(fields: [roleId], references: [id])
-  roleId String?
+  Role            Role?             @relation(fields: [roleId], references: [id])
+  roleId          String?
+  DashboardWidget DashboardWidget[]
 }
 
 model TestCase {
@@ -309,4 +310,18 @@ model Permission {
   name   String
   roleId String
   role   Role   @relation(fields: [roleId], references: [id])
+}
+
+model DashboardWidget {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String // chart / list / counter / table
+  title     String
+  position  Int
+  config    Json?
+  createdAt DateTime @default(now())
+  projectId String? 
+   width     Int @default(1) 
+
+  user User @relation(fields: [userId], references: [id])
 }

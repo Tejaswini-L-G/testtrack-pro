@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./Dashboard.css";
 import ProfileMenu from "../Dashboard/Profile";
+import DashboardWidgets from "../Reports/DashboardWidgets";
 
 function TesterDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [user, setUser] = useState(null);
 
   const [stats, setStats] = useState({
     total: 0,
@@ -23,6 +25,22 @@ function TesterDashboard() {
       .then(data => setStats(data))
       .catch(() => console.error("Failed to load stats"));
   }, []);
+
+  // ===== LOAD USER =====
+// ===== LOAD USER FROM LOCAL STORAGE =====
+useEffect(() => {
+
+  const storedUser = localStorage.getItem("user");
+
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  } else {
+    console.error("User not found in localStorage");
+  }
+
+}, []);
+// ===== INIT DEFAULT WIDGETS =====
+
 
   const isActive = (path) => location.pathname === path;
 
@@ -111,6 +129,41 @@ function TesterDashboard() {
   My Bugs
 </button>
 
+
+<div className="reports-panel">
+
+  <h4>Reports & Analytics</h4>
+
+  <div className="reports-buttons">
+
+   <button
+  onClick={() => navigate("/dashboard/reports/execution")}
+>
+  📊 Execution Report
+</button>
+
+    <button
+      onClick={() => navigate("/dashboard/reports/bugs")}
+    >
+      🐞 Bug Report
+    </button>
+
+    <button
+      onClick={() => navigate("/dashboard/reports/developer-performance")}
+    >
+      👨‍💻 Developer Performance
+    </button>
+
+    <button
+      onClick={() => navigate("/dashboard/reports/tester-performance")}
+    >
+      🧪 Tester Performance
+    </button>
+
+  </div>
+
+</div>
+
           <hr />
 
           <button
@@ -130,28 +183,33 @@ function TesterDashboard() {
       <main className="dashboard-content">
 
         {/* Dashboard Home Content */}
-        {location.pathname === "/dashboard" && (
-          <>
-            <h1>Tester Dashboard</h1>
+       {/* Dashboard Home Content */}
+{location.pathname === "/dashboard" && (
+  <>
+    <h1>Tester Dashboard</h1>
 
-            <div className="stats-grid">
-              <div className="stat-card">
-                <span>Total Test Cases</span>
-                <strong>{stats.total}</strong>
-              </div>
+    <div className="stats-grid">
+      <div className="stat-card">
+        <span>Total Test Cases</span>
+        <strong>{stats.total}</strong>
+      </div>
 
-              <div className="stat-card">
-                <span>Draft</span>
-                <strong>{stats.draft}</strong>
-              </div>
+      <div className="stat-card">
+        <span>Draft</span>
+        <strong>{stats.draft}</strong>
+      </div>
 
-              <div className="stat-card">
-                <span>Approved</span>
-                <strong>{stats.approved}</strong>
-              </div>
-            </div>
-          </>
-        )}
+      <div className="stat-card">
+        <span>Approved</span>
+        <strong>{stats.approved}</strong>
+      </div>
+    </div>
+
+    {/* ⭐ DASHBOARD WIDGETS */}
+    <DashboardWidgets user={user} />
+
+  </>
+)}
 
         {/* CHILD PAGES RENDER HERE */}
         <Outlet />

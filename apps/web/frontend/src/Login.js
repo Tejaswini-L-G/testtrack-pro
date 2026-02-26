@@ -30,7 +30,9 @@ const [data , setData] = useState({});
     // ✅ Decode role from token
     const payload = JSON.parse(atob(res.data.accessToken.split(".")[1]));
 
-    localStorage.setItem("role", payload.role);   // ⭐ FIXED
+    localStorage.setItem("role", payload.role); 
+    localStorage.setItem("token", res.data.accessToken);
+localStorage.setItem("user", JSON.stringify(res.data.user));  // ⭐ FIXED
 
     if (res.data.refreshToken) {
       localStorage.setItem("refreshToken", res.data.refreshToken);

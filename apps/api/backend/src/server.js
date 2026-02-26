@@ -16,7 +16,7 @@ const xlsx = require("xlsx");
 
 
 
-
+// or your existing path
 
 const app = express();
 app.use(passport.initialize());
@@ -25,6 +25,83 @@ const prisma = new PrismaClient();
 
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+
+
+
+
+
+async function getDeveloperReportData() {
+
+  const bugs = await prisma.bug.findMany({
+    include: { assignedTo: true }
+  });
+
+  const devStats = {};
+
+  for (const bug of bugs) {
+
+    const dev = bug.assignedTo?.name || "Unassigned";
+
+    if (!devStats[dev]) {
+      devStats[dev] = {
+        assigned: 0,
+        resolved: 0,
+        reopened: 0,
+        resolutionTimes: []
+      };
+    }
+
+    const s = devStats[dev];
+
+    s.assigned++;
+
+    if (bug.status === "Resolved" || bug.status === "Closed") {
+      s.resolved++;
+
+      if (bug.fixedAt) {
+        const days =
+          Math.floor((bug.fixedAt - bug.createdAt) /
+            (1000 * 60 * 60 * 24));
+
+        s.resolutionTimes.push(days);
+      }
+    }
+
+    if (bug.status === "Reopened") s.reopened++;
+  }
+
+  return Object.entries(devStats).map(([developer, s]) => {
+
+    const avg =
+      s.resolutionTimes.length
+        ? (s.resolutionTimes.reduce((a, b) => a + b, 0) /
+          s.resolutionTimes.length).toFixed(2)
+        : 0;
+
+    const reopenRate =
+      s.resolved
+        ? ((s.reopened / s.resolved) * 100).toFixed(2)
+        : 0;
+
+    const quality =
+      s.assigned
+        ? ((s.resolved / s.assigned) * 100).toFixed(2)
+        : 0;
+
+    return {
+      developer,
+      assigned: s.assigned,
+      resolved: s.resolved,
+      avgResolutionDays: avg,
+      reopenRate,
+      fixQuality: quality
+    };
+  });
+}
+
+
+
+
 
 
 
@@ -383,10 +460,15 @@ app.post("/login", async (req, res) => {
   res.json({
   accessToken,
   refreshToken,
-  role: user.role,
-  name: user.name
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role
+  }
 });
 });
+
 
 app.post("/forgot-password", async (req, res) => {
   try {
@@ -3550,7 +3632,7 @@ app.get("/api/bugs/export/excel/:developerId", async (req, res) => {
 
 // Server start
 
-const PDFDocument = require("pdfkit");
+
 
 app.get("/api/bugs/export/pdf/:developerId", async (req, res) => {
 
@@ -3986,6 +4068,1127 @@ app.post("/api/admin/seed-roles", async (req, res) => {
 
   res.json({ message: "Roles seeded successfully" });
 });
+
+
+app.get("/api/reports/execution/:id/export/csv", async (req, res) => {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testRunId: req.params.id }
+  });
+
+  const { Parser } = require("json2csv");
+  const parser = new Parser();
+
+  const csv = parser.parse(executions);
+
+  res.header("Content-Type", "text/csv");
+  res.attachment("report.csv");
+  res.send(csv);
+});
+
+
+
+app.get("/api/reports/execution/:id/export/excel", async (req, res) => {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testRunId: req.params.id }
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(executions);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+  const buffer = XLSX.write(workbook, {
+    type: "buffer",
+    bookType: "xlsx"
+  });
+
+  res.attachment("report.xlsx");
+  res.send(buffer);
+});
+
+
+
+app.get("/api/reports/execution/:id/export/pdf", async (req, res) => {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { testRunId: req.params.id }
+  });
+
+  const doc = new PDFDocument();
+
+  res.attachment("report.pdf");
+  doc.pipe(res);
+
+  doc.text("Execution Report");
+
+  executions.forEach(e => {
+    doc.text(`${e.testCaseId} — ${e.status}`);
+  });
+
+  doc.end();
+});
+
+
+
+
+
+
+// ==========================================================
+// FR-RPT-001 : TEST EXECUTION REPORT
+// ==========================================================
+
+
+
+// ==========================================================
+// EXECUTION REPORTS FOR ALL TEST RUNS
+// ==========================================================
+
+app.get("/api/reports/execution-by-run", async (req, res) => {
+  try {
+
+    const runs = await prisma.testRun.findMany({
+      include: {
+        TestExecution: {
+          include: {
+            executedBy: true
+          }
+        }
+      }
+    });
+
+    if (!runs.length) {
+      return res.status(404).json({
+        message: "No test runs found"
+      });
+    }
+
+    const reports = [];
+
+    for (const run of runs) {
+
+      const executions = run.TestExecution;
+
+      if (!executions.length) continue;
+
+      // 🔹 Fetch related test cases ONCE per run
+      const testCases = await prisma.testCase.findMany({
+        where: {
+          id: { in: executions.map(e => e.testCaseId) }
+        }
+      });
+
+      const testCaseMap = {};
+      testCases.forEach(tc => {
+        testCaseMap[tc.id] = tc;
+      });
+
+      let passed = 0;
+      let failed = 0;
+      let blocked = 0;
+      let skipped = 0;
+
+      const byTester = {};
+      const byModule = {};
+      const timeline = {};
+      const failedDetails = [];
+      const failedModules = {};
+
+      for (const exec of executions) {
+
+        const status = exec.status;
+        const tester = exec.executedBy?.name || "Unknown";
+        const module =
+          testCaseMap[exec.testCaseId]?.module || "Unknown";
+
+        // ✔ Status breakdown
+        if (status === "Passed") passed++;
+        else if (status === "Failed") failed++;
+        else if (status === "Blocked") blocked++;
+        else if (status === "Skipped") skipped++;
+
+        // ✔ Execution by tester
+        byTester[tester] = (byTester[tester] || 0) + 1;
+
+        // ✔ Execution by module
+        byModule[module] = (byModule[module] || 0) + 1;
+
+        // ✔ Execution timeline
+        const date = exec.startedAt.toISOString().split("T")[0];
+        timeline[date] = (timeline[date] || 0) + 1;
+
+        // ✔ Failed test details + failed modules
+        if (status === "Failed") {
+
+          failedDetails.push({
+            testCaseId: exec.testCaseId,
+            title: testCaseMap[exec.testCaseId]?.title,
+            module,
+            tester,
+            executedAt: exec.startedAt
+          });
+
+          failedModules[module] =
+            (failedModules[module] || 0) + 1;
+        }
+      }
+
+      const total = executions.length;
+
+      const passRate =
+        total ? ((passed / total) * 100).toFixed(2) : 0;
+
+      // ✔ Top failed modules
+      const topFailedModules = Object.entries(failedModules)
+        .sort((a, b) => b[1] - a[1])
+        .map(([module, count]) => ({
+          module,
+          failures: count
+        }));
+
+      reports.push({
+        testRunId: run.id,
+        testRunName: run.name,
+        period: {
+          start: run.startDate,
+          end: run.endDate
+        },
+
+        // ================= FR-RPT-001 =================
+
+        totalExecuted: total,
+
+        statusBreakdown: {
+          passed,
+          failed,
+          blocked,
+          skipped,
+          passRate
+        },
+
+        executionByTester: byTester,
+        executionByModule: byModule,
+        executionTimeline: timeline,
+
+        failedTestCases: failedDetails,
+        topFailedModules
+      });
+    }
+
+    res.json(reports);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error generating reports"
+    });
+  }
+});
+
+
+
+
+
+
+
+
+// ==========================================================
+// FR-RPT-002 : BUG REPORT
+// ==========================================================
+
+app.get("/api/reports/bugs", async (req, res) => {
+  try {
+
+    const bugs = await prisma.bug.findMany({
+      include: {
+        assignedTo: true
+      }
+    });
+
+    if (!bugs.length) {
+      return res.status(404).json({
+        message: "No bugs found"
+      });
+    }
+
+    const byStatus = {};
+    const bySeverity = {};
+    const byPriority = {};
+    const byDeveloper = {};
+    const trend = {};
+    const aging = [];
+    const resolutionTimes = [];
+
+    const now = new Date();
+
+    for (const bug of bugs) {
+
+      // ✔ Status count
+      byStatus[bug.status] =
+        (byStatus[bug.status] || 0) + 1;
+
+      // ✔ Severity
+      if (bug.severity) {
+        bySeverity[bug.severity] =
+          (bySeverity[bug.severity] || 0) + 1;
+      }
+
+      // ✔ Priority
+      if (bug.priority) {
+        byPriority[bug.priority] =
+          (byPriority[bug.priority] || 0) + 1;
+      }
+
+      // ✔ By developer
+      const dev =
+        bug.assignedTo?.name || "Unassigned";
+
+      byDeveloper[dev] =
+        (byDeveloper[dev] || 0) + 1;
+
+      // ✔ Trend over time (created date)
+      const date = bug.createdAt
+        .toISOString()
+        .split("T")[0];
+
+      trend[date] = (trend[date] || 0) + 1;
+
+      // ✔ Aging (days open)
+      if (bug.status !== "Closed" && bug.status !== "Resolved") {
+        const daysOpen =
+          Math.floor((now - bug.createdAt) / (1000 * 60 * 60 * 24));
+
+        aging.push({
+          bugId: bug.id,
+          title: bug.title,
+          daysOpen
+        });
+      }
+
+      // ✔ Resolution time
+      if (bug.fixedAt) {
+        const days =
+          Math.floor((bug.fixedAt - bug.createdAt) /
+            (1000 * 60 * 60 * 24));
+
+        resolutionTimes.push(days);
+      }
+    }
+
+    const avgResolution =
+      resolutionTimes.length
+        ? (
+            resolutionTimes.reduce((a, b) => a + b, 0) /
+            resolutionTimes.length
+          ).toFixed(2)
+        : 0;
+
+    res.json({
+      totalBugs: bugs.length,
+
+      bugsByStatus: byStatus,
+      bugsBySeverity: bySeverity,
+      bugsByPriority: byPriority,
+      bugsByDeveloper: byDeveloper,
+
+      bugTrend: trend,
+      bugAging: aging,
+
+      resolutionMetrics: {
+        averageResolutionDays: avgResolution,
+        resolvedCount: resolutionTimes.length
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error generating bug report"
+    });
+  }
+});
+
+
+// ==========================================================
+// BUG REPORT EXPORT — CSV
+// ==========================================================
+
+app.get("/api/reports/bugs/export/csv", async (req, res) => {
+
+  const bugs = await prisma.bug.findMany({
+    include: { assignedTo: true }
+  });
+
+  const { Parser } = require("json2csv");
+
+  const rows = bugs.map(b => ({
+    id: b.id,
+    title: b.title,
+    status: b.status,
+    severity: b.severity,
+    priority: b.priority,
+    developer: b.assignedTo?.name || "Unassigned",
+    createdAt: b.createdAt,
+    fixedAt: b.fixedAt
+  }));
+
+  const parser = new Parser();
+  const csv = parser.parse(rows);
+
+  res.header("Content-Type", "text/csv");
+  res.attachment("bug-report.csv");
+  res.send(csv);
+});
+
+// ==========================================================
+// BUG REPORT EXPORT — EXCEL
+// ==========================================================
+
+const XLSX = require("xlsx");
+
+app.get("/api/reports/bugs/export/excel", async (req, res) => {
+
+  const bugs = await prisma.bug.findMany({
+    include: { assignedTo: true }
+  });
+
+  const rows = bugs.map(b => ({
+    ID: b.id,
+    Title: b.title,
+    Status: b.status,
+    Severity: b.severity,
+    Priority: b.priority,
+    Developer: b.assignedTo?.name || "Unassigned",
+    CreatedAt: b.createdAt,
+    FixedAt: b.fixedAt
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Bug Report");
+
+  const buffer = XLSX.write(workbook, {
+    type: "buffer",
+    bookType: "xlsx"
+  });
+
+  res.attachment("bug-report.xlsx");
+  res.send(buffer);
+});
+
+// ==========================================================
+// BUG REPORT EXPORT — PDF
+// ==========================================================
+
+const PDFDocument = require("pdfkit");
+
+app.get("/api/reports/bugs/export/pdf", async (req, res) => {
+
+  const bugs = await prisma.bug.findMany({
+    include: { assignedTo: true }
+  });
+
+  const doc = new PDFDocument();
+
+  res.attachment("bug-report.pdf");
+  doc.pipe(res);
+
+  doc.fontSize(18).text("Bug Report", { align: "center" });
+  doc.moveDown();
+
+  bugs.forEach(b => {
+    doc
+      .fontSize(12)
+      .text(`ID: ${b.id}`)
+      .text(`Title: ${b.title}`)
+      .text(`Status: ${b.status}`)
+      .text(`Severity: ${b.severity}`)
+      .text(`Priority: ${b.priority}`)
+      .text(`Developer: ${b.assignedTo?.name || "Unassigned"}`)
+      .text(`Created: ${b.createdAt}`)
+      .moveDown();
+  });
+
+  doc.end();
+});
+
+
+
+
+// ==========================================================
+// FR-RPT-003 : DEVELOPER PERFORMANCE REPORT
+// ==========================================================
+
+app.get("/api/reports/developer-performance", async (req, res) => {
+  try {
+
+    const bugs = await prisma.bug.findMany({
+      include: { assignedTo: true }
+    });
+
+    if (!bugs.length) {
+      return res.status(404).json({
+        message: "No bugs found"
+      });
+    }
+
+    const devStats = {};
+
+    for (const bug of bugs) {
+
+      const devName =
+        bug.assignedTo?.name || "Unassigned";
+
+      if (!devStats[devName]) {
+        devStats[devName] = {
+          assigned: 0,
+          resolved: 0,
+          reopened: 0,
+          resolutionTimes: []
+        };
+      }
+
+      const stats = devStats[devName];
+
+      // ✔ Assigned
+      stats.assigned++;
+
+      // ✔ Resolved / Closed
+      if (bug.status === "Resolved" || bug.status === "Closed") {
+        stats.resolved++;
+
+        if (bug.fixedAt) {
+          const days =
+            Math.floor((bug.fixedAt - bug.createdAt) /
+              (1000 * 60 * 60 * 24));
+
+          stats.resolutionTimes.push(days);
+        }
+      }
+
+      // ✔ Reopened (if status = Reopened)
+      if (bug.status === "Reopened") {
+        stats.reopened++;
+      }
+    }
+
+    // ================= FINAL METRICS =================
+
+    const report = Object.entries(devStats).map(
+      ([developer, s]) => {
+
+        const avgResolution =
+          s.resolutionTimes.length
+            ? (
+                s.resolutionTimes.reduce((a, b) => a + b, 0) /
+                s.resolutionTimes.length
+              ).toFixed(2)
+            : 0;
+
+        const reopenRate =
+          s.resolved
+            ? ((s.reopened / s.resolved) * 100).toFixed(2)
+            : 0;
+
+        const fixQuality =
+          s.assigned
+            ? ((s.resolved / s.assigned) * 100).toFixed(2)
+            : 0;
+
+        return {
+          developer,
+          assigned: s.assigned,
+          resolved: s.resolved,
+          avgResolutionDays: avgResolution,
+          reopenRate,
+          fixQuality
+        };
+      }
+    );
+
+    res.json(report);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error generating developer report"
+    });
+  }
+});
+
+
+// ==========================================================
+// DEV PERFORMANCE EXPORT — CSV
+// ==========================================================
+
+app.get("/api/reports/developer-performance/export/csv", async (req, res) => {
+
+  const data = await getDeveloperReportData(); // reuse logic
+
+  const { Parser } = require("json2csv");
+  const parser = new Parser();
+
+  const csv = parser.parse(data);
+
+  res.header("Content-Type", "text/csv");
+  res.attachment("developer-performance.csv");
+  res.send(csv);
+});
+
+
+
+app.get("/api/reports/developer-performance/export/excel", async (req, res) => {
+
+  const data = await getDeveloperReportData();
+
+  const sheet = XLSX.utils.json_to_sheet(data);
+  const book = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(book, sheet, "Developer Report");
+
+  const buffer = XLSX.write(book, {
+    type: "buffer",
+    bookType: "xlsx"
+  });
+
+  res.attachment("developer-performance.xlsx");
+  res.send(buffer);
+});
+
+
+app.get("/api/reports/developer-performance/export/pdf", async (req, res) => {
+
+  const data = await getDeveloperReportData();
+
+  const doc = new PDFDocument();
+
+  res.attachment("developer-performance.pdf");
+  doc.pipe(res);
+
+  doc.fontSize(18).text("Developer Performance Report", {
+    align: "center"
+  });
+
+  doc.moveDown();
+
+  data.forEach(d => {
+    doc
+      .fontSize(12)
+      .text(`${d.developer}`)
+      .text(`Assigned: ${d.assigned}`)
+      .text(`Resolved: ${d.resolved}`)
+      .text(`Avg Resolution: ${d.avgResolutionDays} days`)
+      .text(`Reopen Rate: ${d.reopenRate}%`)
+      .text(`Fix Quality: ${d.fixQuality}%`)
+      .moveDown();
+  });
+
+  doc.end();
+});
+
+
+// ==========================================================
+// FR-RPT-004 : TESTER PERFORMANCE REPORT
+// ==========================================================
+
+app.get("/api/reports/tester-performance", async (req, res) => {
+  try {
+
+    const executions = await prisma.testExecution.findMany({
+      include: { executedBy: true }
+    });
+
+    const bugs = await prisma.bug.findMany({
+      include: { reportedBy: true }
+    });
+
+    const assignments = await prisma.testRunAssignment.findMany();
+
+    const testerStats = {};
+
+    // ================= EXECUTIONS =================
+
+    for (const exec of executions) {
+
+      const tester =
+        exec.executedBy?.name || "Unknown";
+
+      if (!testerStats[tester]) {
+        testerStats[tester] = {
+          executed: 0,
+          passed: 0,
+          bugsReported: 0,
+          assigned: 0
+        };
+      }
+
+      const s = testerStats[tester];
+
+      s.executed++;
+
+      if (exec.status === "Passed") s.passed++;
+    }
+
+    // ================= BUGS REPORTED =================
+
+    for (const bug of bugs) {
+
+      const tester =
+        bug.reportedBy?.name || "Unknown";
+
+      if (!testerStats[tester]) continue;
+
+      testerStats[tester].bugsReported++;
+    }
+
+    // ================= ASSIGNMENTS =================
+
+    for (const a of assignments) {
+
+      const testerId = a.testerId;
+
+      const testerEntry = executions.find(
+        e => e.executedById === testerId
+      );
+
+      const tester =
+        testerEntry?.executedBy?.name || "Unknown";
+
+      if (!testerStats[tester]) continue;
+
+      testerStats[tester].assigned++;
+    }
+
+    // ================= FINAL METRICS =================
+
+    const report = Object.entries(testerStats).map(
+      ([tester, s]) => {
+
+        const bugRate =
+          s.executed
+            ? ((s.bugsReported / s.executed) * 100).toFixed(2)
+            : 0;
+
+        const efficiency =
+          s.executed
+            ? ((s.passed / s.executed) * 100).toFixed(2)
+            : 0;
+
+        const coverage =
+  s.assigned > 0
+    ? Math.min(
+        ((s.executed / s.assigned) * 100),
+        100
+      ).toFixed(2)
+    : 0;
+
+        return {
+          tester,
+          executed: s.executed,
+          bugsReported: s.bugsReported,
+          bugDetectionRate: bugRate,
+          efficiency,
+          coverage
+        };
+      }
+    );
+
+    res.json(report);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error generating tester report"
+    });
+  }
+});
+
+
+// ==========================================================
+// GET DASHBOARD WIDGETS FOR USER
+// ==========================================================
+
+app.get("/api/widgets/:userId", async (req, res) => {
+
+  const widgets = await prisma.dashboardWidget.findMany({
+    where: { userId: req.params.userId },
+    orderBy: { position: "asc" }
+  });
+
+  res.json(widgets);
+});
+
+
+
+// ==========================================================
+// SAVE WIDGET ORDER
+// ==========================================================
+
+app.post("/api/widgets/reorder", async (req, res) => {
+
+  const { widgets } = req.body;
+
+  for (const w of widgets) {
+    await prisma.dashboardWidget.update({
+      where: { id: w.id },
+      data: { position: w.position }
+    });
+  }
+
+  res.json({ message: "Layout saved" });
+});
+
+app.post("/api/widgets", async (req, res) => {
+
+  const { userId, type, title } = req.body;
+
+  const count = await prisma.dashboardWidget.count({
+    where: { userId }
+  });
+
+  const widget = await prisma.dashboardWidget.create({
+    data: {
+      userId,
+      type,
+      title,
+      position: count
+    }
+  });
+
+  res.json(widget);
+});
+
+
+
+// ==========================================================
+// CREATE DEFAULT WIDGETS FOR USER ROLE
+// ==========================================================
+
+app.post("/api/widgets/default", async (req, res) => {
+
+  const { userId, role } = req.body;
+
+  const existing = await prisma.dashboardWidget.count({
+    where: { userId }
+  });
+
+  if (existing > 0) {
+    return res.json({ message: "Already initialized" });
+  }
+
+  let widgets = [];
+
+  // ================= TESTER =================
+
+  if (role === "tester") {
+    widgets = [
+      { type: "list", title: "My Pending Tests" },
+      { type: "list", title: "Recent Failures" },
+      { type: "chart", title: "Execution Trend" },
+      { type: "counter", title: "Bug Detection Rate" }
+    ];
+  }
+
+  // ================= DEVELOPER =================
+
+  if (role === "developer") {
+    widgets = [
+      { type: "list", title: "Assigned Bugs" },
+      { type: "counter", title: "Fix Rate" },
+      { type: "counter", title: "Reopen Rate" },
+      { type: "counter", title: "Resolution Time" }
+    ];
+  }
+
+  // ================= ADMIN =================
+
+  if (role === "admin") {
+    widgets = [
+      { type: "counter", title: "Overall Execution" },
+      { type: "chart", title: "Bug Status" },
+      { type: "chart", title: "Team Performance" },
+      { type: "list", title: "Active Test Runs" }
+    ];
+  }
+
+  const created = await prisma.dashboardWidget.createMany({
+    data: widgets.map((w, i) => ({
+      userId,
+      type: w.type,
+      title: w.title,
+      position: i
+    }))
+  });
+
+  res.json(created);
+});
+
+// ==========================================================
+// CREATE DEFAULT WIDGETS (RUN ONCE PER USER)
+// ==========================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get("/api/widgets/data/counters/:userId", async (req, res) => {
+
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) return res.json({});
+
+  // ================= TESTER =================
+
+  if (user.role === "tester") {
+
+    const bugs = await prisma.bug.count({
+      where: { reportedById: userId }
+    });
+
+    const executions = await prisma.testExecution.count({
+      where: { executedById: userId }
+    });
+
+    return res.json({
+      "Bug Detection Rate": bugs,
+      "Overall Execution": executions
+    });
+  }
+
+  // ================= DEVELOPER =================
+
+  if (user.role === "developer") {
+
+  const assigned = await prisma.bug.count({
+    where: { assignedToId: userId }
+  });
+
+  const resolved = await prisma.bug.count({
+    where: {
+      assignedToId: userId,
+      fixedAt: { not: null }   // ⭐ reliable indicator
+    }
+  });
+
+  const open = assigned - resolved;
+
+  return res.json({
+    "Assigned Bugs": assigned,
+    "Fix Rate": resolved,
+    "Reopen Rate": open
+  });
+}
+  
+
+  // ================= ADMIN =================
+
+  if (user.role === "admin") {
+
+    const executions = await prisma.testExecution.count();
+
+    const bugs = await prisma.bug.count();
+
+    const runs = await prisma.testRun.count({
+      where: { status: "Active" }
+    });
+
+    return res.json({
+      "Overall Execution": executions,
+      "Bug Status": bugs,
+      "Active Test Runs": runs
+    });
+  }
+
+  res.json({});
+});
+
+app.get("/api/widgets/data/lists/:userId", async (req, res) => {
+
+  const { userId } = req.params;
+
+  // ⭐ YOU MISSED THIS
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) return res.json({});
+
+  // ================= TESTER =================
+  if (user.role === "tester") {
+
+    const pendingRuns = await prisma.testRunAssignment.findMany({
+      where: { testerId: userId },
+      include: { testRun: true },
+      take: 5
+    });
+
+    const failures = await prisma.testExecution.findMany({
+      where: {
+        executedById: userId,
+        status: "Failed"
+      },
+      orderBy: { startedAt: "desc" },
+      take: 5
+    });
+
+    const testCases = await prisma.testCase.findMany({
+      where: { id: { in: failures.map(f => f.testCaseId) } }
+    });
+
+    const map = {};
+    testCases.forEach(tc => (map[tc.id] = tc));
+
+    return res.json({
+      "My Pending Tests": pendingRuns.map(r => r.testRun.name),
+      "Recent Failures": failures.map(f =>
+        map[f.testCaseId]?.title || "Unknown"
+      )
+    });
+  }
+
+  // ================= DEVELOPER =================
+  if (user.role === "developer") {
+
+    const bugs = await prisma.bug.findMany({
+      where: { assignedToId: userId },
+      take: 5
+    });
+
+    return res.json({
+      "Assigned Bugs": bugs.map(b => b.title)
+    });
+  }
+
+  // ================= ADMIN =================
+  if (user.role === "admin") {
+
+    const runs = await prisma.testRun.findMany({
+      where: { status: "Active" },
+      take: 5
+    });
+
+    return res.json({
+      "Active Test Runs": runs.map(r => r.name)
+    });
+  }
+
+  res.json({});
+});
+
+app.get("/api/widgets/data/trend/:userId", async (req, res) => {
+
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) return res.json([]);
+
+  let executions;
+
+  // Tester → personal executions
+  if (user.role === "tester") {
+    executions = await prisma.testExecution.findMany({
+      where: { executedById: userId }
+    });
+  }
+
+  // Developer + Admin → team executions
+  else {
+    executions = await prisma.testExecution.findMany();
+  }
+
+  const timeline = {};
+
+  executions.forEach(e => {
+    const date = e.startedAt.toISOString().split("T")[0];
+    timeline[date] = (timeline[date] || 0) + 1;
+  });
+
+  const data = Object.entries(timeline).map(([date, count]) => ({
+    date,
+    count
+  }));
+
+  res.json(data);
+});
+app.get("/api/widgets/data/table/:userId", async (req, res) => {
+
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
+
+  if (!user) return res.json([]);
+
+  let recentExec;
+
+  if (user.role === "tester") {
+    recentExec = await prisma.testExecution.findMany({
+      where: { executedById: userId },
+      orderBy: { startedAt: "desc" },
+      take: 5
+    });
+  } else {
+    // Developer/Admin → show team executions
+    recentExec = await prisma.testExecution.findMany({
+      orderBy: { startedAt: "desc" },
+      take: 5
+    });
+  }
+
+  const testCases = await prisma.testCase.findMany({
+    where: { id: { in: recentExec.map(e => e.testCaseId) } }
+  });
+
+  const map = {};
+  testCases.forEach(tc => (map[tc.id] = tc));
+
+  res.json(
+    recentExec.map(e => ({
+      name: map[e.testCaseId]?.title || "Unknown",
+      status: e.status
+    }))
+  );
+});
+
+
+app.delete("/api/widgets/:id", async (req, res) => {
+
+  await prisma.dashboardWidget.delete({
+    where: { id: req.params.id }
+  });
+
+  res.json({ message: "Widget removed" });
+
+});
+
+
+
+
+
+
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
