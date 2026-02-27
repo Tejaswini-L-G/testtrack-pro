@@ -1443,3 +1443,431 @@ html, body, #root {
   width: 16px;
   height: 16px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.admin-projects-page {
+  padding: 25px;
+}
+
+.project-form {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.project-form input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.project-form button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.project-form button:hover {
+  background: #1d4ed8;
+}
+
+.project-table {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.project-table th,
+.project-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.project-table th {
+  background: #f3f4f6;
+  text-align: left;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.admin-audit-page {
+  padding: 20px;
+}
+
+.audit-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.audit-table th {
+  background: #f3f4f6;
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+}
+
+.audit-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.audit-table tr:hover {
+  background: #f9fafb;
+}
+
+
+
+.audit-page {
+  padding: 25px;
+}
+
+.audit-table {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.audit-table th,
+.audit-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.audit-table th {
+  background: #f3f4f6;
+  text-align: left;
+}
+
+.audit-entity {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.audit-action {
+  font-weight: 600;
+}
+
+.audit-details {
+  color: #555;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ========================= */
+/* ADMIN PROJECTS PAGE */
+/* ========================= */
+/* PAGE */
+
+.admin-projects-page {
+  padding: 20px;
+}
+
+/* ===== CREATE FORM ===== */
+
+.project-form {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-form input,
+.project-form textarea {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.project-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.project-form button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.project-form button:hover {
+  background: #1d4ed8;
+}
+
+/* ===== GRID ===== */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ===== CARD ===== */
+
+.project-card {
+  background: white;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: 0.2s;
+}
+
+.project-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ARCHIVED STYLE */
+
+.project-card.archived {
+  opacity: 0.6;
+  border-left: 5px solid #ef4444;
+}
+
+/* TITLE */
+
+.project-card h3 {
+  margin: 0;
+  color: #111827;
+}
+
+/* DESCRIPTION */
+
+.project-card .desc {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* STATUS */
+
+.project-card .status {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* ACTION BUTTONS */
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.edit-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.archive-btn {
+  background: #f59e0b;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
+/* ===== AUDIT PAGE ===== */
+
+.admin-audit-page h2 {
+  margin-bottom: 18px;
+}
+
+/* ===== FILTER BAR ===== */
+
+.audit-filters {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.audit-filters input,
+.audit-filters select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 14px;
+}
+
+.export-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.export-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ===== TABLE WRAPPER ===== */
+
+.audit-table-wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+/* ===== TABLE ===== */
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.audit-table th {
+  background: #f3f4f6;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.audit-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.audit-table tr:hover {
+  background: #f9fafb;
+}
+
+.action-cell {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* ===== EMPTY ===== */
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+}

@@ -38,6 +38,8 @@ model User {
   Role            Role?             @relation(fields: [roleId], references: [id])
   roleId          String?
   DashboardWidget DashboardWidget[]
+  Project         Project[]
+  AuditLog        AuditLog[]
 }
 
 model TestCase {
@@ -320,8 +322,33 @@ model DashboardWidget {
   position  Int
   config    Json?
   createdAt DateTime @default(now())
-  projectId String? 
-   width     Int @default(1) 
+  projectId String?
+  width     Int      @default(1)
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  active      Boolean  @default(true)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  isArchived Boolean @default(false)
 }

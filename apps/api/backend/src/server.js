@@ -15,7 +15,7 @@ const fs = require("fs");
 const xlsx = require("xlsx");
 
 
-
+const logAction = require("./utils/logAction");
 // or your existing path
 
 const app = express();
@@ -3726,24 +3726,34 @@ app.get("/api/users/me", async (req, res) => {
 
 app.put("/api/admin/users/:id/deactivate", async (req, res) => {
 
+  const id = req.params.id;
+
   await prisma.user.update({
-    where: { id: req.params.id },
+    where: { id },
     data: { active: false }
   });
+
+  const authHeader = req.headers.authorization;
+
+  if (authHeader) {
+
+    const token = authHeader.split(" ")[1];
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    await logAction(
+  payload.id,
+  "Deactivate User",
+  `User ID: ${req.params.id}`,
+  "User"
+);
+  }
 
   res.json({ message: "User deactivated" });
 });
 
-app.post("/api/admin/projects", async (req, res) => {
-
-  const { name } = req.body;
-
-  const project = await prisma.project.create({
-    data: { name }
-  });
-
-  res.json(project);
-});
 
 
 app.post("/api/admin/backup", async (req, res) => {
@@ -5186,8 +5196,188 @@ app.delete("/api/widgets/:id", async (req, res) => {
 
 
 
+app.get("/api/admin/projects", async (req, res) => {
+
+  const projects = await prisma.project.findMany({
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(projects);
+});
+
+app.put("/api/admin/projects/:id", async (req, res) => {
+
+  const { name, description } = req.body;
+
+  const project = await prisma.project.update({
+    where: { id: req.params.id },
+    data: { name, description }
+  });
+
+  res.json(project);
+});
+
+app.post("/api/admin/projects", async (req, res) => {
+
+  const { name, description } = req.body;
+
+  const project = await prisma.project.create({
+    data: {
+      name,
+      description
+    }
+  });
+
+  // ✅ SAFE TOKEN EXTRACTION
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (token) {
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    await logAction(
+      payload.id,
+      "Create Project",
+      `Project: ${name}`,
+      "Project"
+    );
+  }
+
+  res.json(project);
+});
 
 
+app.delete("/api/admin/projects/:id", async (req, res) => {
+
+  const id = req.params.id;
+
+  await prisma.project.delete({
+    where: { id }
+  });
+
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (token) {
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    await logAction(
+  payload.id,
+  "Delete Project",
+  `Project ID: ${id}`,
+  "Project"
+);
+  }
+
+  res.json({ message: "Project deleted" });
+});
+
+app.put("/api/admin/projects/:id/archive", async (req, res) => {
+
+  const id = req.params.id;
+
+  const project = await prisma.project.findUnique({
+    where: { id }
+  });
+
+  const updated = await prisma.project.update({
+    where: { id },
+    data: { active: !project.active }
+  });
+
+  res.json(updated);
+});
+
+
+
+app.get("/api/admin/audit", async (req, res) => {
+
+  const { search, user, action, from, to } = req.query;
+
+  const where = {};
+
+  if (search) {
+    where.OR = [
+      { action: { contains: search, mode: "insensitive" } },
+      { details: { contains: search, mode: "insensitive" } }
+    ];
+  }
+
+  if (user) where.userId = user;
+
+  if (action) where.action = action;
+
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt.gte = new Date(from);
+    if (to) where.createdAt.lte = new Date(to);
+  }
+
+  const logs = await prisma.auditLog.findMany({
+    where,
+    include: {
+      user: { select: { name: true, email: true } }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(logs);
+
+});
+
+app.put("/api/admin/audit/archive-old", async (req, res) => {
+
+  const { days = 90 } = req.body;
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  await prisma.auditLog.updateMany({
+    where: { createdAt: { lt: cutoff } },
+    data: { isArchived: true }
+  });
+
+  res.json({ message: "Old logs archived" });
+
+});
+
+const { Parser } = require("json2csv");
+
+app.get("/api/admin/audit/export", async (req, res) => {
+
+  const logs = await prisma.auditLog.findMany({
+    include: { user: true }
+  });
+
+  const fields = [
+    "user.name",
+    "user.email",
+    "action",
+    "entity",
+    "entityId",
+    "details",
+    "createdAt"
+  ];
+
+  const parser = new Parser({ fields });
+  const csv = parser.parse(logs);
+
+  res.header("Content-Type", "text/csv");
+  res.attachment("audit_logs.csv");
+  res.send(csv);
+
+});
+
+app.delete("/api/admin/audit", async (req, res) => {
+
+  await prisma.auditLog.deleteMany();
+
+  res.json({ message: "All logs deleted" });
+
+});
 
 
 const PORT = process.env.PORT || 5000;
