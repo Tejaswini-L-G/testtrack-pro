@@ -69,6 +69,8 @@ function ViewTestCase() {
 
   return (
     <div className="tc-view-container">
+
+      
       <h2>{testCase.title}</h2>
 
       <div className="tc-section">
@@ -176,7 +178,11 @@ function ViewTestCase() {
 </button>
 
 
+
+
     </div>
+
+    
   );
 }
 

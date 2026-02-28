@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-function Login() {
+function Login({ switchModal })  {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -96,32 +96,75 @@ localStorage.setItem("user", JSON.stringify(res.data.user));  // ⭐ FIXED
   </span>
 </div>
 
-<label style={{ display: "block", marginTop: "8px", fontSize: "14px" }}>
-  <input
-    type="checkbox"
-    checked={remember}
-    onChange={(e) => setRemember(e.target.checked)}
-    style={{ marginRight: "6px" }}
-  />
-  Remember Me
-</label>
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    marginTop: "12px"
+  }}
+>
+  <label
+    style={{
+      display: "flex",
+      alignItems: "center",
+      fontSize: "14px",
+      color: "#333",
+      cursor: "pointer"
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={remember}
+      onChange={(e) => setRemember(e.target.checked)}
+      style={{
+        marginRight: "8px",
+        width: "16px",
+        height: "16px",
+        cursor: "pointer"
+      }}
+    />
+    Remember Me
+  </label>
+</div>
 
         <button type="submit">Login</button>
       </form>
-<a
-  href="/forgot"
+<span
+  onClick={() => switchModal && switchModal("forgot")}
   style={{
     marginTop: "10px",
     display: "inline-block",
     cursor: "pointer",
-    color: "#4facfe",
+    color: "#4f46e5",
     textDecoration: "underline",
   }}
 >
   Forgot Password?
-</a>
+</span>
 
-
+<div
+  style={{
+    marginTop: "18px",
+    textAlign: "center",
+    fontSize: "14px",
+    color: "#666",
+  }}
+>
+  Don’t have an account?{" "}
+  <span
+    onClick={() => switchModal && switchModal("register")}
+    style={{
+      color: "#4f46e5",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "0.2s",
+    }}
+    onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+    onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+  >
+    Register
+  </span>
+</div>
       
 
       {/* Divider */}

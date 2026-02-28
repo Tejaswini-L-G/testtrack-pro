@@ -102,10 +102,7 @@ function App() {
    <Route path="/testcases/:id/edit" element={<EditTestCase />} />
  
   
-  <Route path="testcases" element={<AdminTestCases />} />
-
- <Route path="testruns" element={<TestRunList />} />
-  <Route path="testruns/create" element={<CreateTestRun />} />
+  
 
 
   <Route path="/admin/dashboard" element={<AdminDashboard />}>
@@ -137,36 +134,35 @@ function App() {
   path="reports/tester-performance"
   element={<TesterPerformanceReport />}
 />
+<Route
+  path="/admin/dashboard/testruns/edit/:id"
+  element={<EditTestRun />}
+/>
+
+<Route path="testruns" element={<TestRunList />} />
+
+<Route path="testcases" element={<AdminTestCases />} />
+
+ 
+  <Route path="testruns/create" element={<CreateTestRun />} />
+
+  <Route
+  path="/admin/dashboard/testruns/:id"
+  element={<RunProgressDashboard />}
+/>
 </Route>
 
 <Route path="/profile" element={<Profile />} />
 
 <Route path="/dashboard/home" element={<HomePage />} />
-  <Route
-  path="/dashboard/testcases/:id/versions"
-  element={<VersionsList />}
-/>
-
-<Route
-  path="/admin/dashboard/testruns/:id"
-  element={<RunProgressDashboard />}
-/>
-
-<Route
-  path="/admin/dashboard/testruns/edit/:id"
-  element={<EditTestRun />}
-/>
-
-<Route
-  path="/admin/dashboard/testruns/edit/:id"
-  element={<EditTestRun />}
-/>
+  
 
 
-<Route
-  path="/dashboard/version/:id"
-  element={<VersionDetail />}
-/>
+
+
+
+
+
 
 
 
@@ -231,13 +227,16 @@ function App() {
   path="/dashboard/compare"
   element={<ExecutionCompare />}
 />
-
-</Route>
+<Route
+  path="/dashboard/testcases/:id/versions"
+  element={<VersionsList />}
+/>
 
 <Route
-  path="/dashboard/execution-history/:testCaseId"
-  element={<ExecutionHistory />}
+  path="/dashboard/version/:id"
+  element={<VersionDetail />}
 />
+
 
 <Route
   path="/dashboard/suites/:suiteId/execute"
@@ -248,6 +247,17 @@ function App() {
   path="/dashboard/suite-report/suite/:suiteId"
   element={<SuiteReport />}
 />
+
+<Route
+  path="/dashboard/execution-history/:testCaseId"
+  element={<ExecutionHistory />}
+/>
+
+</Route>
+
+
+
+
 
 
 

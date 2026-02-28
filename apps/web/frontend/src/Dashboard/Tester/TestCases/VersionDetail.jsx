@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "./VersionDetail.css";
+import { useNavigate } from "react-router-dom";
 
 function VersionDetail() {
+   const navigate = useNavigate();
+
 
   const { id } = useParams();
   const [version, setVersion] = useState(null);
@@ -28,6 +31,13 @@ function VersionDetail() {
   return (
     <div className="version-page">
       <div className="version-card">
+
+        <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
 
         <h1>Version v{version.version}</h1>
 

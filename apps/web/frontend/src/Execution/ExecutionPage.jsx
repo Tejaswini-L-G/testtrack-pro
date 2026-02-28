@@ -307,6 +307,13 @@ const step =
   return (
     <div className="execution-container">
 
+      <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
+
       <h1 className="execution-title">
         Execute Test Case — {testCase.title}
       </h1>

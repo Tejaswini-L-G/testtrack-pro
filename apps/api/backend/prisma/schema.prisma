@@ -349,6 +349,16 @@ model AuditLog {
   
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
   isArchived Boolean @default(false)
+}
+
+model SystemConfig {
+  id              String  @id @default(uuid())
+  defaultSeverity String?
+  defaultPriority String?
+  emailEnabled    Boolean @default(true)
+  autoAssignBug   Boolean @default(false)
+  maxUploadSize   Int     @default(10) // in MB
+  updatedAt       DateTime @updatedAt
 }

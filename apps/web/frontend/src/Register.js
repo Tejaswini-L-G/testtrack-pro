@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 
-function Register() {
+function Register({ switchModal }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -88,6 +88,32 @@ function Register() {
 
 
         <button type="submit">Register</button>
+
+        <div className="auth-switch">
+  <div
+  style={{
+    marginTop: "18px",
+    textAlign: "center",
+    fontSize: "14px",
+    color: "#666",
+  }}
+>
+  Already have an account?{" "}
+  <span
+    onClick={() => switchModal && switchModal("login")}
+    style={{
+      color: "#4f46e5",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "0.2s",
+    }}
+    onMouseOver={(e) => (e.target.style.textDecoration = "underline")}
+    onMouseOut={(e) => (e.target.style.textDecoration = "none")}
+  >
+    Login
+  </span>
+</div>
+</div>
       </form>
 
       <p className={`message ${error ? "error" : "success"}`}>

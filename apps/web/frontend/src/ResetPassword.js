@@ -53,102 +53,119 @@ function ResetPassword() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(135deg, #1d2671, #c33764)",
-      }}
-    >
-      <div
+  <div
+    style={{
+      background: "white",
+      padding: "30px",
+      borderRadius: "12px",
+      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+      width: "100%",
+      maxWidth: "400px",
+      boxSizing: "border-box",
+      textAlign: "center",
+    }}
+  >
+    <h2 style={{ marginBottom: "20px",color:"black" }}>
+      🔐 Reset Password
+    </h2>
+
+    <form onSubmit={reset}>
+      {/* New Password */}
+      <div style={{ position: "relative", marginBottom: "15px" }}>
+        <input
+          type={showNew ? "text" : "password"}
+          placeholder="New Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{
+            width: "100%",
+            padding: "10px",
+            paddingRight: "35px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
+        <span
+          onClick={() => setShowNew(!showNew)}
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          {showNew ? "🙈" : "👁️"}
+        </span>
+      </div>
+
+      {/* Confirm Password */}
+      <div style={{ position: "relative", marginBottom: "20px" }}>
+        <input
+          type={showConfirm ? "text" : "password"}
+          placeholder="Confirm New Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          style={{
+            width: "100%",
+            padding: "10px",
+            paddingRight: "35px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
+        <span
+          onClick={() => setShowConfirm(!showConfirm)}
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          {showConfirm ? "🙈" : "👁️"}
+        </span>
+      </div>
+
+      <button
+        type="submit"
         style={{
-          width: "320px",
-          padding: "25px",
-          borderRadius: "15px",
-          background: "white",
-          boxSizing: "border-box",
-          overflow: "hidden",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-          textAlign: "center",
+          width: "100%",
+          padding: "10px",
+          borderRadius: "8px",
+          border: "none",
+          background: "#4f46e5",
+          color: "white",
+          fontWeight: "600",
+          cursor: "pointer",
         }}
       >
-        <h2 style={{ marginBottom: "20px" }}>🔐 Reset Password</h2>
+        Reset Password
+      </button>
+    </form>
 
-        <form onSubmit={reset}>
-          {/* New Password */}
-          <div style={fieldStyle}>
-            <input
-              type={showNew ? "text" : "password"}
-              placeholder="New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                paddingRight: "34px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
-              }}
-              required
-            />
-            <span style={eyeStyle} onClick={() => setShowNew(!showNew)}>
-              {showNew ? "🙈" : "👁️"}
-            </span>
-          </div>
-
-          {/* Confirm Password */}
-          <div style={fieldStyle}>
-            <input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Confirm New Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                paddingRight: "34px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
-              }}
-              required
-            />
-            <span
-              style={eyeStyle}
-              onClick={() => setShowConfirm(!showConfirm)}
-            >
-              {showConfirm ? "🙈" : "👁️"}
-            </span>
-          </div>
-
-          <button
-            type="submit"
-            style={{
-              marginTop: "10px",
-              width: "100%",
-              padding: "12px",
-              borderRadius: "25px",
-              border: "none",
-              background: "linear-gradient(135deg, #4facfe, #00f2fe)",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-            }}
-          >
-            Reset Password
-          </button>
-        </form>
-
-        <p style={{ marginTop: "15px", color: "#555", fontSize: "14px" }}>
-          {message}
-        </p>
-      </div>
-    </div>
-  );
+    {message && (
+      <p
+        style={{
+          marginTop: "15px",
+          fontSize: "14px",
+          color: message.includes("successful")
+            ? "green"
+            : "#d9534f",
+        }}
+      >
+        {message}
+      </p>
+    )}
+  </div>
+);
 }
 
 export default ResetPassword;

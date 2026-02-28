@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "./execution.css";
+import { useNavigate } from "react-router-dom";
 
 function ExecutionCompare() {
-
+   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
 
@@ -73,6 +74,13 @@ function ExecutionCompare() {
 
   return (
     <div className="compare-page">
+
+       <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
 
       <h2 className="compare-title">
         Execution Comparison

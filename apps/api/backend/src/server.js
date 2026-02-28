@@ -16,6 +16,7 @@ const xlsx = require("xlsx");
 
 
 const logAction = require("./utils/logAction");
+const getUserIdFromToken = require("./utils/getUserFromToken");
 // or your existing path
 
 const app = express();
@@ -1238,6 +1239,9 @@ app.post("/testcases", authenticate, async (req, res) => {
       type,
       status,
       preconditions,
+      impactIfFails,          // ✅ ADD
+  testDataRequirements,   // ✅ ADD
+  cleanupSteps, 
      
 postconditions,
 
@@ -3756,18 +3760,21 @@ app.put("/api/admin/users/:id/deactivate", async (req, res) => {
 
 
 
-app.post("/api/admin/backup", async (req, res) => {
-
-  // Placeholder — implement real backup later
-  console.log("Backup triggered");
-
-  res.json({ message: "Backup completed" });
-});
 
 
 app.post("/api/admin/users", async (req, res) => {
 
   const { name, email, password, role } = req.body;
+
+  const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User with this email already exists"
+      });
+    }
 
   const user = await prisma.user.create({
     data: {
@@ -3778,6 +3785,8 @@ app.post("/api/admin/users", async (req, res) => {
       active: true
     }
   });
+ const userId = getUserIdFromToken(req); // Implement this helper to extract user ID from token
+  await logAction(userId, "Create User", "User", user.id);
 
   res.json(user);
 });
@@ -3792,75 +3801,139 @@ app.put("/api/admin/users/:id", async (req, res) => {
     data: { name, email, role }
   });
 
+
+const token = req.headers.authorization?.split(" ")[1];
+
+  if (token) {
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    await logAction(
+      payload.id,
+      "Update User",
+      `User ID: ${req.params.id}`,
+      "User",
+      req.params.id
+    );
+  }
+
+
   res.json(updated);
 });
 
 app.put("/api/admin/users/:id/activate", async (req, res) => {
 
-  await prisma.user.update({
+  const user = await prisma.user.update({
     where: { id: req.params.id },
     data: { active: true }
   });
+
+  const userId = getUserIdFromToken(req);
+
+  if (userId) {
+    await logAction(
+      userId,
+      "Activate User",
+      "User",
+      user.id,
+      `Activated user ${user.email}`
+    );
+  }
 
   res.json({ message: "User activated" });
 });
 
 
-app.post("/api/admin/roles", async (req, res) => {
+app.post("/api/admin/roles", authenticate, async (req, res) => {
+  try {
 
-  const { name, permissions } = req.body;
-
-  const role = await prisma.role.create({
-    data: {
-      name,
-      permissions: {
-        create: permissions.map(p => ({ name: p }))
-      }
-    },
-    include: { permissions: true }
-  });
-
-  res.json(role);
-});
-
-
-
-app.put("/api/admin/roles/:id", async (req, res) => {
-
-  const { permissions } = req.body;
-  const id = req.params.id;
-
-  // delete old permissions
-  await prisma.permission.deleteMany({
-    where: { roleId: id }
-  });
-
-  // create new permissions
-  const role = await prisma.role.update({
-    where: { id },
-    data: {
-      permissions: {
-        create: permissions.map(p => ({ name: p }))
-      }
-    },
-    include: { permissions: true }
-  });
-
-  res.json(role);
-});
-
-
-
-app.get("/api/roles", async (req, res) => {
-
-  const roles = await prisma.role.findMany({
-    include: {
-      permissions: true
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can create roles" });
     }
-  });
 
-  res.json(roles);
+    const { name, permissions } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: "Role name is required" });
+    }
+
+    const role = await prisma.role.create({
+      data: {
+        name: name.trim().toLowerCase(),
+        permissions: {
+          create: permissions?.map(p => ({ name: p })) || []
+        }
+      },
+      include: { permissions: true }
+    });
+
+    await logAction(
+      req.user.id,
+      "Create Role",
+      "Role",
+      role.id,
+      `Created role ${name}`
+    );
+
+    res.json(role);
+
+  } catch (err) {
+
+    if (err.code === "P2002") {
+      return res.status(400).json({ message: "Role already exists" });
+    }
+
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
+
+
+
+app.put("/api/admin/roles/:id", authenticate, async (req, res) => {
+  try {
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can update roles" });
+    }
+
+    const { permissions } = req.body;
+    const id = req.params.id;
+
+    await prisma.permission.deleteMany({
+      where: { roleId: id }
+    });
+
+    const role = await prisma.role.update({
+      where: { id },
+      data: {
+        permissions: {
+          create: permissions?.map(p => ({ name: p })) || []
+        }
+      },
+      include: { permissions: true }
+    });
+
+    await logAction(
+  req.user.id,
+  "Update Role Permissions",
+  "Role",
+  role.id,
+  `Permissions updated`
+);
+
+    res.json(role);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
 
 app.get("/api/permissions", async (req, res) => {
 
@@ -3887,79 +3960,135 @@ app.get("/api/roles/:id/permissions", async (req, res) => {
   res.json(role);
 });
 
-app.post("/api/roles", async (req, res) => {
 
-  const { name } = req.body;
 
-  const role = await prisma.role.create({
-    data: { name }
-  });
+app.post("/api/admin/roles/:id/permissions", authenticate, async (req, res) => {
+  try {
 
-  res.json(role);
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can assign permissions" });
+    }
+
+    const roleId = req.params.id;
+    const { permissions } = req.body;
+
+    const created = await Promise.all(
+      permissions.map(p =>
+        prisma.permission.create({
+          data: {
+            name: p,
+            roleId
+          }
+        })
+      )
+    );
+
+    // ✅ AUDIT LOG
+    await logAction(
+      req.user.id,
+      "Assign Permission",
+      "Role",
+      roleId,
+      `Assigned permissions: ${permissions.join(", ")}`
+    );
+
+    res.json(created);
+
+  } catch (err) {
+    console.error("ASSIGN PERMISSION ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
+app.delete("/api/admin/permissions/:id", authenticate, async (req, res) => {
+  try {
 
-app.post("/api/roles/:id/permissions", async (req, res) => {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can remove permissions" });
+    }
 
-  const roleId = req.params.id;
-  const { permissions } = req.body;
+    const id = req.params.id;
 
-  const created = await Promise.all(
-    permissions.map(p =>
-      prisma.permission.create({
-        data: {
-          name: p,
-          roleId
-        }
-      })
-    )
-  );
+    // 🔍 Get permission before deleting (for audit log)
+    const permission = await prisma.permission.findUnique({
+      where: { id }
+    });
 
-  res.json(created);
+    if (!permission) {
+      return res.status(404).json({ message: "Permission not found" });
+    }
+
+    await prisma.permission.delete({
+      where: { id }
+    });
+
+    // ✅ AUDIT LOG
+    await logAction(
+      req.user.id,
+      "Remove Permission",
+      "Role",
+      permission.roleId,
+      `Removed permission: ${permission.name}`
+    );
+
+    res.json({ message: "Permission deleted successfully" });
+
+  } catch (err) {
+    console.error("REMOVE PERMISSION ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
-app.delete("/api/permissions/:id", async (req, res) => {
+app.delete("/api/admin/roles/:id", authenticate, async (req, res) => {
+  try {
 
-  const id = req.params.id;
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin can delete roles" });
+    }
 
-  await prisma.permission.delete({
-    where: { id }
-  });
+    const id = req.params.id;
 
-  res.json({ message: "Permission deleted" });
-});
-app.delete("/api/roles/:id", async (req, res) => {
+    // 🔥 FIRST delete related permissions
+    await prisma.permission.deleteMany({
+      where: { roleId: id }
+    });
 
-  const id = req.params.id;
+    // 🔥 THEN delete role
+    await prisma.role.delete({
+      where: { id }
+    });
 
-  await prisma.role.delete({
-    where: { id }
-  });
+    await logAction(
+      req.user.id,
+      "Delete Role",
+      "Role",
+      id,
+      "Deleted role"
+    );
 
-  res.json({ message: "Role deleted" });
+    res.json({ message: "Role deleted successfully" });
+
+  } catch (err) {
+    console.error("DELETE ROLE ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /* =========================================
    GET ALL ROLES WITH PERMISSIONS
 ========================================= */
 
-app.get("/api/admin/roles", async (req, res) => {
-
+app.get("/api/admin/roles", authenticate, async (req, res) => {
   try {
-
     const roles = await prisma.role.findMany({
-      include: {
-        permissions: true
-      }
+      include: { permissions: true }
     });
 
     res.json(roles);
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Failed to load roles" });
+    res.status(500).json({ error: err.message });
   }
-
 });
-
 app.get("/api/admin/permissions", async (req, res) => {
 
   try {
@@ -5287,46 +5416,15 @@ app.put("/api/admin/projects/:id/archive", async (req, res) => {
     where: { id },
     data: { active: !project.active }
   });
+ const userId = getUserIdFromToken(req);
+ await logAction(userId, "Archive Project", "Project", id);
 
   res.json(updated);
 });
 
 
 
-app.get("/api/admin/audit", async (req, res) => {
 
-  const { search, user, action, from, to } = req.query;
-
-  const where = {};
-
-  if (search) {
-    where.OR = [
-      { action: { contains: search, mode: "insensitive" } },
-      { details: { contains: search, mode: "insensitive" } }
-    ];
-  }
-
-  if (user) where.userId = user;
-
-  if (action) where.action = action;
-
-  if (from || to) {
-    where.createdAt = {};
-    if (from) where.createdAt.gte = new Date(from);
-    if (to) where.createdAt.lte = new Date(to);
-  }
-
-  const logs = await prisma.auditLog.findMany({
-    where,
-    include: {
-      user: { select: { name: true, email: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  });
-
-  res.json(logs);
-
-});
 
 app.put("/api/admin/audit/archive-old", async (req, res) => {
 
@@ -5379,6 +5477,378 @@ app.delete("/api/admin/audit", async (req, res) => {
 
 });
 
+
+
+
+
+
+app.get("/api/admin/audit", async (req, res) => {
+
+  const { search, user, action, from, to, archived } = req.query;
+
+  const where = {};
+
+  // ✅ Only filter if archived param exists
+  if (archived !== undefined) {
+    where.isArchived = archived === "true";
+  }
+
+  if (search) {
+    where.OR = [
+      { action: { contains: search, mode: "insensitive" } },
+      { details: { contains: search, mode: "insensitive" } }
+    ];
+  }
+
+  if (user) where.userId = user;
+  if (action) where.action = action;
+
+  if (from || to) {
+    where.createdAt = {};
+    if (from) where.createdAt.gte = new Date(from);
+    if (to) where.createdAt.lte = new Date(to);
+  }
+
+  const logs = await prisma.auditLog.findMany({
+    where,
+    include: {
+      user: {
+        select: { name: true, email: true }
+      }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(logs);
+});
+
+app.put("/api/admin/audit/archive-selected", async (req, res) => {
+
+  const { ids } = req.body;
+
+  await prisma.auditLog.updateMany({
+    where: {
+      id: { in: ids }
+    },
+    data: {
+      isArchived: true   // ⭐ THIS IS IMPORTANT
+    }
+  });
+
+  res.json({ message: "Archived successfully" });
+});
+
+
+
+
+app.get("/api/admin/system-config", authenticate, async (req, res) => {
+  try {
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin allowed" });
+    }
+
+    let config = await prisma.systemConfig.findFirst();
+
+    if (!config) {
+      config = await prisma.systemConfig.create({ data: {} });
+    }
+
+    res.json(config);
+
+  } catch (err) {
+    res.status(500).json({ message: "Failed to load config" });
+  }
+});
+
+app.put("/api/admin/system-config", authenticate, async (req, res) => {
+  try {
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin allowed" });
+    }
+
+    const updated = await prisma.systemConfig.updateMany({
+      data: req.body
+    });
+
+    
+
+    res.json({ message: "Configuration updated" });
+
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update config" });
+  }
+});
+
+app.get("/api/admin/system-status", async (req, res) => {
+  try {
+
+    const userCount = await prisma.user.count();
+    const roleCount = await prisma.role.count();
+    const bugCount = await prisma.bug.count();
+    const testCaseCount = await prisma.testCase.count();
+
+    const uptimeSeconds = process.uptime();
+
+    res.json({
+      status: "Running",
+      database: "Connected",
+      uptime: `${Math.floor(uptimeSeconds / 60)} minutes`,
+      users: userCount,
+      roles: roleCount,
+      bugs: bugCount,
+      testCases: testCaseCount,
+      serverTime: new Date()
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      status: "Error",
+      database: "Disconnected"
+    });
+  }
+});
+
+
+
+
+
+const { exec } = require("child_process");
+
+app.post("/api/admin/backup", authenticate, async (req, res) => {
+  try {
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin allowed" });
+    }
+
+    const backupsDir = path.join(process.cwd(), "backups");
+
+    if (!fs.existsSync(backupsDir)) {
+      fs.mkdirSync(backupsDir);
+    }
+
+    const fileName = `backup-${Date.now()}.sql`;
+    const backupPath = path.join(backupsDir, fileName);
+
+    const command = `pg_dump -U postgres -h localhost -p 5432 -d testtrack -f "${backupPath}"`;
+
+    exec(command, {
+      env: {
+        ...process.env,
+        PGPASSWORD: "Theju@2004"
+      }
+    }, (error, stdout, stderr) => {
+
+      if (error) {
+        console.log("❌ Backup failed:", error.message);
+        console.log(stderr);
+        return res.status(500).json({ message: "Backup failed" });
+      }
+
+      
+
+      res.json({ message: "Backup created successfully" });
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Backup error" });
+  }
+});
+app.get("/api/admin/backups", authenticate, async (req, res) => {
+
+  const backupsDir = path.join(process.cwd(), "backups")
+  if (!fs.existsSync(backupsDir)) {
+    return res.json([]);
+  }
+
+  const files = fs.readdirSync(backupsDir);
+
+  const backups = files.map(file => {
+    const filePath = path.join(backupsDir, file);
+    const stats = fs.statSync(filePath);
+
+    return {
+      name: file,
+      size: (stats.size / (1024 * 1024)).toFixed(2) + " MB",
+      createdAt: stats.birthtime
+    };
+  });
+
+  res.json(backups);
+});
+
+app.get("/api/admin/backups/download/:name", authenticate, (req, res) => {
+
+  const filePath =  path.join(process.cwd(), "backups", req.params.name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "File not found" });
+  }
+
+  res.download(filePath);
+});
+
+app.delete("/api/admin/backups/:name", authenticate, (req, res) => {
+
+  const backupsDir = path.join(process.cwd(), "backups");
+  const archiveDir = path.join(process.cwd(), "archived-backups");
+
+  const filePath = path.join(backupsDir, req.params.name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "File not found" });
+  }
+
+  if (!fs.existsSync(archiveDir)) {
+    fs.mkdirSync(archiveDir);
+  }
+
+  const archivePath = path.join(archiveDir, req.params.name);
+
+  fs.renameSync(filePath, archivePath);
+
+  res.json({ message: "Backup moved to archive" });
+});
+
+app.get("/api/admin/backups/archived", authenticate, (req, res) => {
+
+  const archiveDir = path.join(process.cwd(), "archived-backups");
+
+  if (!fs.existsSync(archiveDir)) {
+    return res.json([]);
+  }
+
+  const files = fs.readdirSync(archiveDir);
+
+  const backups = files.map(file => {
+    const filePath = path.join(archiveDir, file);
+    const stats = fs.statSync(filePath);
+
+    return {
+      name: file,
+      size: (stats.size / (1024 * 1024)).toFixed(2) + " MB",
+      createdAt: stats.birthtime
+    };
+  });
+
+  res.json(backups);
+});
+
+app.post("/api/admin/backups/restore-file/:name", authenticate, (req, res) => {
+
+  const backupsDir = path.join(process.cwd(), "backups");
+  const archiveDir = path.join(process.cwd(), "archived-backups");
+
+  const filePath = path.join(archiveDir, req.params.name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "File not found" });
+  }
+
+  const restorePath = path.join(backupsDir, req.params.name);
+
+  fs.renameSync(filePath, restorePath);
+
+  res.json({ message: "Backup restored to active list" });
+});
+
+
+
+const cron = require("node-cron");
+
+cron.schedule("0 2 * * *", () => {
+  console.log("Running auto backup...");
+
+  const backupsDir = path.join(process.cwd(), "backups");
+
+  if (!fs.existsSync(backupsDir)) {
+    fs.mkdirSync(backupsDir);
+  }
+
+  const fileName = `auto-backup-${Date.now()}.sql`;
+  const backupPath = path.join(backupsDir, fileName);
+
+  const pgDumpPath = "C:\\Program Files\\PostgreSQL\\18\\bin\\pg_dump.exe";
+
+  const args = [
+    "-U", "postgres",
+    "-h", "localhost",
+    "-p", "5432",
+    "-d", "testtrack",
+    "-f", backupPath
+  ];
+
+  execFile(pgDumpPath, args, {
+    env: {
+      ...process.env,
+      PGPASSWORD: "Theju@2004"
+    }
+  }, (error) => {
+
+    if (error) {
+      console.log("Auto backup failed:", error.message);
+      return;
+    }
+
+    console.log("Auto backup created:", backupPath);
+  });
+});
+
+app.post("/api/admin/backups/restore/:name", authenticate, (req, res) => {
+  try {
+
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Only admin allowed" });
+    }
+
+    const filePath = path.join(process.cwd(), "backups", req.params.name);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Backup file not found" });
+    }
+
+    const command = `psql -U postgres -h localhost -p 5432 -d testtrack -f "${filePath}"`;
+
+    exec(command, {
+      env: {
+        ...process.env,
+        PGPASSWORD: "Theju@2004"
+      }
+    }, (error, stdout, stderr) => {
+
+      if (error) {
+        console.log("❌ Restore failed:", error.message);
+        console.log(stderr);
+        return res.status(500).json({ message: "Restore failed" });
+      }
+
+      console.log("✅ Database restored from:", filePath);
+
+      res.json({ message: "Database restored successfully" });
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Restore error" });
+  }
+});
+
+app.delete("/api/admin/backups/permanent/:name", authenticate, (req, res) => {
+
+  const archiveDir = path.join(process.cwd(), "archived-backups");
+  const filePath = path.join(archiveDir, req.params.name);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ message: "File not found" });
+  }
+
+  fs.unlinkSync(filePath);
+
+  res.json({ message: "Backup permanently deleted" });
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
