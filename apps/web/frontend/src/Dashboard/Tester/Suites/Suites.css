@@ -1176,3 +1176,116 @@
   padding: 4px 8px;
   font-size: 11px;
 }
+/* ===== MODAL OVERLAY WITH BLUR ===== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55); /* dark soft overlay */
+  backdrop-filter: blur(6px);        /* blur background */
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* ===== MODAL BOX ===== */
+
+.modal-box {
+  background: #ffffff;
+  width: 420px;
+  max-width: 90%;
+  padding: 30px 35px;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: fadeInScale 0.25s ease;
+}
+
+/* ===== TITLE ===== */
+
+.modal-box h3 {
+  margin-bottom: 22px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ===== RADIO OPTIONS ===== */
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-option:hover {
+  background: #eef2ff;
+  border-color: #6366f1;
+}
+
+.radio-option input {
+  accent-color: #4f46e5;
+  transform: scale(1.1);
+}
+
+/* ===== ACTION BUTTONS ===== */
+
+.modal-actions {
+  margin-top: 25px;
+  display: flex;
+  gap: 14px;
+}
+
+.start-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.start-btn:hover {
+  background: #4338ca;
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #111827;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #d1d5db;
+}
+
+/* ===== ANIMATION ===== */
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

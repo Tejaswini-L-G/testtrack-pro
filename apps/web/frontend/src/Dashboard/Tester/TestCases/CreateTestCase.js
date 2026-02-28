@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import "./CreateTestCase.css";
+
 
 function CreateTestCase() {
   const [title, setTitle] = useState("");
@@ -9,6 +10,15 @@ function CreateTestCase() {
   const [priority, setPriority] = useState("Medium");
   const [severity, setSeverity] = useState("Major");
   const [type, setType] = useState("Functional");
+ 
+
+  const projectId = localStorage.getItem("projectId");
+
+useEffect(() => {
+    if (!projectId) {
+      setError("Please select a project first.");
+    }
+  }, [projectId]);
 
   // 🔹 Context section toggle
 
@@ -68,6 +78,7 @@ const [cleanupSteps, setCleanupSteps] = useState("");
   testDataRequirements,
   environment,
   cleanupSteps,
+  projectId,
         },
         {
           headers: {
@@ -234,7 +245,11 @@ const [cleanupSteps, setCleanupSteps] = useState("");
 
       <div className="tc-field">
         <label>Impact if Test Fails</label>
-        <textarea rows={3} />
+        <textarea
+  value={impactIfFails}
+  onChange={(e) => setImpactIfFails(e.target.value)}
+  rows={3}
+/>
       </div>
 
       <div className="tc-field">
@@ -248,17 +263,29 @@ const [cleanupSteps, setCleanupSteps] = useState("");
 
       <div className="tc-field">
         <label>Test Data Requirements</label>
-        <textarea rows={3} />
+       <textarea
+  value={testDataRequirements}
+  onChange={(e) => setTestDataRequirements(e.target.value)}
+  rows={3}
+/>
       </div>
 
       <div className="tc-field">
         <label>Environment Requirements</label>
-        <textarea rows={3} />
+        <textarea
+  value={environment}
+  onChange={(e) => setEnvironment(e.target.value)}
+  rows={3}
+/>
       </div>
 
       <div className="tc-field">
         <label>Cleanup Steps</label>
-        <textarea rows={3} />
+        <textarea
+  value={cleanupSteps}
+  onChange={(e) => setCleanupSteps(e.target.value)}
+  rows={3}
+/>
       </div>
 
     </div>

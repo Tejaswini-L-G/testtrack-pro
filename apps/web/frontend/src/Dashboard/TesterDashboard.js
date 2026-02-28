@@ -3,6 +3,8 @@ import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./Dashboard.css";
 import ProfileMenu from "../Dashboard/Profile";
 import DashboardWidgets from "../Reports/DashboardWidgets";
+import ProjectSelector from "../Projects/ProjectSelector";
+
 
 function TesterDashboard() {
   const navigate = useNavigate();
@@ -14,6 +16,46 @@ function TesterDashboard() {
     draft: 0,
     approved: 0,
   });
+
+  const [projectName, setProjectName] = useState("");
+const [projectId, setProjectId] = useState(
+  localStorage.getItem("projectId")
+);
+
+useEffect(() => {
+
+  const handleStorageChange = () => {
+    setProjectId(localStorage.getItem("projectId"));
+  };
+
+  window.addEventListener("storage", handleStorageChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorageChange);
+  };
+
+}, []);
+
+useEffect(() => {
+
+  if (!projectId) {
+    setProjectName("");
+    return;
+  }
+
+  fetch(`http://localhost:5000/api/projects/${projectId}`, {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    })
+    .then(data => setProjectName(data.name))
+    .catch(() => setProjectName(""));
+
+}, [projectId]);
 
   useEffect(() => {
     fetch("http://localhost:5000/dashboard/tester", {
@@ -56,6 +98,13 @@ useEffect(() => {
       <aside className="sidebar">
 
         <h2 className="logo">TestTrack Pro</h2>
+
+       <div className="project-display">
+    Project: <strong>{projectName || "Not Selected"}</strong>
+  </div>
+
+  <ProjectSelector />
+
 
         <nav className="sidebar-nav">
 

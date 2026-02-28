@@ -10,6 +10,8 @@ function AdminProjects() {
   const [editing, setEditing] = useState(null);
   const [editName, setEditName] = useState("");
   const [editDesc, setEditDesc] = useState("");
+  const [users, setUsers] = useState([]);
+const [selectedUser, setSelectedUser] = useState({});
 
   const token = localStorage.getItem("token");
 
@@ -24,9 +26,42 @@ function AdminProjects() {
     setProjects(data);
   };
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
+  const assignUser = async (projectId) => {
+
+  const userId = selectedUser[projectId];
+
+  if (!userId) {
+    alert("Select a user first");
+    return;
+  }
+
+  await fetch(
+    `http://localhost:5000/api/projects/${projectId}/members`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({ userId })
+    }
+  );
+
+  alert("User assigned successfully ✅");
+
+};
+
+
+ useEffect(() => {
+  loadProjects();
+
+  fetch("http://localhost:5000/api/users", {
+    headers: { Authorization: "Bearer " + token }
+  })
+    .then(res => res.json())
+    .then(setUsers);
+
+}, []);
 
   /* ===== CREATE ===== */
 
@@ -188,6 +223,21 @@ function AdminProjects() {
                   {p.active ? "Active" : "Archived"}
                 </div>
 
+                {/* ===== ASSIGNED USERS ===== */}
+
+{p.members && p.members.length > 0 && (
+  <div className="assigned-users">
+    <strong>Members:</strong>
+    <div className="member-list">
+      {p.members.map(m => (
+        <span key={m.user.id} className="member-badge">
+          {m.user.name} ({m.user.role})
+        </span>
+      ))}
+    </div>
+  </div>
+)}
+
                 <div className="card-actions">
 
                   <button
@@ -196,6 +246,11 @@ function AdminProjects() {
                   >
                     Edit
                   </button>
+
+
+                  {/* ===== ASSIGN USER ===== */}
+
+
 
                   <button
                     className="archive-btn"
@@ -210,6 +265,36 @@ function AdminProjects() {
                   >
                     Delete
                   </button>
+
+                  <div className="assign-user-section">
+
+  <select
+    value={selectedUser[p.id] || ""}
+    onChange={(e) =>
+      setSelectedUser({
+        ...selectedUser,
+        [p.id]: e.target.value
+      })
+    }
+  >
+    <option value="">Assign User</option>
+
+    {users.map(u => (
+      <option key={u.id} value={u.id}>
+        {u.name} ({u.role})
+      </option>
+    ))}
+
+  </select>
+
+  <button
+    className="assign-btn"
+    onClick={() => assignUser(p.id)}
+  >
+    Assign
+  </button>
+
+</div>
 
                 </div>
               </>

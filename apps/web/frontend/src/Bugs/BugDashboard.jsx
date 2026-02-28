@@ -9,6 +9,7 @@ function BugsList() {
   const [developers, setDevelopers] = useState([]);
 const [selectedDev, setSelectedDev] = useState({});
 const [openDiscussion, setOpenDiscussion] = useState({});
+const projectId = localStorage.getItem("projectId");
 
   useEffect(() => {
 
@@ -33,13 +34,11 @@ const [openDiscussion, setOpenDiscussion] = useState({});
 
         // ⭐ Admin sees ALL bugs
         if (role === "admin") {
-          url = "http://localhost:5000/api/bugs";
-        }
-
-        // ⭐ Tester sees ONLY own bugs
-        else {
-          url = `http://localhost:5000/api/bugs/my/${userId}`;
-        }
+  url = `http://localhost:5000/api/bugs?projectId=${projectId}`;
+}
+else {
+  url = `http://localhost:5000/api/bugs/my/${userId}?projectId=${projectId}`;
+}
 
         const res = await fetch(url);
         const data = await res.json();
@@ -128,6 +127,8 @@ const role = payload?.role;
 
   if (loading) return <p>Loading bugs...</p>;
 
+  if (!projectId) return <h2>Please select a project first.</h2>;
+
   return (
     <div className="bugs-container">
 
@@ -135,13 +136,22 @@ const role = payload?.role;
   <h2>Bug Reports</h2>
 
   <button
-    className="export-btn"
-    onClick={() =>
-      window.open("http://localhost:5000/api/bugs/export")
+  className="export-btn"
+  onClick={() => {
+    const projectId = localStorage.getItem("projectId");
+
+    if (!projectId) {
+      alert("Please select a project first");
+      return;
     }
-  >
-    Export Bug Reports
-  </button>
+
+    window.open(
+      `http://localhost:5000/api/bugs/export?projectId=${projectId}`
+    );
+  }}
+>
+  Export Bug Reports
+</button>
 </div>
 
       {bugs.length === 0 ? (

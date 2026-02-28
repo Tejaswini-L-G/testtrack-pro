@@ -27,6 +27,7 @@ const [showExecuteModal, setShowExecuteModal] = useState(false);
 // ===== ORDERED CASES FOR SELECTED SUITE =====
 const [suiteCases, setSuiteCases] = useState([]);
 const [showArchived, setShowArchived] = useState(false);
+const projectId = localStorage.getItem("projectId");
 
 const toggleArchived = () => {
   setShowArchived(prev => !prev);
@@ -36,14 +37,17 @@ const toggleArchived = () => {
   setSuiteCases([]);
 };
 
-  const fetchSuites = async () => {
+ const fetchSuites = async () => {
 
-  const res = await fetch(`http://localhost:5000/suites?archived=${showArchived}`,
+  if (!projectId) return;
+
+  const res = await fetch(
+    `http://localhost:5000/suites?projectId=${projectId}&archived=${showArchived}`,
     {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
-      cache: "no-store"   // ⭐ prevents stale data
+      cache: "no-store"
     }
   );
 
@@ -51,13 +55,20 @@ const toggleArchived = () => {
 };
 
   const fetchTestCases = async () => {
-    const res = await fetch("http://localhost:5000/testcases", {
+
+  if (!projectId) return;
+
+  const res = await fetch(
+    `http://localhost:5000/testcases?projectId=${projectId}`,
+    {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
-    });
-    setTestCases(await res.json());
-  };
+    }
+  );
+
+  setTestCases(await res.json());
+};
 
  useEffect(() => {
   fetchSuites();
@@ -139,7 +150,8 @@ const saveOrder = async () => {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
       body: JSON.stringify({ name, description,module,
-  parentId: parentSuite || null }),
+  parentId: parentSuite || null ,
+projectId}),
     });
 
     setName("");
@@ -320,7 +332,13 @@ const confirmExecute = async () => {
   fetchTestCases();
   fetchSuites();
 };
-
+if (!projectId) {
+  return (
+    <div style={{ padding: "40px", textAlign: "center" }}>
+      <h2>Please select a project first.</h2>
+    </div>
+  );
+}
 
   return (
     <div className="suites-container">
