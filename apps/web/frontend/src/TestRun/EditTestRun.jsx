@@ -30,11 +30,15 @@ function EditTestRun() {
       .then(r => r.json())
       .then(data => {
 
+        setTestCases(Array.isArray(data.testCases) ? data.testCases : []);
+
         setName(data.name || "");
         setDescription(data.description || "");
 
         setStartDate(data.startDate?.slice(0, 10));
         setEndDate(data.endDate?.slice(0, 10));
+
+        
 
         setSelectedCases(
           data.testCases?.map(tc => tc.testCaseId) || []
@@ -159,7 +163,8 @@ function EditTestRun() {
 
       <div className="checkbox-list">
 
-        {testCases.map(tc => (
+       {Array.isArray(testCases) &&
+  testCases.map(tc => (
 
           <label key={tc.id} className="checkbox-item">
 

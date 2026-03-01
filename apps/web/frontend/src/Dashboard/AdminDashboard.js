@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useEffect } from "react";
 import DashboardWidgets from "../Reports/DashboardWidgets";
 import ProjectSelector from "../Projects/ProjectSelector";
+import AdminNavbar from "../Dashboard/AdminNavbar";
+import ProfileMenu from "../Dashboard/Profile";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -12,6 +14,7 @@ function AdminDashboard() {
 const [showProfile, setShowProfile] = useState(false);
 const [userInfo, setUserInfo] = useState(null);
 const [user, setUser] = useState(null);
+const [searchResults, setSearchResults] = useState(null);
 
 
 
@@ -105,54 +108,12 @@ useEffect(() => {
      <div className="admin-topbar">
 
   {/* RIGHT SIDE CONTAINER */}
-  <div className="topbar-right">
-
-    {/* AVATAR */}
-    <div
-      className="profile-avatar"
-      onClick={() => setProfileOpen(prev => !prev)}
-    >
-      {userInfo?.name?.charAt(0)?.toUpperCase() || "U"}
-    </div>
-
-    {/* DROPDOWN */}
-    {profileOpen && (
-      <div className="profile-menu">
-
-        <div className="profile-header">
-          <div className="avatar-large">
-            {userInfo?.name?.charAt(0)?.toUpperCase() || "U"}
-          </div>
-
-          <div>
-            <h4>{userInfo?.name}</h4>
-            <p>{userInfo?.email}</p>
-          </div>
-        </div>
-
-        <div className="profile-role">
-          {userInfo?.role}
-        </div>
-
-        <button
-          className="logout-btn"
-          onClick={() => {
-            localStorage.removeItem("token");
-            navigate("/dashboard/home");
-          }}
-        >
-          Logout
-        </button>
-
-      </div>
-    )}
-
-  </div>
-
+  <div className="topbar">
+  <AdminNavbar onSearchResults={setSearchResults} />
+  <ProfileMenu />
 </div>
 
-
-
+</div>
       {/* ===== LEFT SIDEBAR ===== */}
     <aside className="admin-sidebar">
 
@@ -215,6 +176,36 @@ useEffect(() => {
       Backup Management
     </button>
 
+    <button
+  onClick={() =>
+    navigate("/admin/dashboard/reports/cross-project")
+  }
+>
+  Cross Project Report
+</button>
+
+<button
+  onClick={() => navigate("/admin/dashboard/custom-fields")}
+>
+  Project Custom Fields
+</button>
+
+<button onClick={() => navigate("/admin/dashboard/workflows")}>
+   Project Workflow 
+</button>
+
+<button onClick={() => navigate("/admin/dashboard/modules")}>
+  Project Modules
+</button>
+
+<button onClick={() => navigate("/admin/dashboard/environments")}>
+  Project Environments
+</button>
+
+<button onClick={() => navigate("/admin/dashboard/milestones")}>
+  Project Milestones
+</button>
+
   </div>
 )}
     
@@ -268,6 +259,8 @@ useEffect(() => {
          <button onClick={() => navigate("/admin/dashboard/bugs")}>
       View Bugs
     </button>
+ 
+
     <button
       className="logout-btn"
       onClick={() => {

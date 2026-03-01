@@ -93,6 +93,25 @@ function ViewTestCase() {
       </div>
 
       <div className="tc-section">
+  <h3>Project Specific Fields</h3>
+
+  {testCase.TestCaseCustomValue?.length === 0 && (
+    <p>No custom fields.</p>
+  )}
+
+  {testCase.TestCaseCustomValue?.map((item) => (
+    <div key={item.id} className="tc-field">
+      <div className="tc-label">
+        {item.field.name}
+      </div>
+      <div className="tc-value">
+        {item.value}
+      </div>
+    </div>
+  ))}
+</div>
+
+      <div className="tc-section">
         <h3>Test Steps</h3>
 
         {testCase.steps?.map((step) => (

@@ -1,20 +1,19 @@
 /* ===== TOPBAR ===== */
 
 .topbar {
-  height: 60px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  height: 64px;
+  background: #1e293b; /* match dark theme */
+  border-bottom: 1px solid #334155;
 
   display: flex;
-  justify-content: flex-end;
   align-items: center;
+  justify-content: center; /* center content */
 
   padding: 0 24px;
   position: sticky;
   top: 0;
   z-index: 1000;
 }
-
 /* ===== AVATAR ===== */
 
 .profile-avatar {
@@ -59,7 +58,7 @@
   border-radius: 14px;
   padding: 18px;
 
-  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+  box-shadow: 0 12px 28px rgba(237, 227, 227, 0.18);
   z-index: 2000;
 }
 

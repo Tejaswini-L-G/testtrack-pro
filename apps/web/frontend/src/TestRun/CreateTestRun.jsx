@@ -17,10 +17,26 @@ function CreateTestRun() {
   const [selectedCases, setSelectedCases] = useState([]);
   const [selectedTesters, setSelectedTesters] = useState([]);
 
+  const [milestones, setMilestones] = useState([]);
+const [selectedMilestone, setSelectedMilestone] = useState("");
+
   const [showDropdown, setShowDropdown] = useState(false);
   const projectId = localStorage.getItem("projectId");
 
   /* LOAD DATA */
+
+  useEffect(() => {
+  if (!projectId) return;
+
+  fetch(`http://localhost:5000/api/projects/${projectId}/milestones`, {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  })
+    .then(res => res.json())
+    .then(setMilestones);
+
+}, [projectId]);
 
   useEffect(() => {
 
@@ -84,6 +100,7 @@ function CreateTestRun() {
         startDate,
         endDate,
          projectId,
+          milestoneId: selectedMilestone || null,
         testCaseIds: selectedCases,
         testerIds: selectedTesters
       })
@@ -124,6 +141,23 @@ if (!projectId) {
         />
 
       </div>
+
+      <div className="form-group">
+  <label>Associate Milestone</label>
+
+  <select
+    value={selectedMilestone}
+    onChange={e => setSelectedMilestone(e.target.value)}
+  >
+    <option value="">None</option>
+
+    {milestones.map(ms => (
+      <option key={ms.id} value={ms.id}>
+        {ms.name}
+      </option>
+    ))}
+  </select>
+</div>
 
       <div className="form-group">
 

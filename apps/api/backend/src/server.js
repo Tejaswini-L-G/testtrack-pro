@@ -1254,7 +1254,11 @@ postconditions,
 
     // ✅ Ignore deleted test cases
     const testCaseId = await generateTestCaseId();
-
+    if (!projectId) {
+      return res.status(400).json({
+        message: "Project is required"
+      });
+    }
 
     const newTestCase = await prisma.testCase.create({
       data: {
@@ -1272,7 +1276,7 @@ postconditions,
         environment,
         impactIfFails,
   testDataRequirements,
-  environment,
+ 
   cleanupSteps,
   project: {
   connect: { id: projectId }
@@ -1294,6 +1298,21 @@ postconditions,
       },
       include: { steps: true }
     });
+
+if (req.body.customValues) {
+
+  for (const fieldId in req.body.customValues) {
+
+    await prisma.testCaseCustomValue.create({
+      data: {
+        value: req.body.customValues[fieldId],
+        fieldId,
+        testCaseId: newTestCase.id
+      }
+    });
+
+  }
+}
 
     res.json(newTestCase);
 
@@ -1523,6 +1542,12 @@ app.get("/testcases/:id", authenticate, async (req, res) => {
     attachments: {
       where: { isDeleted: false },
     },
+
+    TestCaseCustomValue: {
+          include: {
+            field: true
+          }
+        },
     createdBy: {
       select: {
         id: true,
@@ -1552,6 +1577,11 @@ app.get("/testcases", authenticate, async (req, res) => {
   include: {
     steps: true,
     attachments: true,
+    TestCaseCustomValue: {
+  include: {
+    field: true
+  }
+},
     createdBy: {
       select: {
         id: true,
@@ -2406,6 +2436,14 @@ app.post("/api/execution/save", async (req, res) => {
   try {
     const { executionId, steps } = req.body;
 
+    if (!executionId) {
+      return res.status(400).json({ message: "Execution ID missing" });
+    }
+
+    if (!Array.isArray(steps)) {
+      return res.status(400).json({ message: "Steps missing" });
+    }
+
     for (const step of steps) {
       await prisma.executionStep.upsert({
         where: {
@@ -2417,12 +2455,16 @@ app.post("/api/execution/save", async (req, res) => {
         update: {
           actual: step.actual,
           status: step.status,
+          notes: step.notes
         },
         create: {
           executionId,
           stepNumber: step.stepNumber,
+          action: step.action,
+          expected: step.expected,
           actual: step.actual,
           status: step.status,
+          notes: step.notes
         },
       });
     }
@@ -2430,6 +2472,7 @@ app.post("/api/execution/save", async (req, res) => {
     res.json({ message: "Progress saved" });
 
   } catch (err) {
+    console.error("SAVE ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -2473,7 +2516,8 @@ app.post("/api/testruns", async (req, res) => {
   endDate,
   testCaseIds,
   testerIds,
-  projectId   // 🔥 ADD
+  projectId,
+  milestoneId     // 🔥 ADD
 } = req.body;
 
 if (!projectId) {
@@ -2487,6 +2531,7 @@ if (!projectId) {
         startDate: new Date(startDate),
         endDate: new Date(endDate),
           projectId, 
+          milestoneId: milestoneId || null,
 
         testCases: {
           create: testCaseIds.map(id => ({
@@ -2855,15 +2900,56 @@ const count = await prisma.bug.count();
 });
 
 app.get("/api/bugs", async (req, res) => {
-  const { projectId } = req.query;
+  try {
+    const {
+      projectId,
+      priority,
+      assignedTo,
+      sort
+    } = req.query;
 
-  const bugs = await prisma.bug.findMany({
-     where: { projectId },
-    orderBy: { createdAt: "desc" }
-  });
+    if (!projectId) {
+      return res.status(400).json({ message: "projectId required" });
+    }
 
-  res.json(bugs);
+    const where = { projectId };
 
+    // ⭐ Priority Filter
+    if (priority) {
+      where.priority = priority;
+    }
+
+    // ⭐ Unassigned Filter
+    if (assignedTo === "null") {
+      where.assignedToId = null;
+    }
+
+    // ⭐ Assigned To Specific User
+    if (assignedTo && assignedTo !== "null") {
+      where.assignedToId = assignedTo;
+    }
+
+    // ⭐ Sorting
+    let orderBy = { createdAt: "desc" };
+
+    if (sort === "recent") {
+  orderBy = { createdAt: "desc" };
+}
+
+    const bugs = await prisma.bug.findMany({
+      where,
+      orderBy,
+      include: {
+        assignedTo: true
+      }
+    });
+
+    res.json(bugs);
+
+  } catch (err) {
+    console.error("BUG FETCH ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 app.get("/api/bugs/my/:testerId", async (req, res) => {
 
@@ -6036,6 +6122,537 @@ app.get("/api/projects/:id", authenticate, async (req, res) => {
   }
 
   res.json(project);
+});
+
+
+
+app.get("/api/admin/reports/cross-project", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Admin only" });
+  }
+
+  try {
+
+    const totalProjects = await prisma.project.count({
+      where: { active: true }
+    });
+
+    const totalTestCases = await prisma.testCase.count();
+
+    const totalRuns = await prisma.testRun.count();
+
+    const totalBugs = await prisma.bug.count();
+
+    const bugsByStatus = await prisma.bug.groupBy({
+      by: ["status"],
+      _count: { status: true }
+    });
+
+    const executions = await prisma.testExecution.groupBy({
+      by: ["status"],
+      _count: { status: true }
+    });
+
+    // Per Project Summary
+    const projectSummary = await prisma.project.findMany({
+      where: { active: true },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: {
+            testCases: true,
+            bugs: true,
+            testRuns: true
+          }
+        }
+      }
+    });
+
+    res.json({
+      totalProjects,
+      totalTestCases,
+      totalRuns,
+      totalBugs,
+      bugsByStatus,
+      executions,
+      projectSummary
+    });
+
+  } catch (err) {
+    console.error("Cross Project Report Error:", err);
+    res.status(500).json({ message: "Failed to load report" });
+  }
+});
+
+app.post("/api/projects/:projectId/custom-fields", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name, type, required, options } = req.body;
+
+  const field = await prisma.projectCustomField.create({
+    data: {
+      name,
+      type,
+      required,
+      options: options ? JSON.stringify(options) : null,
+      projectId: req.params.projectId
+    }
+  });
+
+  res.json(field);
+});
+
+app.get("/api/projects/:projectId/custom-fields", authenticate, async (req, res) => {
+
+  const fields = await prisma.projectCustomField.findMany({
+    where: { projectId: req.params.projectId }
+  });
+
+  res.json(fields);
+});
+
+app.delete("/api/custom-fields/:id", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  await prisma.projectCustomField.delete({
+    where: { id: req.params.id }
+  });
+
+  res.json({ message: "Deleted successfully" });
+});
+
+app.put("/api/custom-fields/:id", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name, type, required, options } = req.body;
+
+  const result = await prisma.projectCustomField.updateMany({
+    where: { id: req.params.id },
+    data: {
+      name,
+      type,
+      required,
+      options: options ? JSON.stringify(options) : null
+    }
+  });
+
+  if (result.count === 0) {
+    return res.status(404).json({ message: "Field not found" });
+  }
+
+  res.json({ message: "Updated successfully" });
+});
+
+
+
+app.post("/api/projects/:projectId/workflows", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name, statuses } = req.body;
+
+  const existing = await prisma.projectWorkflow.findFirst({
+    where: {
+      projectId: req.params.projectId,
+      name
+    }
+  });
+
+  if (existing) {
+    const updated = await prisma.projectWorkflow.update({
+      where: { id: existing.id },
+      data: {
+        statuses: JSON.stringify(statuses)
+      }
+    });
+    return res.json(updated);
+  }
+
+  const workflow = await prisma.projectWorkflow.create({
+    data: {
+      name,
+      statuses: JSON.stringify(statuses),
+      projectId: req.params.projectId
+    }
+  });
+
+  res.json(workflow);
+});
+
+app.get("/api/projects/:projectId/workflows/:name", authenticate, async (req, res) => {
+
+  const workflow = await prisma.projectWorkflow.findFirst({
+    where: {
+      projectId: req.params.projectId,
+      name: req.params.name
+    }
+  });
+
+  res.json(workflow);
+});
+
+app.delete("/api/projects/:projectId/workflows/:name", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  await prisma.projectWorkflow.deleteMany({
+    where: {
+      projectId: req.params.projectId,
+      name: req.params.name
+    }
+  });
+
+  res.json({ message: "Workflow deleted" });
+});
+
+
+app.post("/api/projects/:projectId/modules", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name } = req.body;
+
+  const module = await prisma.projectModule.create({
+    data: {
+      name,
+      projectId: req.params.projectId
+    }
+  });
+
+  res.json(module);
+});
+
+app.get("/api/projects/:projectId/modules", authenticate, async (req, res) => {
+
+  const modules = await prisma.projectModule.findMany({
+    where: { projectId: req.params.projectId }
+  });
+
+  res.json(modules);
+});
+
+app.delete("/api/modules/:id", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  await prisma.projectModule.delete({
+    where: { id: req.params.id }
+  });
+
+  res.json({ message: "Deleted" });
+});
+
+
+app.get("/api/projects/:projectId/environments", authenticate, async (req, res) => {
+  const environments = await prisma.projectEnvironment.findMany({
+    where: { projectId: req.params.projectId }
+  });
+
+  res.json(environments);
+});
+
+app.post("/api/projects/:projectId/environments", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name } = req.body;
+
+  const env = await prisma.projectEnvironment.create({
+    data: {
+      name,
+      projectId: req.params.projectId
+    }
+  });
+
+  res.json(env);
+});
+
+app.delete("/api/environments/:id", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  await prisma.projectEnvironment.delete({
+    where: { id: req.params.id }
+  });
+
+  res.json({ message: "Deleted" });
+});
+
+
+
+app.post("/api/projects/:projectId/milestones", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name, description, targetDate, targetPassRate } = req.body;
+
+  const milestone = await prisma.projectMilestone.create({
+    data: {
+      name,
+      description,
+      targetDate: new Date(targetDate),
+      targetPassRate: parseFloat(targetPassRate),
+      projectId: req.params.projectId
+    }
+  });
+
+  res.json(milestone);
+});
+
+
+
+app.delete("/api/milestones/:id", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  await prisma.projectMilestone.delete({
+    where: { id: req.params.id }
+  });
+
+  res.json({ message: "Milestone deleted" });
+});
+
+app.put("/api/milestones/:id", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { name, description, targetDate, targetPassRate } = req.body;
+
+  const updated = await prisma.projectMilestone.update({
+    where: { id: req.params.id },
+    data: {
+      name,
+      description,
+      targetDate: new Date(targetDate),
+      targetPassRate: Number(targetPassRate)
+    }
+  });
+
+  res.json(updated);
+});
+
+
+app.get("/api/projects/:projectId/milestones", authenticate, async (req, res) => {
+
+  const milestones = await prisma.projectMilestone.findMany({
+    where: { projectId: req.params.projectId },
+    include: {
+      testRuns: {
+        include: {
+           testCases: true, 
+          TestExecution: true
+        }
+      }
+    }
+  });
+
+  const result = milestones.map(ms => {
+
+    let total = 0;
+    let passed = 0;
+
+    ms.testRuns.forEach(run => {
+      run.TestExecution.forEach(exec => {
+        total++;
+       if ((exec.status || "").toLowerCase() === "passed") passed++;
+      });
+    });
+
+    const progress = total === 0 ? 0 : (passed / total) * 100;
+
+    let health = "On Track";
+
+    if (progress < ms.targetPassRate - 10)
+      health = "At Risk";
+
+    if (new Date() > new Date(ms.targetDate) && progress < ms.targetPassRate)
+      health = "Delayed";
+
+    return {
+      ...ms,
+      progress: progress.toFixed(1),
+      health
+    };
+  });
+
+  res.json(result);
+});
+
+
+
+app.get("/api/search", authenticate, async (req, res) => {
+  try {
+    const { q, projectId } = req.query;
+
+    if (!q || !projectId) {
+      return res.json({
+        testCases: [],
+        bugs: [],
+        comments: []
+      });
+    }
+
+    const testCases = await prisma.testCase.findMany({
+      where: {
+        projectId,
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } }
+        ]
+      },
+      take: 20
+    });
+
+    const bugs = await prisma.bug.findMany({
+      where: {
+        projectId,
+        OR: [
+          { title: { contains: q, mode: "insensitive" } },
+          { description: { contains: q, mode: "insensitive" } }
+        ]
+      },
+      take: 20
+    });
+
+    // 🔥 FIXED: use bugComment instead of comment
+    const comments = await prisma.bugComment.findMany({
+      where: {
+        bug: { projectId }, // filter via relation
+        content: { contains: q, mode: "insensitive" }
+      },
+      include: {
+        bug: true,
+        author: true
+      },
+      take: 20
+    });
+
+    res.json({
+      testCases,
+      bugs,
+      comments
+    });
+
+  } catch (err) {
+    console.error("SEARCH ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/advanced-filter", authenticate, async (req, res) => {
+  try {
+    const {
+      type,
+      priority,
+      status,
+      assignedTo,
+      module,
+      projectId
+    } = req.body;
+
+    const filters = [];
+
+    if (priority) filters.push({ priority });
+    if (status) filters.push({ status });
+    if (module) filters.push({ module });
+    if (assignedTo) filters.push({ assignedToId: assignedTo });
+    if (projectId) filters.push({ projectId });
+
+    const where = filters.length ? { AND: filters } : {};
+
+    let result = [];
+
+    if (type === "testCase") {
+      result = await prisma.testCase.findMany({ where });
+    }
+
+    if (type === "bug") {
+      result = await prisma.bug.findMany({ where });
+    }
+
+    res.json(result);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/filter-presets", authenticate, async (req, res) => {
+
+  const presets = await prisma.filterPreset.findMany({
+    where: {
+      OR: [
+        { userId: req.user.id },
+        { isShared: true }
+      ]
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  res.json(presets);
+});
+
+app.post("/api/filter-presets", authenticate, async (req, res) => {
+
+  const preset = await prisma.filterPreset.create({
+    data: {
+      name: req.body.name,
+      userId: req.user.id,   // ✅ IMPORTANT
+      filters: req.body.filters,
+      isShared: req.body.isShared
+    }
+  });
+
+  res.json(preset);
+});
+
+app.get("/api/quick-filter", authenticate, async (req, res) => {
+  const { type, filter, projectId } = req.query;
+
+  let where = { projectId };
+
+  if (filter === "my-items") {
+    where.assignedToId = req.user.id;
+  }
+
+  if (filter === "unassigned") {
+    where.assignedToId = null;
+  }
+
+  if (filter === "recent") {
+    where.updatedAt = {
+      gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    };
+  }
+
+  let result = [];
+
+  if (type === "testCase") {
+    result = await prisma.testCase.findMany({ where });
+  }
+
+  if (type === "bug") {
+    result = await prisma.bug.findMany({ where });
+  }
+
+  res.json(result);
 });
 
 

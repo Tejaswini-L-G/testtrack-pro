@@ -722,7 +722,7 @@ const activeFiltersCount =
 
 <button
   className="btn-link"
-  onClick={() => navigate(`/dashboard/testcases/view/${tc.id}`)}
+  onClick={() => navigate(`/dashboard/testcases/${tc.id}`)}
 >
   View
 </button>
