@@ -149,54 +149,22 @@ async function generateTestCaseId() {
 
 app.use(express.json());
 
-const nodemailer = require("nodemailer");
-let transporterPromise = nodemailer.createTestAccount().then(testAccount => {
-  const t = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
-    },
-  });
+console.log("EMAIL USER:", process.env.EMAIL_USER);
+console.log("EMAIL PASS LENGTH:", process.env.EMAIL_PASS?.length);
 
-  console.log("📩 Ethereal Email Ready");
-  return t;
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // TLS
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });
 
-async function sendDevEmail({ to, subject, text, html }) {
-  const transporter = await transporterPromise;
 
-  const info = await transporter.sendMail({
-    from: '"TestTrack Pro" <no-reply@testtrack.pro>',
-    to,
-    subject,
-    text,
-    html,
-  });
-
-  console.log("📩 Preview URL:", nodemailer.getTestMessageUrl(info));
-}
-
-
-let transporter;
-
-(async () => {
-  const testAccount = await nodemailer.createTestAccount();
-
-  transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
-    port: 587,
-    secure: false,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
-    },
-  });
-
-  console.log("📩 Ethereal Email Ready");
-})();
 
 function isStrongPassword(password) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password);
@@ -259,23 +227,7 @@ app.get("/api/me", async (req, res) => {
 
 
 
-app.get("/verify/:token", async (req, res) => {
-  try {
-    const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
 
-    await prisma.user.update({
-      where: { email: decoded.email },
-      data: {
-        isVerified: true,
-        verifyToken: null
-      }
-    });
-
-    res.redirect(`${process.env.FRONTEND_URL}/`);
-  } catch {
-    res.send("Verification link expired");
-  }
-});
 
 app.get("/users", authenticate, async (req, res) => {
   try {
@@ -370,32 +322,48 @@ app.post("/register", async (req, res) => {
       message:
         "Registration successful! Please check your email to verify your account.",
     });
-
+     console.log("📩 Sending verification email to:", email);
     // 📩 TRY SENDING EMAIL (FAILURE WON'T AFFECT USER NOW)
     try {
       const link = `${process.env.FRONTEND_URL}/verify/${verifyToken}`;
 
-      const info = await transporter.sendMail({
-        from: '"TestTrack Pro" <no-reply@testtrack.pro>',
-        to: email,
-        subject: "TestTrack Pro - Verify Your Account",
-        text: `Verify your account by opening this link:\n\n${link}`,
-        html: `
-          <div style="font-family: Arial, sans-serif;">
-            <h2>TestTrack Pro</h2>
-            <p>Click the button below to verify your account:</p>
-            <a href="${link}" 
-               style="display:inline-block;padding:10px 20px;background:#4facfe;color:white;text-decoration:none;border-radius:5px;">
-               Verify Account
-            </a>
-            <p style="margin-top:10px;">Or copy this link:</p>
-            <p>${link}</p>
-          </div>
-        `,
-      });
+      await transporter.sendMail({
+  from: process.env.EMAIL_USER,
+  to: email,
+  subject: "Welcome to TestTrack Pro 🎉",
+  html: `
+    <div style="font-family: Arial; padding:20px;">
+      <h2>Welcome to TestTrack Pro</h2>
+      <p>Hi ${name},</p>
 
-      // 👇 Preview link (Ethereal)
-      console.log("📩 Preview URL:", nodemailer.getTestMessageUrl(info));
+      <p>Thank you for creating your account.</p>
+
+      <p>Please confirm your email address to activate your account.</p>
+
+      <p>
+        <a href="${link}" 
+           style="display:inline-block;padding:10px 20px;
+           background:#4f46e5;color:white;
+           text-decoration:none;border-radius:5px;">
+           Confirm Email Address
+        </a>
+      </p>
+
+      <hr style="margin-top:20px;" />
+
+      <p style="font-size:12px;color:#777;">
+        If you did not create this account, you can safely ignore this email.
+      </p>
+
+      <p style="font-size:12px;color:#777;">
+        TestTrack Pro Team
+      </p>
+    </div>
+  `
+});
+console.log("✅ Verification email sent successfully");
+      
+      
     } catch (mailErr) {
       console.error("EMAIL SEND FAILED:", mailErr);
     }
@@ -473,7 +441,7 @@ app.post("/login", async (req, res) => {
 
 app.post("/forgot-password", async (req, res) => {
   try {
-    console.log("🚀 Forgot Password HIT");
+    
 
     const { email } = req.body;
     if (!email) {
@@ -507,13 +475,23 @@ app.post("/forgot-password", async (req, res) => {
     // 🔗 Generate link AFTER token exists
     const link = `${process.env.FRONTEND_URL}/reset/${token}`;
 
-    console.log("🔗 Reset link generated:", link);
 
     // 📩 DEV MODE — PRINT LINK IN TERMINAL
-    res.json({
-      message: "Reset link generated",
-      resetLink: link
-    });
+   await transporter.sendMail({
+  from: `"TestTrack Pro" <${process.env.EMAIL_USER}>`,
+  to: email,
+  subject: "Reset Your Password",
+  html: `
+    <h2>Reset Password</h2>
+    <p>Click below to reset:</p>
+    <a href="${link}" 
+       style="padding:10px 15px;background:#4f46e5;color:white;text-decoration:none;border-radius:5px;">
+       Reset Password
+    </a>
+  `
+});
+
+res.json({ message: "Reset link sent to email" });
 
   } catch (err) {
     console.error("❌ FORGOT PASSWORD ERROR:", err);
