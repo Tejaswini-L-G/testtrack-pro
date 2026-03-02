@@ -18,8 +18,10 @@ import TemplateList from "./Dashboard/Tester/TestCases/TemplateList";
 import ImportTestCases from "./Dashboard/Tester/TestCases/ImportTestCases";
 import ViewTestCase from "./Dashboard/Tester/TestCases/ViewTestCase";
 import TesterDashboard  from "./Dashboard/TesterDashboard";
+import SuitesList from "./Dashboard/Tester/Suites/SuitesList";
 
-
+import VersionsList from "./Dashboard/Tester/TestCases/VersionsList";
+import VersionDetail from "./Dashboard/Tester/TestCases/VersionDetail";
 
 
 
@@ -69,6 +71,21 @@ function App() {
   <Route path="/testcases" element={<TestCases />} />
    <Route path="/testcases/create" element={<CreateTestCase />} />
    <Route path="/testcases/:id/edit" element={<EditTestCase />} />
+  <Route path="/suites" element={<SuitesList />} />
+
+  <Route
+  path="/dashboard/testcases/:id/versions"
+  element={<VersionsList />}
+/>
+
+<Route
+  path="/dashboard/version/:id"
+  element={<VersionDetail />}
+/>
+
+
+
+
    <Route
 path="/dashboard/testcases/edit/:id"
   element={<EditTestCase />}

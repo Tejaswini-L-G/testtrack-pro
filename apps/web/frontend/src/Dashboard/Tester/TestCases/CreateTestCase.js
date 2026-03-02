@@ -10,8 +10,27 @@ function CreateTestCase() {
   const [severity, setSeverity] = useState("Major");
   const [type, setType] = useState("Functional");
 
+  // 🔹 Context section toggle
+
+
+
+
+
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [changeLog, setChangeLog] = useState("");
+  
+
+const [showContext, setShowContext] = useState(false);
+
+const [preconditions, setPreconditions] = useState("");
+const [postconditions, setPostconditions] = useState("");
+const [impactIfFails, setImpactIfFails] = useState("");
+const [testDataRequirements, setTestDataRequirements] = useState("");
+const [environment, setEnvironment] = useState("");
+const [cleanupSteps, setCleanupSteps] = useState("");
+
+
 
   const [steps, setSteps] = useState([
     { action: "", testData: "", expected: "" },
@@ -43,6 +62,12 @@ function CreateTestCase() {
           type,
           status: "Draft",
           steps,
+           preconditions,
+  postconditions,
+  impactIfFails,
+  testDataRequirements,
+  environment,
+  cleanupSteps,
         },
         {
           headers: {
@@ -182,6 +207,64 @@ function CreateTestCase() {
           Add Step
         </button>
       </div>
+
+<button
+  type="button"
+  className="context-toggle-btn"
+  onClick={() => setShowContext(!showContext)}
+>
+  {showContext ? "Hide Test Context ▲" : "Show Test Context ▼"}
+</button>
+
+{showContext && (
+  <div className="context-section">
+
+    <h3>Execution & Test Context</h3>
+
+    <div className="context-grid">
+
+      <div className="tc-field">
+        <label>Preconditions</label>
+        <textarea
+          value={preconditions}
+          onChange={(e) => setPreconditions(e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="tc-field">
+        <label>Impact if Test Fails</label>
+        <textarea rows={3} />
+      </div>
+
+      <div className="tc-field">
+        <label>Postconditions</label>
+        <textarea
+          value={postconditions}
+          onChange={(e) => setPostconditions(e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="tc-field">
+        <label>Test Data Requirements</label>
+        <textarea rows={3} />
+      </div>
+
+      <div className="tc-field">
+        <label>Environment Requirements</label>
+        <textarea rows={3} />
+      </div>
+
+      <div className="tc-field">
+        <label>Cleanup Steps</label>
+        <textarea rows={3} />
+      </div>
+
+    </div>
+  </div>
+)}
+
 
       {/* Submit */}
       <div className="tc-actions">

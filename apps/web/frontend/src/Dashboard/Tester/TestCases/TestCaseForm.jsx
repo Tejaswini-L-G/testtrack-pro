@@ -9,6 +9,36 @@ function TestCaseForm({ initialData = {}, onSubmit, isEdit = false }) {
   const [severity, setSeverity] = useState(initialData.severity || "Major");
   const [type, setType] = useState(initialData.type || "Functional");
   const [status, setStatus] = useState(initialData.status || "Draft");
+  const [showContext, setShowContext] = useState(false);
+  const [changeLog, setChangeLog] = useState("");
+  const [impact, setImpact] = useState(initialData.impactIfFails || "");
+ 
+
+  const [preconditions, setPreconditions] = useState(
+  initialData.preconditions || ""
+);
+
+const [postconditions, setPostconditions] = useState(
+  initialData.postconditions || ""
+);
+
+const [impactIfFails, setImpactIfFails] = useState(
+  initialData.impactIfFails || ""
+);
+
+const [testDataRequirements, setTestDataRequirements] = useState(
+  initialData.testDataRequirements || ""
+);
+
+const [environment, setEnvironment] = useState(
+  initialData.environment || ""
+);
+
+const [cleanupSteps, setCleanupSteps] = useState(
+  initialData.cleanupSteps || ""
+);
+
+
 
   const [steps, setSteps] = useState(
     initialData.steps && initialData.steps.length > 0
@@ -47,6 +77,12 @@ function TestCaseForm({ initialData = {}, onSubmit, isEdit = false }) {
       type,
       status,
       steps,
+      preconditions,
+  postconditions,
+  impactIfFails,
+  testDataRequirements,
+  environment,
+  cleanupSteps,
     };
 
     onSubmit(payload);
@@ -88,6 +124,7 @@ function TestCaseForm({ initialData = {}, onSubmit, isEdit = false }) {
               />
             </div>
 
+            
             <div className="tc-field">
               <label>Priority</label>
               <select
@@ -203,6 +240,68 @@ function TestCaseForm({ initialData = {}, onSubmit, isEdit = false }) {
             Add Step
           </button>
         </div>
+{/* ===============================
+   Execution / Test Context (BOTTOM)
+================================ */}
+
+<button
+  type="button"
+  className="context-toggle-btn"
+  onClick={() => setShowContext(!showContext)}
+>
+  {showContext ? "Hide Test Context ▲" : "Show Test Context ▼"}
+</button>
+
+{showContext && (
+  <div className="context-section">
+
+    <h3>Execution & Test Context</h3>
+
+    <div className="context-grid">
+
+      <div className="tc-field">
+        <label>Preconditions</label>
+        <textarea
+          value={preconditions}
+          onChange={(e) => setPreconditions(e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="tc-field">
+        <label>Impact if Test Fails</label>
+        <textarea rows={3} />
+      </div>
+
+      <div className="tc-field">
+        <label>Postconditions</label>
+        <textarea
+          value={postconditions}
+          onChange={(e) => setPostconditions(e.target.value)}
+          rows={3}
+        />
+      </div>
+
+      <div className="tc-field">
+        <label>Test Data Requirements</label>
+        <textarea rows={3} />
+      </div>
+
+      <div className="tc-field">
+        <label>Environment Requirements</label>
+        <textarea rows={3} />
+      </div>
+
+      <div className="tc-field">
+        <label>Cleanup Steps</label>
+        <textarea rows={3} />
+      </div>
+
+    </div>
+  </div>
+)}
+
+       
 
         {/* Submit */}
         <div className="tc-actions">
