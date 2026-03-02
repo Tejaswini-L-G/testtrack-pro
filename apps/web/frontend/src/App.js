@@ -69,6 +69,7 @@ import ProjectEnvironments from "./Projects/ProjectEnvironments";
 import ProjectMilestones from "./Projects/ProjectMilestones";
 import MilestoneDashboard from "./Projects/MilestoneDashboard";
 import GlobalSearch from "./Search/GlobalSearch";
+import OAuthSuccess from "./OAuthSuccess";
 import "./styles.css";
 
 
@@ -321,7 +322,7 @@ function App() {
 
 </Route>
 
-
+<Route path="/oauth-success" element={<OAuthSuccess />} />
 
 
 

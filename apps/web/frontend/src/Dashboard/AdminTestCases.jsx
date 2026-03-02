@@ -40,7 +40,7 @@ function AdminTestCases() {
     });
 
     const data = await res.json();
-    setTestCases(data);
+    setTestCases(Array.isArray(data) ? data : data.testCases || []);
   };
 
   // ===== Selection =====
