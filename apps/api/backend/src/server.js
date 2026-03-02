@@ -26,6 +26,24 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
+
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader)
+    return res.status(401).json({ message: "No token" });
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};
+
 async function generateTestCaseId() {
   const year = new Date().getFullYear();
 
@@ -153,6 +171,26 @@ app.get("/verify/:token", async (req, res) => {
     res.send("Verification link expired");
   }
 });
+
+app.get("/users", authenticate, async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    });
+
+    res.json(users);
+
+  } catch (err) {
+    console.error("FETCH USERS ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+});
+
 
 // 👉 PASTE REGISTER API BELOW THIS LINE
 app.post("/register", async (req, res) => {
@@ -293,7 +331,12 @@ app.post("/login", async (req, res) => {
     },
   });
 
-  res.json({ accessToken, refreshToken });
+  res.json({
+  accessToken,
+  refreshToken,
+  role: user.role,
+  name: user.name
+});
 });
 
 app.post("/forgot-password", async (req, res) => {
@@ -540,24 +583,7 @@ app.get("/auth/github/callback",
   }
 );
 
-const authenticate = (req, res, next) => {
-  const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res.status(401).json({ message: "Token missing" });
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error("JWT ERROR:", err.message);
-    return res.status(401).json({ message: "Invalid token" });
-  }
-};
 
 
 
@@ -671,6 +697,30 @@ app.put("/testcases/bulk-update", authenticate, async (req, res) => {
     res.status(500).json({ message: "Bulk update failed" });
   }
 });
+
+app.put("/admin/testcases/bulk-permanent", authenticate, async (req, res) => {
+  const { ids } = req.body;
+
+  await prisma.testCase.deleteMany({
+    where: { id: { in: ids } }
+  });
+
+  res.json({ message: "Deleted successfully" });
+});
+
+app.put("/admin/testcases/bulk-restore", authenticate, async (req, res) => {
+  const { ids } = req.body;
+
+  await prisma.testCase.updateMany({
+    where: { id: { in: ids } },
+    data: { isDeleted: false }
+  });
+
+  res.json({ message: "Restored successfully" });
+});
+
+
+
 
 // 🔥 BULK DELETE TEST CASES (SOFT DELETE)
 app.put("/testcases/bulk-delete", authenticate, async (req, res) => {
@@ -2028,6 +2078,57 @@ app.put("/templates/:id", authenticate, async (req, res) => {
   }
 });
 
+app.get("/admin/testcases", authenticate, async (req, res) => {
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const testCases = await prisma.testCase.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  res.json(testCases);
+});
+
+
+app.put(
+  "/admin/testcases/:id/restore",
+  authenticate,
+  async (req, res) => {
+    if (req.user.role !== "admin")
+      return res.status(403).json({ message: "Admin only" });
+
+    await prisma.testCase.update({
+      where: { id: req.params.id },
+      data: { isDeleted: false },
+    });
+
+    res.json({ message: "Test case restored" });
+  }
+);
+
+app.delete(
+  "/admin/testcases/:id/permanent",
+  authenticate,
+  async (req, res) => {
+    if (req.user.role !== "admin")
+      return res.status(403).json({ message: "Admin only" });
+
+    await prisma.testCase.delete({
+      where: { id: req.params.id },
+    });
+
+    res.json({ message: "Test case permanently deleted" });
+  }
+);
+
+app.get("/admin/testcases/deleted", authenticate, async (req, res) => {
+  const deleted = await prisma.testCase.findMany({
+    where: { isDeleted: true },
+    orderBy: { updatedAt: "desc" }
+  });
+
+  res.json(deleted);
+});
 
 
 // Server start
