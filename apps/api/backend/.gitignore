@@ -3,3 +3,10 @@ node_modules
 .env
 
 /src/generated/prisma
+# Database backups
+apps/api/backend/backups/
+apps/api/backend/archived-backups/
+*.sql
+
+# Uploads
+apps/api/backend/uploads/
