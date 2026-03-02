@@ -18,24 +18,60 @@ function CreateTestRun() {
   const [selectedTesters, setSelectedTesters] = useState([]);
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const projectId = localStorage.getItem("projectId");
 
   /* LOAD DATA */
 
   useEffect(() => {
 
-    fetch("http://localhost:5000/api/testcases")
-      .then(r => r.json())
-      .then(setTestCases);
+  if (!projectId) return;
 
-    fetch("http://localhost:5000/api/users?role=tester")
-      .then(r => r.json())
-      .then(setTesters);
+  const token = localStorage.getItem("token");
 
-  }, []);
+  // LOAD TEST CASES
+  fetch(`http://localhost:5000/testcases?projectId=${projectId}`, {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setTestCases(data);
+      } else {
+        console.error("Testcases API error:", data);
+        setTestCases([]);
+      }
+    })
+    .catch(() => setTestCases([]));
+
+  // LOAD TESTERS
+  fetch("http://localhost:5000/api/users?role=tester", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setTesters(data);
+      } else {
+        console.error("Users API error:", data);
+        setTesters([]);
+      }
+    })
+    .catch(() => setTesters([]));
+
+}, [projectId]);  // 🔥 ADD projectId dependency
 
   /* CREATE RUN */
 
  const createRun = async () => {
+
+  if (!projectId) {
+  alert("Please select a project first");
+  return;
+}
 
   const res = await fetch(
     "http://localhost:5000/api/testruns",
@@ -47,6 +83,7 @@ function CreateTestRun() {
         description,
         startDate,
         endDate,
+         projectId,
         testCaseIds: selectedCases,
         testerIds: selectedTesters
       })
@@ -66,6 +103,9 @@ function CreateTestRun() {
 
   }
 };
+if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
 
   return (
     <div className="testrun-page">

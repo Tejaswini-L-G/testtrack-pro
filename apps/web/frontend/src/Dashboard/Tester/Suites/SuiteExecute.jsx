@@ -11,6 +11,7 @@ const location = useLocation();
 const params = new URLSearchParams(location.search);
 const mode = params.get("mode") || "sequential";
 const [currentIndex, setCurrentIndex] = useState(0);
+const projectId = localStorage.getItem("projectId");
 
   const navigate = useNavigate();
 
@@ -40,8 +41,8 @@ const [currentIndex, setCurrentIndex] = useState(0);
       const suiteData = await suiteRes.json();
       setSuite(suiteData);
 
-      const tcRes = await fetch(
-        "http://localhost:5000/testcases",
+    const tcRes = await fetch(
+  `http://localhost:5000/testcases?projectId=${projectId}`,
         {
           headers: {
             Authorization: "Bearer " + token,

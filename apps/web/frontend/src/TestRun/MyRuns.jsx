@@ -6,22 +6,28 @@ function MyRuns() {
 
   const [runs, setRuns] = useState([]);
   const navigate = useNavigate();
-
+const projectId = localStorage.getItem("projectId");
   /* Get tester ID from token */
 
   const token = localStorage.getItem("token");
   const payload = JSON.parse(atob(token.split(".")[1]));
   const testerId = payload.id;
 
-  useEffect(() => {
+ useEffect(() => {
 
-    fetch(
-      `http://localhost:5000/api/my-runs/${testerId}`
-    )
-      .then(r => r.json())
-      .then(setRuns);
+  if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
 
-  }, [testerId]);
+  fetch(
+    `http://localhost:5000/api/testruns/my/${testerId}?projectId=${projectId}`
+  )
+    .then(r => r.json())
+    .then(setRuns);
+
+}, [testerId, projectId]);
+
+
 
   return (
     <div className="page-container">

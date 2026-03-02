@@ -3,6 +3,7 @@ import "./AdminDashboard.css";
 import { useState } from "react";
 import { useEffect } from "react";
 import DashboardWidgets from "../Reports/DashboardWidgets";
+import ProjectSelector from "../Projects/ProjectSelector";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -23,6 +24,48 @@ const payload = token
 
 // ADD STATE
 const [profileOpen, setProfileOpen] = useState(false);
+
+const [projectName, setProjectName] = useState("");
+const [projectId, setProjectId] = useState(
+  localStorage.getItem("projectId")
+);
+
+useEffect(() => {
+
+  const loadProjectName = async () => {
+
+    if (!projectId) {
+      setProjectName("");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/projects/${projectId}`,
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token")
+          }
+        }
+      );
+
+      if (!res.ok) {
+        setProjectName("");
+        return;
+      }
+
+      const data = await res.json();
+      setProjectName(data.name);
+
+    } catch (err) {
+      console.error("Failed to load project name");
+      setProjectName("");
+    }
+  };
+
+  loadProjectName();
+
+}, [projectId]);
 
 
 // LOAD USER FROM API
@@ -114,6 +157,12 @@ useEffect(() => {
     <aside className="admin-sidebar">
 
   <h2 className="admin-logo">TestTrack Pro</h2>
+  <div className="project-display">
+    Project: <strong>{projectName || "Not Selected"}</strong>
+  </div>
+
+  <ProjectSelector />
+
 
   <nav className="admin-nav">
 

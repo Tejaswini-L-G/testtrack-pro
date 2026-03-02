@@ -20,6 +20,7 @@ function EditTestRun() {
   const [selectedTesters, setSelectedTesters] = useState([]);
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const projectId = localStorage.getItem("projectId");
 
   /* LOAD DATA */
 
@@ -45,7 +46,7 @@ function EditTestRun() {
 
       });
 
-    fetch("http://localhost:5000/api/testcases")
+    fetch(`http://localhost:5000/testcases?projectId=${projectId}`)
       .then(r => r.json())
       .then(setTestCases);
 
@@ -54,6 +55,10 @@ function EditTestRun() {
       .then(setTesters);
 
   }, [id]);
+
+  if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
 
   /* SAVE */
 

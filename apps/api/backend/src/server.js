@@ -14,7 +14,7 @@ const fs = require("fs");
 
 const xlsx = require("xlsx");
 
-
+const { execFile } = require("child_process");
 const logAction = require("./utils/logAction");
 const getUserIdFromToken = require("./utils/getUserFromToken");
 // or your existing path
@@ -1242,8 +1242,10 @@ app.post("/testcases", authenticate, async (req, res) => {
       impactIfFails,          // ✅ ADD
   testDataRequirements,   // ✅ ADD
   cleanupSteps, 
-     
+     projectId,
 postconditions,
+
+
 
       testData,
       environment,
@@ -1272,6 +1274,9 @@ postconditions,
   testDataRequirements,
   environment,
   cleanupSteps,
+  project: {
+  connect: { id: projectId }
+},
         
 
         createdBy: {
@@ -1540,8 +1545,10 @@ app.get("/testcases/:id", authenticate, async (req, res) => {
 });
 
 app.get("/testcases", authenticate, async (req, res) => {
+  const { projectId } = req.query;
   const testCases = await prisma.testCase.findMany({
-  where: { isDeleted: false },
+  where: {  projectId,
+    isDeleted: false },
   include: {
     steps: true,
     attachments: true,
@@ -1607,9 +1614,18 @@ app.put(
       const { suiteId } = req.params;
       const { testCaseIds } = req.body;
 
+      const suite = await prisma.testSuite.findUnique({
+  where: { id: suiteId }
+});
+
+if (!suite) {
+  return res.status(404).json({ message: "Suite not found" });
+}
+
       const result = await prisma.testCase.updateMany({
         where: {
           id: { in: testCaseIds },
+          projectId: suite.projectId, 
           isDeleted: false,
         },
         data: {
@@ -2000,15 +2016,24 @@ app.get("/versions/:versionId", authenticate, async (req, res) => {
 
 app.post("/suites", authenticate, async (req, res) => {
   try {
-    const { name, description, module, parentId } = req.body;
+    const { name, description, module, parentId,projectId } = req.body;
 
     const suite = await prisma.testSuite.create({
       data: {
         name,
         description,
         module,
-         parentId,
-        createdById: req.user.id,
+        project: {
+      connect: { id: projectId }
+    },
+
+          parent: parentId
+      ? { connect: { id: parentId } }
+      : undefined,
+
+    createdBy: {
+      connect: { id: req.user.id }
+    }
       },
     });
 
@@ -2111,8 +2136,17 @@ app.get("/suites/:id", authenticate, async (req, res) => {
 });
 
 app.get("/testsuites", authenticate, async (req, res) => {
+  const { projectId } = req.query;
+
+  if (!projectId) {
+    return res.status(400).json({ message: "Project is required" });
+  }
+
   const suites = await prisma.testSuite.findMany({
-    where: { isDeleted: false },
+    where: {
+      isDeleted: false,
+      projectId,   // 🔥 ADD THIS
+    },
     select: {
       id: true,
       name: true
@@ -2433,13 +2467,18 @@ app.post("/api/testruns", async (req, res) => {
   try {
 
     const {
-      name,
-      description,
-      startDate,
-      endDate,
-      testCaseIds,
-      testerIds
-    } = req.body;
+  name,
+  description,
+  startDate,
+  endDate,
+  testCaseIds,
+  testerIds,
+  projectId   // 🔥 ADD
+} = req.body;
+
+if (!projectId) {
+  return res.status(400).json({ message: "Project is required" });
+}
 
     const run = await prisma.testRun.create({
       data: {
@@ -2447,6 +2486,7 @@ app.post("/api/testruns", async (req, res) => {
         description,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
+          projectId, 
 
         testCases: {
           create: testCaseIds.map(id => ({
@@ -2470,9 +2510,16 @@ app.post("/api/testruns", async (req, res) => {
 });
 
 app.get("/api/testruns", async (req, res) => {
+  const { projectId } = req.query;
+
+  if (!projectId) {
+    return res.status(400).json({ message: "Project is required" });
+  }
 
   const runs = await prisma.testRun.findMany({
+     where: { projectId }, 
     include: {
+      
       testCases: true,
       assignments: true
     }
@@ -2521,10 +2568,6 @@ app.get("/api/testruns/my/:testerId", async (req, res) => {
 
   res.json(runs);
 });
-
-
-
-
 
 
 app.get("/api/testruns/:id", async (req, res) => {
@@ -2622,6 +2665,7 @@ app.get("/api/my-runs/:testerId", async (req, res) => {
 
   const runs = await prisma.testRun.findMany({
     where: {
+      projectId: req.query.projectId,
       assignments: {
         some: { testerId }
       }
@@ -2772,6 +2816,7 @@ app.post("/api/bugs", upload.single("evidence"), async (req, res) => {
 expectedBehavior,
 actualBehavior,
 type,
+ projectId, 
 environment,
 affectedVersion  // ⭐ REQUIRED
   } = req.body;
@@ -2792,11 +2837,10 @@ const count = await prisma.bug.count();
       priority,
       testCaseId,
       runId,
+      projectId,
       stepNumber: parseInt(stepNumber),
        evidencePath: req.file?.filename,
-      reportedBy: {
-  connect: { id: reportedById }
-},
+     reportedById: reportedById,
       stepsToReproduce,
     expectedBehavior,
     actualBehavior,
@@ -2811,8 +2855,10 @@ const count = await prisma.bug.count();
 });
 
 app.get("/api/bugs", async (req, res) => {
+  const { projectId } = req.query;
 
   const bugs = await prisma.bug.findMany({
+     where: { projectId },
     orderBy: { createdAt: "desc" }
   });
 
@@ -2822,10 +2868,12 @@ app.get("/api/bugs", async (req, res) => {
 app.get("/api/bugs/my/:testerId", async (req, res) => {
 
   const testerId = req.params.testerId;
+   const { projectId } = req.query;
 
   const bugs = await prisma.bug.findMany({
     where: {
-      reportedById: testerId
+      reportedById: testerId,
+      projectId
     },
     orderBy: {
       createdAt: "desc"
@@ -2837,8 +2885,11 @@ app.get("/api/bugs/my/:testerId", async (req, res) => {
 });
 
 app.get("/api/bugs/export", async (req, res) => {
+  const { projectId } = req.query;
 
   const bugs = await prisma.bug.findMany({
+    
+     where: { projectId },
     orderBy: { createdAt: "desc" }
   });
 
@@ -5328,12 +5379,25 @@ app.delete("/api/widgets/:id", async (req, res) => {
 app.get("/api/admin/projects", async (req, res) => {
 
   const projects = await prisma.project.findMany({
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
+    include: {
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true
+            }
+          }
+        }
+      }
+    }
   });
 
   res.json(projects);
 });
-
 app.put("/api/admin/projects/:id", async (req, res) => {
 
   const { name, description } = req.body;
@@ -5423,7 +5487,60 @@ app.put("/api/admin/projects/:id/archive", async (req, res) => {
 });
 
 
+app.get("/api/projects", authenticate, async (req, res) => {
 
+  const role = req.user.role;
+
+  let projects;
+
+  if (role === "admin") {
+
+    projects = await prisma.project.findMany({
+      where: { active: true }
+    });
+
+  } else {
+
+    projects = await prisma.project.findMany({
+      where: {
+        active: true,
+        members: {
+          some: {
+            userId: req.user.id
+          }
+        }
+      }
+    });
+
+  }
+
+  res.json(projects);
+});
+
+app.post("/api/projects/:projectId/members", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Only admin allowed" });
+  }
+
+  const { projectId } = req.params;
+  const { userId } = req.body;
+
+  try {
+
+    const member = await prisma.projectMember.create({
+      data: {
+        userId,
+        projectId
+      }
+    });
+
+    res.json(member);
+
+  } catch (err) {
+    res.status(400).json({ message: "Already assigned" });
+  }
+});
 
 
 app.put("/api/admin/audit/archive-old", async (req, res) => {
@@ -5849,6 +5966,78 @@ app.delete("/api/admin/backups/permanent/:name", authenticate, (req, res) => {
 
   res.json({ message: "Backup permanently deleted" });
 });
+
+app.get("/api/reports/execution", async (req, res) => {
+  const { projectId, all } = req.query;
+
+  const testCaseFilter =
+    all === "true"
+      ? {}
+      : { projectId };
+
+  const total = await prisma.testCase.count({
+    where: testCaseFilter,
+  });
+
+  const passed = await prisma.testExecution.count({
+    where: {
+      status: "Passed",
+      testCase: testCaseFilter
+    },
+  });
+
+  res.json({
+    total,
+    passed,
+    passRate: total
+      ? ((passed / total) * 100).toFixed(2)
+      : 0,
+  });
+});
+
+
+
+
+
+app.get("/debug-assign-members", async (req, res) => {
+
+  const users = await prisma.user.findMany();
+  const project = await prisma.project.findFirst();
+
+  for (const user of users) {
+    await prisma.projectMember.upsert({
+      where: {
+        userId_projectId: {
+          userId: user.id,
+          projectId: project.id
+        }
+      },
+      update: {},
+      create: {
+        userId: user.id,
+        projectId: project.id
+      }
+    });
+  }
+
+  res.json({ message: "All users assigned to default project" });
+});
+
+app.get("/api/projects/:id", authenticate, async (req, res) => {
+
+  const { id } = req.params;
+
+  const project = await prisma.project.findUnique({
+    where: { id }
+  });
+
+  if (!project) {
+    return res.status(404).json({ message: "Project not found" });
+  }
+
+  res.json(project);
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
