@@ -8,16 +8,16 @@ datasource db {
 }
 
 model User {
-  id               String             @id @default(uuid())
+  id               String              @id @default(uuid())
   name             String
-  email            String             @unique
+  email            String              @unique
   password         String
-  role             String             @default("tester")
-  createdAt        DateTime           @default(now())
+  role             String              @default("tester")
+  createdAt        DateTime            @default(now())
   resetExpiry      DateTime?
   resetToken       String?
-  failedAttempts   Int                @default(0)
-  isVerified       Boolean            @default(false)
+  failedAttempts   Int                 @default(0)
+  isVerified       Boolean             @default(false)
   lockUntil        DateTime?
   passwordHistory  String[]
   refreshToken     String?
@@ -26,24 +26,37 @@ model User {
   testCases        TestCase[]
   TestCaseTemplate TestCaseTemplate[]
   testSuites       TestSuite[]
+  assignments      TestRunAssignment[]
+
+  reportedBugs  Bug[]
+  TestExecution TestExecution[]
+  assignedBugs  Bug[]           @relation("AssignedBugs")
+
+  bugComments BugComment[]
+  active      Boolean      @default(true)
+
+  Role            Role?             @relation(fields: [roleId], references: [id])
+  roleId          String?
+  DashboardWidget DashboardWidget[]
+  Project         Project[]
+  AuditLog        AuditLog[]
 }
 
 model TestCase {
-  id               String            @id @default(uuid())
-  testCaseId       String            @unique
-  title            String
-  description      String
-  module           String
-  priority         String
-  severity         String
-  type             String
-  status           String
-  preconditions    String?
+  id            String  @id @default(uuid())
+  testCaseId    String  @unique
+  title         String
+  description   String
+  module        String
+  priority      String
+  severity      String
+  type          String
+  status        String
+  preconditions String?
 
+  impactIfFails String?
 
-impactIfFails        String?
-
-testDataRequirements String?
+  testDataRequirements String?
 
   testData         String?
   environment      String?
@@ -51,21 +64,21 @@ testDataRequirements String?
   cleanupSteps     String?
   createdById      String
   assignedTesterId String?
-  version          Int               @default(1)
-  tags             String[]          @default([])
-  isDeleted        Boolean           @default(false)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  
-  attachments      Attachment[]
-  createdBy        User              @relation(fields: [createdById], references: [id])
-  
-  versions         TestCaseVersion[]
-  steps            TestStep[]
+  version          Int      @default(1)
+  tags             String[] @default([])
+  isDeleted        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  suiteId   String?
-  suite     TestSuite? @relation(fields: [suiteId], references: [id])
+  attachments Attachment[]
+  createdBy   User         @relation(fields: [createdById], references: [id])
 
+  versions TestCaseVersion[]
+  steps    TestStep[]
+
+  suiteId String?
+  suite   TestSuite? @relation(fields: [suiteId], references: [id])
+  order   Int?
 }
 
 model TestStep {
@@ -105,15 +118,22 @@ model TestCaseVersion {
 }
 
 model TestSuite {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
+  module      String?
+  parentId    String?
   createdById String
-  createdBy   User       @relation(fields: [createdById], references: [id])
-  testCases   TestCase[]
-  createdAt   DateTime   @default(now())
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
 
-  isDeleted   Boolean  @default(false)
+  parent   TestSuite?  @relation("SuiteHierarchy", fields: [parentId], references: [id])
+  children TestSuite[] @relation("SuiteHierarchy")
+
+  createdBy User       @relation(fields: [createdById], references: [id])
+  testCases TestCase[]
+
+  isDeleted Boolean @default(false)
 }
 
 model TestCaseTemplate {
@@ -129,9 +149,9 @@ model TestCaseTemplate {
   steps       TemplateStep[]
   createdBy   User           @relation(fields: [createdById], references: [id])
 
- category String @default("General")
+  category String @default("General")
 
-  isGlobal    Boolean  @default(true)  // ⭐ org-wide
+  isGlobal Boolean @default(true) // ⭐ org-wide
 }
 
 model TemplateStep {
@@ -142,4 +162,203 @@ model TemplateStep {
   testData   String?
   expected   String
   template   TestCaseTemplate @relation(fields: [templateId], references: [id])
+}
+
+model TestExecution {
+  id           String    @id @default(uuid())
+  testCaseId   String
+  executedById String
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  status       String // InProgress / Passed / Failed
+
+  steps ExecutionStep[]
+
+  testRunId String?
+  testRun   TestRun? @relation(fields: [testRunId], references: [id])
+
+  executedBy User @relation(fields: [executedById], references: [id])
+}
+
+model ExecutionStep {
+  id          String @id @default(uuid())
+  executionId String
+  stepNumber  Int
+  action      String
+  expected    String
+
+  actual String?
+  status String? // Pass / Fail / Blocked / Skipped
+  notes  String?
+
+  execution TestExecution @relation(fields: [executionId], references: [id])
+}
+
+model ExecutionEvidence {
+  id         String   @id @default(uuid())
+  testCaseId String
+  stepNumber Int
+  filePath   String
+  fileType   String
+  uploadedAt DateTime @default(now())
+}
+
+model ExecutionResult {
+  id            String   @id @default(uuid())
+  testCaseId    String
+  executionTime Int? // ⏱ total time in seconds
+  completedAt   DateTime @default(now())
+}
+
+model TestRun {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("Planned")
+  createdAt   DateTime @default(now())
+
+  testCases     TestRunCase[]
+  assignments   TestRunAssignment[]
+  TestExecution TestExecution[]
+}
+
+model TestRunCase {
+  id         String @id @default(uuid())
+  testRunId  String
+  testCaseId String
+
+  testRun TestRun @relation(fields: [testRunId], references: [id])
+}
+
+model TestRunAssignment {
+  id        String @id @default(uuid())
+  testRunId String
+  testerId  String
+
+  testRun TestRun @relation(fields: [testRunId], references: [id])
+  tester  User    @relation(fields: [testerId], references: [id])
+}
+
+model Bug {
+  id          String @id @default(uuid())
+  title       String
+  description String
+  severity    String
+  priority    String
+  status      String @default("Open")
+
+  testCaseId String?
+  runId      String?
+  stepNumber Int?
+
+  evidencePath String? // ⭐ NEW
+
+  createdAt    DateTime @default(now())
+  createdById  String?
+  reportedById String?
+  reportedBy   User?    @relation(fields: [reportedById], references: [id])
+
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedBugs", fields: [assignedToId], references: [id])
+
+  bugId String? @unique // Human-readable ID (BUG-2026-0001)
+
+  stepsToReproduce String? // Exact reproduction steps
+  expectedBehavior String? // What should happen
+  actualBehavior   String? // What actually happened
+
+  environment     String? // Browser / OS / env
+  affectedVersion String? // App version
+  type            String?
+
+  fixNotes       String?
+  commitLink     String?
+  resolutionNote String?
+  fixedAt        DateTime?
+  startedAt      DateTime?
+
+  comments BugComment[]
+}
+
+model BugComment {
+  id       String   @id @default(uuid())
+  content  String
+  bugId    String
+  authorId String
+  parentId String?
+  mentions String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bug    Bug  @relation(fields: [bugId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+
+  parent  BugComment?  @relation("Thread", fields: [parentId], references: [id])
+  replies BugComment[] @relation("Thread")
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+}
+
+model Permission {
+  id     String @id @default(uuid())
+  name   String
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+}
+
+model DashboardWidget {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String // chart / list / counter / table
+  title     String
+  position  Int
+  config    Json?
+  createdAt DateTime @default(now())
+  projectId String?
+  width     Int      @default(1)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  active      Boolean  @default(true)
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+  isArchived Boolean @default(false)
+}
+
+model SystemConfig {
+  id              String  @id @default(uuid())
+  defaultSeverity String?
+  defaultPriority String?
+  emailEnabled    Boolean @default(true)
+  autoAssignBug   Boolean @default(false)
+  maxUploadSize   Int     @default(10) // in MB
+  updatedAt       DateTime @updatedAt
 }

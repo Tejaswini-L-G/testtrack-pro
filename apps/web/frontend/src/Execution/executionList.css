@@ -1,0 +1,94 @@
+/* ===== Page Layout ===== */
+
+.execution-list-container {
+  padding: 20px;
+}
+
+.page-title {
+  font-size: 26px;
+  margin-bottom: 18px;
+  color: #2c3e50;
+}
+
+/* ===== Table Wrapper ===== */
+
+.table-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Table ===== */
+
+.execution-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* ===== Header ===== */
+
+.execution-table thead {
+  background: #34495e;
+  color: white;
+}
+
+.execution-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* ===== Rows ===== */
+
+.execution-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.execution-table tbody tr:hover {
+  background: #f4f7fb;
+}
+
+/* ===== Title Column ===== */
+
+.title-cell {
+  max-width: 260px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* ===== Status Badge ===== */
+
+.status-approved {
+  background: #2ecc71;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+/* ===== Execute Button ===== */
+
+.execute-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.execute-btn:hover {
+  background: #2980b9;
+}
+
+/* ===== No Data ===== */
+
+.no-data {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+}

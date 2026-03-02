@@ -1,0 +1,1632 @@
+
+
+/* ===== RUN LIST ===== */
+
+.run-list-container {
+  padding: 20px;
+}
+
+.run-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+
+.run-card:hover {
+  transform: translateY(-2px);
+}
+
+.run-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.run-info {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #555;
+}
+
+/* STATUS BADGE */
+
+.status-badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.status-planned { background: #95a5a6; }
+.status-active { background: #3498db; }
+.status-completed { background: #2ecc71; }
+
+
+
+
+/* EXECUTE RUN BUTTON */
+
+.execute-run-btn {
+  margin-top: 12px;
+  padding: 8px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #27ae60;
+  color: white;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.execute-run-btn:hover {
+  background: #219150;
+}
+
+/* RUN DETAILS */
+
+.run-details-container {
+  padding: 20px;
+}
+
+.run-case-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 12px;
+  margin-bottom: 10px;
+
+  background: #ffffff;
+  border-radius: 8px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.run-case-card button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+
+  background: #4f8cff;
+  color: white;
+  cursor: pointer;
+}
+
+.run-case-card button:hover {
+  background: #3b6edc;
+}
+
+/* ===== FULL PAGE LAYOUT ===== */
+
+.testrun-page {
+  padding: 25px 35px;
+  width: 100%;
+}
+
+/* HEADINGS */
+
+.testrun-page h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.testrun-page h3 {
+  margin: 20px 0 10px;
+  color: #34495e;
+}
+
+/* FORM GROUP */
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
+}
+
+/* INPUTS */
+
+.testrun-page input,
+.testrun-page textarea,
+.testrun-page select {
+  width: 100%;
+  padding: 10px 12px;
+
+  border-radius: 8px;
+  border: 1px solid #ccc;
+
+  font-size: 14px;
+  background: #ffffff;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* DATE ROW */
+
+.date-row {
+  display: flex;
+  gap: 20px;
+}
+
+/* CHECKBOX LIST */
+
+.checkbox-list {
+  max-height: 260px;   /* 🔥 taller */
+  overflow-y: auto;
+
+  padding: 12px;
+  border-radius: 10px;
+
+  border: 1px solid #ddd;
+  background: #f9fbfd;
+
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+
+.checkbox-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb {
+  background: #c3c9d3;
+  border-radius: 6px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb:hover {
+  background: #a8b0bd;
+}
+
+.checkbox-item {
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* TESTER DROPDOWN */
+
+.tester-dropdown {
+  height: 120px;
+}
+
+/* CREATE BUTTON */
+
+.create-run-btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg,#4f8cff,#3b6edc);
+  color: white;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.create-run-btn:hover {
+  background: linear-gradient(135deg,#3b6edc,#2f5bb8);
+}
+
+/* ===== DROPDOWN CONTAINER ===== */
+
+.dropdown {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* SELECTED AREA */
+
+.dropdown-selected {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-selected:hover {
+  border-color: #4f8cff;
+}
+
+/* DROPDOWN MENU */
+
+.dropdown-menu {
+  position: absolute;
+  width: 100%;
+  background: white;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  max-height: 180px;
+  overflow-y: auto;
+
+  margin-top: 6px;
+  z-index: 1000;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+/* DROPDOWN ITEM */
+
+.dropdown-item {
+  display: block;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #f3f6fb;
+}
+
+.dropdown-item input {
+  margin-right: 8px;
+}
+
+
+
+
+/* ===================================================== */
+/*                GLOBAL PAGE LAYOUT                     */
+/* ===================================================== */
+
+.testrun-page,
+.run-list-page,
+.run-details-container {
+  padding: 25px 35px;
+  width: 100%;
+  background: #f5f7fb;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.testrun-page h2,
+.run-list-page h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.testrun-page h3 {
+  margin: 20px 0 10px;
+  color: #34495e;
+}
+
+/* ===================================================== */
+/*                   FORM STYLES                         */
+/* ===================================================== */
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
+}
+
+.testrun-page input,
+.testrun-page textarea,
+.testrun-page select {
+  width: 100%;
+  padding: 10px 12px;
+
+  border-radius: 8px;
+  border: 1px solid #ccc;
+
+  font-size: 14px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* ===================================================== */
+/*                     DATE ROW                          */
+/* ===================================================== */
+
+.date-row {
+  display: flex;
+  gap: 20px;
+}
+
+.date-row .form-group {
+  flex: 1;
+}
+
+/* ===================================================== */
+/*                 TEST CASE CHECKBOX LIST               */
+/* ===================================================== */
+
+.checkbox-list {
+  max-height: 260px;
+  overflow-y: auto;
+
+  padding: 12px;
+  border-radius: 10px;
+
+  border: 1px solid #ddd;
+  background: #ffffff;
+
+  scroll-behavior: smooth;
+}
+
+.checkbox-item {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Scrollbar */
+
+.checkbox-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb {
+  background: #c3c9d3;
+  border-radius: 6px;
+}
+
+.checkbox-list::-webkit-scrollbar-thumb:hover {
+  background: #a8b0bd;
+}
+
+/* ===================================================== */
+/*              PROFESSIONAL DROPDOWN                    */
+/* ===================================================== */
+
+.dropdown {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.dropdown-selected {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-selected:hover {
+  border-color: #4f8cff;
+}
+
+.dropdown-menu {
+  position: absolute;
+  width: 100%;
+  background: white;
+
+  border: 1px solid #ddd;
+  border-radius: 10px;
+
+  max-height: 180px;
+  overflow-y: auto;
+
+  margin-top: 6px;
+  z-index: 1000;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+.dropdown-item {
+  display: block;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #f3f6fb;
+}
+
+.dropdown-item input {
+  margin-right: 8px;
+}
+
+/* ===================================================== */
+/*                CREATE BUTTON                          */
+/* ===================================================== */
+
+.create-run-btn {
+  margin-top: 20px;
+  padding: 12px 24px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg,#4f8cff,#3b6edc);
+  color: white;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.create-run-btn:hover {
+  background: linear-gradient(135deg,#3b6edc,#2f5bb8);
+}
+
+/* ===================================================== */
+/*                RUN LIST TABLE                         */
+/* ===================================================== */
+
+.run-table {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.run-table-header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1.5fr 1fr 2fr;
+
+  padding: 14px 16px;
+  background: #f4f6fa;
+
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.run-row {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1.5fr 1fr 2fr;
+
+  padding: 14px 16px;
+  border-top: 1px solid #eee;
+  align-items: center;
+
+  transition: background 0.15s;
+}
+
+.run-row:hover {
+  background: #f9fbff;
+}
+
+.run-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+/* ===================================================== */
+/*                 STATUS BADGES                         */
+/* ===================================================== */
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: white;
+  font-weight: 500;
+}
+
+.status-planned { background: #95a5a6; }
+.status-active { background: #3498db; }
+.status-completed { background: #2ecc71; }
+
+/* ===================================================== */
+/*                 ACTION BUTTONS                        */
+/* ===================================================== */
+
+.run-actions button {
+  margin-right: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* VIEW */
+
+.view-btn {
+  background: #4f8cff;
+  color: white;
+}
+
+.view-btn:hover {
+  background: #3b6edc;
+}
+
+/* EDIT */
+
+.edit-btn {
+  background: #f39c12;
+  color: white;
+}
+
+.edit-btn:hover {
+  background: #d68910;
+}
+
+/* DELETE */
+
+.delete-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c0392b;
+}
+
+/* ===================================================== */
+/*                RUN DETAILS PAGE                       */
+/* ===================================================== */
+
+.run-case-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 12px;
+  margin-bottom: 10px;
+
+  background: #ffffff;
+  border-radius: 8px;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.run-case-card button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+
+  background: #4f8cff;
+  color: white;
+  cursor: pointer;
+}
+
+.run-case-card button:hover {
+  background: #3b6edc;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 26px;
+  background: #e0e6f1;
+  border-radius: 14px;
+  margin: 15px 0;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: #4f8cff;
+  color: white;
+  text-align: center;
+  line-height: 26px;
+  font-size: 13px;
+  border-radius: 14px;
+  transition: width 0.3s ease;
+}
+.run-dashboard {
+  padding: 30px 40px;
+  width: 100%;
+  background: #f5f7fb;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.run-header h2 {
+  margin-bottom: 6px;
+  color: #2c3e50;
+}
+
+.run-dates {
+  color: #666;
+  margin-bottom: 20px;
+}
+.progress-card,
+.testers-card,
+.cases-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.progress-bar-container {
+  width: 100%;
+  height: 26px;
+  background: #e0e6f1;
+  border-radius: 14px;
+  margin: 15px 0;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg,#4f8cff,#3b6edc);
+  color: white;
+  text-align: center;
+  line-height: 26px;
+  font-size: 13px;
+  border-radius: 14px;
+  transition: width 0.3s ease;
+}
+.tester-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tester-badge {
+  background: #4f8cff;
+  color: white;
+
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+.cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+  gap: 12px;
+}
+
+.case-item {
+  background: #f4f7fd;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+
+  border-left: 4px solid #4f8cff;
+}
+/* ===================================== */
+/* FULL-SCREEN EDIT PAGE                 */
+/* ===================================== */
+
+.edit-run-page {
+
+  /* Fill parent (dashboard content) */
+  width: 100%;
+  height: 100%;
+
+  /* If parent doesn't give height, fallback */
+  min-height: calc(100vh - 60px);
+
+  box-sizing: border-box;
+
+  padding: 30px 40px;
+  background: #f5f7fb;
+
+  /* ⭐ SCROLL INSIDE PAGE */
+  overflow-y: auto;
+
+  /* Clean layout */
+  display: block;
+}
+.back-btn {
+  margin-bottom: 15px;
+  padding: 8px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #95a5a6;
+  color: white;
+
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #7f8c8d;
+}
+
+/* ===================================== */
+/* FULL SCREEN PAGE (NO SIDEBAR)         */
+/* ===================================== */
+
+.fullscreen-page {
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  background: #f5f7fb;
+
+  overflow-y: auto;
+
+  padding: 40px 60px;
+  box-sizing: border-box;
+
+  z-index: 999; /* above dashboard */
+}
+
+.back-btn {
+
+  margin-bottom: 20px;
+  padding: 8px 16px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #7f8c8d;
+  color: white;
+
+  cursor: pointer;
+}
+
+.back-btn:hover {
+  background: #5f6a6a;
+}
+
+
+
+
+
+
+
+/* ===================================== */
+/* TEST RUN — PROFESSIONAL FULLSCREEN UI */
+/* ===================================== */
+
+
+/* ===== FULLSCREEN PAGE ===== */
+
+.fullscreen-page {
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  background: #f4f6fb;
+
+  overflow-y: auto;
+
+  padding: 40px 20px;
+  box-sizing: border-box;
+
+  z-index: 999;
+}
+
+
+/* ===== CENTER CONTENT CARD ===== */
+
+.page-container {
+
+  max-width: 1100px;
+  margin: 0 auto;
+
+  background: #ffffff;
+  padding: 40px;
+
+  border-radius: 14px;
+
+  box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+}
+
+
+/* ===== BACK BUTTON ===== */
+
+.back-btn {
+
+  background: #6c7a89;
+  color: white;
+
+  border: none;
+  padding: 10px 18px;
+
+  border-radius: 8px;
+  font-weight: 500;
+
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.back-btn:hover {
+  background: #56626f;
+}
+
+
+/* ===== TITLES ===== */
+
+.page-title {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  margin-bottom: 28px;
+}
+
+
+/* ===== SECTION BLOCK ===== */
+
+.section {
+  margin-top: 28px;
+}
+
+.section h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+
+/* ===== LIST ITEMS ===== */
+
+.list-item {
+
+  padding: 10px 12px;
+  background: #f9fafc;
+
+  border-radius: 8px;
+  margin-bottom: 8px;
+
+  border: 1px solid #eceff4;
+}
+
+
+/* ===================================== */
+/* PROGRESS BAR                          */
+/* ===================================== */
+
+.progress-bar-container {
+
+  width: 100%;
+  height: 18px;
+
+  background: #e5e7eb;
+  border-radius: 20px;
+
+  overflow: hidden;
+  margin: 10px 0 15px;
+}
+
+.progress-bar-fill {
+
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #4facfe,
+    #00f2fe
+  );
+
+  color: white;
+  font-size: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: width 0.4s ease;
+}
+
+
+/* ===================================== */
+/* FORM ELEMENTS (EDIT PAGE)             */
+/* ===================================== */
+
+.form-group {
+  margin-bottom: 22px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+
+/* ===== INPUTS / TEXTAREA / SELECT ===== */
+
+input,
+textarea,
+select {
+
+  width: 100%;
+  padding: 10px 12px;
+
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+
+  outline: none;
+  border-color: #4facfe;
+
+  box-shadow: 0 0 0 2px rgba(79,172,254,0.2);
+}
+
+
+/* ===== DATE ROW ===== */
+
+.date-row {
+
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+
+/* ===================================== */
+/* TEST CASE CHECKBOX LIST               */
+/* ===================================== */
+
+.checkbox-list {
+
+  max-height: 240px;
+  overflow-y: auto;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+
+  padding: 14px;
+  background: #fafbfd;
+}
+
+.checkbox-item {
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+  padding: 6px 0;
+
+  font-size: 14px;
+}
+
+.checkbox-item input {
+  width: auto;
+}
+
+
+/* ===================================== */
+/* DROPDOWN (TESTER SELECTION)           */
+/* ===================================== */
+
+.dropdown {
+
+  position: relative;
+}
+
+.dropdown-selected {
+
+  border: 1px solid #d1d5db;
+  padding: 10px 12px;
+
+  border-radius: 8px;
+  background: white;
+
+  cursor: pointer;
+}
+
+.dropdown-menu {
+
+  position: absolute;
+  top: 105%;
+  left: 0;
+
+  width: 100%;
+  max-height: 220px;
+
+  overflow-y: auto;
+
+  background: white;
+  border: 1px solid #e5e7eb;
+
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+
+  z-index: 10;
+}
+
+.dropdown-item {
+
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  font-size: 14px;
+}
+
+.dropdown-item:hover {
+  background: #f3f6ff;
+}
+
+
+/* ===================================== */
+/* PRIMARY BUTTON                        */
+/* ===================================== */
+
+.create-run-btn {
+
+  margin-top: 25px;
+
+  padding: 12px 22px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: linear-gradient(
+    90deg,
+    #4facfe,
+    #00f2fe
+  );
+
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.create-run-btn:hover {
+  opacity: 0.9;
+}
+
+
+
+
+
+/* ===================================== */
+/* TEST RUN PROGRESS PAGE — PROFESSIONAL */
+/* ===================================== */
+
+
+/* ===== FULLSCREEN WRAPPER ===== */
+
+.fullscreen-page {
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 100vw;
+  height: 100vh;
+
+  background: #f4f6fb;
+
+  overflow-y: auto;
+
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+
+/* ===== MAIN DASHBOARD CARD ===== */
+
+.progress-container {
+
+  max-width: 1100px;
+  margin: 0 auto;
+
+  background: #ffffff;
+  padding: 36px;
+
+  border-radius: 14px;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+
+/* ===== HEADER ===== */
+
+.progress-header h2 {
+
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.progress-header p {
+
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+
+
+/* ===== BACK BUTTON ===== */
+
+.back-btn {
+
+  background: #6c7a89;
+  color: white;
+
+  border: none;
+  padding: 10px 18px;
+
+  border-radius: 8px;
+  font-weight: 500;
+
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.back-btn:hover {
+  background: #56626f;
+}
+
+
+/* ===================================== */
+/* PROGRESS SECTION                      */
+/* ===================================== */
+
+.progress-section {
+
+  margin-bottom: 32px;
+}
+
+.progress-section h3 {
+  margin-bottom: 12px;
+}
+
+
+/* BIG PROGRESS BAR */
+
+.progress-bar-container {
+
+  width: 100%;
+  height: 22px;
+
+  background: #e5e7eb;
+  border-radius: 20px;
+
+  overflow: hidden;
+  margin: 12px 0 8px;
+}
+
+.progress-bar-fill {
+
+  height: 100%;
+
+  background: linear-gradient(
+    90deg,
+    #4facfe,
+    #00f2fe
+  );
+
+  color: white;
+  font-size: 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 600;
+
+  transition: width 0.4s ease;
+}
+
+.progress-text {
+  color: #374151;
+  font-weight: 500;
+}
+
+
+/* ===================================== */
+/* TWO-COLUMN GRID                       */
+/* ===================================== */
+
+.progress-grid {
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+
+/* ===== CARD STYLE ===== */
+
+.progress-card {
+
+  background: #f9fafc;
+
+  padding: 20px;
+  border-radius: 12px;
+
+  border: 1px solid #e5e7eb;
+}
+
+.progress-card h3 {
+
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+
+/* ===== LIST ITEMS ===== */
+
+.progress-item {
+
+  padding: 10px 12px;
+
+  border-radius: 8px;
+  margin-bottom: 8px;
+
+  background: white;
+  border: 1px solid #eceff4;
+
+  font-size: 14px;
+}
+
+
+/* ===== EMPTY TEXT ===== */
+
+.empty-text {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 800px) {
+
+  .progress-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .progress-container {
+    padding: 24px;
+  }
+}
+
+
+.run-card {
+
+  background: #ffffff;
+  padding: 20px;
+
+  border-radius: 12px;
+  margin-bottom: 16px;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.run-card {
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: #ffffff;
+  padding: 20px;
+
+  border-radius: 12px;
+  margin-bottom: 16px;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.tc-info h4 {
+  margin: 0 0 6px;
+}
+
+.tc-info p {
+  margin: 2px 0;
+  color: #6b7280;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.status.NotStarted {
+  background: #f1f5f9;
+}
+
+.status.InProgress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.Completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.table-container {
+  margin-top: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.run-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.run-table th,
+.run-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+}
+
+.run-table th {
+  background: #f5f7fa;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.status.InProgress {
+  background: #fff4e5;
+  color: #d97706;
+}
+
+.status.Passed {
+  background: #e6fffa;
+  color: #059669;
+}
+
+.status.Failed {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* EXECUTION DETAILS CARD */
+
+.progress-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  border: 1px solid #e5e7eb;
+}
+
+/* INDIVIDUAL EXECUTION ITEM */
+
+.progress-item {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  border-left: 5px solid #6366f1;
+  transition: all 0.25s ease;
+}
+
+.progress-item:hover {
+  background: #eef2ff;
+  transform: translateY(-2px);
+}
+
+/* TEXT STYLING */
+
+.progress-item p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.progress-item strong {
+  color: #111827;
+}
+
+/* STATUS COLORS */
+
+.status-Passed {
+  border-left-color: #22c55e;
+}
+
+.status-Failed {
+  border-left-color: #ef4444;
+}
+
+.status-InProgress {
+  border-left-color: #f59e0b;
+}
+
+/* EMPTY TEXT */
+
+.empty-text {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 20px 0;
+}
+.status-Passed { border-left: 5px solid #22c55e; }
+.status-Failed { border-left: 5px solid #ef4444; }
+.status-Blocked { border-left: 5px solid #f59e0b; }
+.status-InProgress { border-left: 5px solid #3b82f6; }
+
+.tc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Base badge */
+.status-badge {
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+}
+
+/* Passed */
+.status-badge.passed {
+  background: #16a34a;
+}
+
+/* Failed */
+.status-badge.failed {
+  background: #dc2626;
+}
+
+/* In Progress */
+.status-badge.progress {
+  background: #f59e0b;
+}
+
+/* PAGE */
+
+.page-container {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* BACK BUTTON */
+
+.back-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+/* FILTER BAR */
+
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #e5e7eb;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.filter-btn:hover {
+  background: #d1d5db;
+}
+
+.filter-btn.active {
+  background: #2563eb;
+  color: white;
+}
+
+/* TEST CASE CARD */
+
+.run-card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.tc-info h4 {
+  margin: 0 0 8px 0;
+}
+
+/* STATUS BADGE */
+
+.status-badge {
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.passed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.inprogress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.not\ executed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* EXECUTE BUTTON */
+
+.create-run-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.create-run-btn:hover {
+  background: #059669;
+}

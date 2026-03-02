@@ -22,44 +22,89 @@ function ForgotPassword() {
   };
 
   return (
-    <div className="auth-container">
-      <h2>Forgot Password</h2>
+  <div
+    style={{
+      background: "white",
+      padding: "30px",
+      borderRadius: "12px",
+      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+      width: "100%",
+      maxWidth: "400px",
+      boxSizing: "border-box",
+      textAlign: "center",
+    }}
+  >
+    <h2 style={{ marginBottom: "20px",color:"black" }}>
+      🔑 Forgot Password
+    </h2>
 
-      <form onSubmit={submit}>
-        <input
-          type="email"
-          placeholder="Enter your registered email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button type="submit">Generate Reset Link</button>
-      </form>
+    <form onSubmit={submit}>
+      <input
+        type="email"
+        placeholder="Enter your registered email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+        style={{
+          width: "100%",
+          padding: "10px",
+          borderRadius: "8px",
+          border: "1px solid #ddd",
+          marginBottom: "15px",
+          outline: "none",
+        }}
+      />
 
-      <p className="message">{message}</p>
+      <button
+        type="submit"
+        style={{
+          width: "100%",
+          padding: "10px",
+          borderRadius: "8px",
+          border: "none",
+          background: "#4f46e5",
+          color: "white",
+          fontWeight: "600",
+          cursor: "pointer",
+        }}
+      >
+        Generate Reset Link
+      </button>
+    </form>
 
-      {resetLink && (
-  <div style={{ marginTop: "20px", textAlign: "center" }}>
-    <button
-      onClick={() => (window.location.href = resetLink)}
-      style={{
-        padding: "12px 25px",
-        borderRadius: "25px",
-        border: "none",
-        background: "linear-gradient(135deg, #4facfe, #00f2fe)",
-        color: "white",
-        fontWeight: "bold",
-        cursor: "pointer",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-      }}
-    >
-      Go to Reset Password Page 🔐
-    </button>
+    {message && (
+      <p
+        style={{
+          marginTop: "15px",
+          fontSize: "14px",
+          color: resetLink ? "green" : "#d9534f",
+        }}
+      >
+        {message}
+      </p>
+    )}
+
+    {resetLink && (
+      <div style={{ marginTop: "20px" }}>
+        <button
+          onClick={() => (window.location.href = resetLink)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "none",
+            background: "#10b981",
+            color: "white",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          Go to Reset Password Page 🔐
+        </button>
+      </div>
+    )}
   </div>
-)}
-
-    </div>
-  );
+);
 }
 
 export default ForgotPassword;

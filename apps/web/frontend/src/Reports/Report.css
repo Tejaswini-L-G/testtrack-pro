@@ -1,0 +1,658 @@
+.report-container {
+  padding: 24px;
+}
+
+.report-loading {
+  padding: 40px;
+  font-size: 18px;
+}
+
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.report-card {
+  background: #f3f4f6;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.report-card p {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.pass { background: #d1fae5; }
+.fail { background: #fee2e2; }
+.blocked { background: #fef3c7; }
+.skipped { background: #e5e7eb; }
+.rate { background: #dbeafe; }
+
+.report-charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.chart-box {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.full-width {
+  grid-column: span 2;
+}
+
+.report-section {
+  margin-top: 30px;
+}
+
+.failed-modules li {
+  margin: 6px 0;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.report-table th {
+  background: #f9fafb;
+}
+
+.export-buttons {
+  margin: 20px 0;
+  display: flex;
+  gap: 12px;
+}
+
+.export-buttons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+}
+
+.export-buttons button:hover {
+  background: #2563eb;
+}
+.run-report {
+  margin-bottom: 40px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+}
+
+.report-container {
+  padding: 24px;
+
+  height: calc(100vh - 80px); /* adjust if header present */
+  overflow-y: auto;
+
+  background: #f5f7fb;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow-x: auto;
+  display: block;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================= */
+/* MAIN CONTAINER (RIGHT PANEL) */
+/* ============================= */
+
+/* ============================= */
+/* MAIN CONTAINER (RIGHT PANEL) */
+/* ============================= */
+
+.report-container {
+  padding: 28px;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+
+  background: #f4f6fb;
+  box-sizing: border-box;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ============================= */
+/* PAGE TITLE */
+/* ============================= */
+
+.report-container h1 {
+  margin-bottom: 24px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ============================= */
+/* TOTAL CARD */
+/* ============================= */
+
+.report-card {
+  background: linear-gradient(135deg, #ced2d8, #cacdd4);
+  color: rgb(21, 18, 18);
+
+  padding: 18px 22px;
+  border-radius: 14px;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  margin-bottom: 22px;
+
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+/* ============================= */
+/* SECTION CONTAINER */
+/* ============================= */
+
+.report-section {
+  background: #ffffff;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* SECTION TITLES */
+
+.report-section h3 {
+  margin-bottom: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* ============================= */
+/* LIST STYLING */
+/* ============================= */
+
+.report-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.report-section li {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 10px 12px;
+  margin-bottom: 8px;
+
+  border-radius: 8px;
+  background: #f9fafb;
+
+  font-size: 14px;
+  color: #374151;
+
+  border: 1px solid #eef2f7;
+}
+
+/* ============================= */
+/* SPECIAL COLOR VARIANTS */
+/* ============================= */
+
+/* STATUS */
+
+.report-section:nth-of-type(1) li {
+  background: #eef2ff;
+}
+
+/* SEVERITY */
+
+.report-section:nth-of-type(2) li {
+  background: #fee2e2;
+}
+
+/* PRIORITY */
+
+.report-section:nth-of-type(3) li {
+  background: #fef3c7;
+}
+
+/* DEVELOPER */
+
+.report-section:nth-of-type(4) li {
+  background: #ecfeff;
+}
+
+/* TREND */
+
+.report-section:nth-of-type(5) li {
+  background: #f0fdf4;
+}
+
+/* ============================= */
+/* BUG AGING LIST */
+/* ============================= */
+
+.bug-aging li {
+  background: #fff7ed;
+}
+
+/* ============================= */
+/* EXPORT BUTTONS */
+/* ============================= */
+
+.export-buttons {
+  margin-bottom: 20px;
+
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.export-buttons button {
+  padding: 9px 16px;
+
+  border-radius: 8px;
+  border: none;
+
+  background: #3b82f6;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s;
+
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.export-buttons button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* ============================= */
+/* SCROLLBAR */
+/* ============================= */
+
+.report-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.report-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+/* ============================= */
+/* RESPONSIVE */
+/* ============================= */
+
+@media (max-width: 900px) {
+  .report-container {
+    padding: 16px;
+  }
+
+  .report-card {
+    font-size: 16px;
+  }
+
+  .report-section h3 {
+    font-size: 16px;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ================================= */
+/* DEVELOPER PERFORMANCE CARDS */
+/* ================================= */
+
+.dev-card {
+  background: #ffffff;
+  padding: 20px 22px;
+  margin-bottom: 20px;
+
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+/* Developer name */
+
+.dev-card h3 {
+  margin-bottom: 14px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Metrics grid */
+
+.dev-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+/* Individual metric */
+
+.metric-box {
+  background: #f9fafb;
+  padding: 14px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+  border: 1px solid #eef2f7;
+}
+
+/* Color highlights */
+
+.metric-assigned {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.metric-resolved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.metric-avg {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.metric-reopen {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.metric-quality {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+/* ================================= */
+/* EXPORT BUTTONS */
+/* ================================= */
+
+.export-buttons {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.export-buttons button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+
+  background: #3b82f6;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s;
+
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.export-buttons button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* ================================= */
+/* RESPONSIVE */
+/* ================================= */
+
+@media (max-width: 900px) {
+  .dev-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ================================= */
+/* TESTER PERFORMANCE CARDS */
+/* ================================= */
+
+.dev-card {
+  background: #ffffff;
+  padding: 20px 22px;
+  margin-bottom: 22px;
+
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+/* Tester name */
+
+.dev-card h3 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ================================= */
+/* METRICS GRID */
+/* ================================= */
+
+.dev-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+}
+
+/* Individual metric card */
+
+.metric-box {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
+
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+
+  border: 1px solid #eef2f7;
+  transition: 0.15s ease;
+}
+
+.metric-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* ================================= */
+/* COLOR THEMES PER METRIC */
+/* ================================= */
+
+/* Executed */
+
+.metric-assigned {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+/* Bugs Found */
+
+.metric-resolved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* Bug Rate */
+
+.metric-avg {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Efficiency */
+
+.metric-reopen {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Coverage */
+
+.metric-quality {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+/* ================================= */
+/* EXPORT BUTTONS */
+/* ================================= */
+
+.export-buttons {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.export-buttons button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+
+  background: #3b82f6;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: 0.2s;
+
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.export-buttons button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* ================================= */
+/* RESPONSIVE */
+/* ================================= */
+
+@media (max-width: 1100px) {
+  .dev-metrics {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .dev-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -1,0 +1,336 @@
+/* PAGE */
+
+.dev-page {
+  padding: 25px;
+  background: #f9fafb;
+  min-height: 100vh;
+}
+
+.dev-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+.empty-msg {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+
+/* CARD */
+
+.dev-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+
+/* HEADER */
+
+.dev-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.dev-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #111827;
+}
+
+
+/* GRID */
+
+.dev-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.dev-grid label {
+  font-size: 12px;
+  color: #6b7280;
+  display: block;
+}
+
+.dev-grid p {
+  margin: 2px 0 0;
+  font-weight: 500;
+}
+
+
+/* SECTION */
+
+.dev-section {
+  margin-top: 10px;
+}
+
+.dev-section label {
+  font-size: 12px;
+  color: #6b7280;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.dev-section p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+
+/* ATTACHMENTS */
+
+.attachment-list {
+  margin: 5px 0 0;
+  padding-left: 18px;
+}
+
+.attachment-list li {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+
+/* BADGES */
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.high { background: #fee2e2; color: #b91c1c; }
+.badge.medium { background: #fef3c7; color: #92400e; }
+.badge.low { background: #dcfce7; color: #166534; }
+
+.badge.passed { background: #dcfce7; color: #166534; }
+.badge.failed { background: #fee2e2; color: #b91c1c; }
+.badge.blocked { background: #fef3c7; color: #92400e; }
+.badge.skipped { background: #dbeafe; color: #1e40af; }
+.badge.open { background: #e5e7eb; color: #374151; }
+
+
+/* ===== Developer Assigned Issues Page ===== */
+
+.dev-issues-container {
+  padding: 30px;
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.dev-issues-container h2 {
+  margin-bottom: 20px;
+  font-size: 26px;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* BUG CARD */
+
+.dev-bug-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: transform 0.15s ease;
+}
+
+.dev-bug-card:hover {
+  transform: translateY(-2px);
+}
+
+/* HEADER */
+
+.bug-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.bug-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+/* STATUS BADGE */
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.open {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.in\ progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.fixed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.closed {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.status-badge.reopened {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* BODY */
+
+.bug-body p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* ACTION BUTTONS */
+
+.bug-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.bug-actions button {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  color: white;
+  transition: opacity 0.2s;
+}
+
+.bug-actions button:hover {
+  opacity: 0.9;
+}
+
+.btn-progress {
+  background: #2563eb;
+}
+
+.btn-fixed {
+  background: #16a34a;
+}
+
+.btn-reject {
+  background: #dc2626;
+}
+
+
+/* ===== COMPACT FILTER TOOLBAR ===== */
+
+.dev-filter-bar {
+  display: flex !important;
+  flex-wrap: nowrap !important;      /* keep in one line */
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0 20px 0;
+}
+
+/* SMALL DROPDOWNS */
+
+.dev-filter-bar select {
+  width: auto !important;            /* remove full width */
+  height: 36px !important;
+  padding: 0 10px !important;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+/* FOCUS EFFECT */
+
+.dev-filter-bar select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+.resolution-panel {
+  background: #ffffff;
+  padding: 18px;
+  margin-top: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.resolution-panel textarea,
+.resolution-panel input {
+  width: 100%;
+  margin: 8px 0 14px 0;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.btn-save {
+  background: #16a34a;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  margin-right: 10px;
+}
+
+.btn-cancel {
+  background: #e5e7eb;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+}
+
+/* ===== HEADER WITH EXPORT BUTTON ===== */
+
+.dev-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+/* Export button */
+
+.export-btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.export-btn:hover {
+  background: #1d4ed8;
+}

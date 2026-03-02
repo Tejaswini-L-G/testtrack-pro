@@ -26,8 +26,41 @@ import AdminTestCases from "./Dashboard/AdminTestCases";
 import AdminDashboard from "./Dashboard/AdminDashboard"
 import DashboardLayout from "./Dashboard/DashboardLayout";
 import DeveloperDashboard from "./Dashboard/DeveloperDashboard";
-
+import ExecutionPage from "./Execution/ExecutionPage";
 import HomePage from "./Dashboard/HomePage";
+import ExecutionList from "./Execution/ExecutionList";
+import CreateTestRun from "./TestRun/CreateTestRun";
+import TestRunList from "./TestRun/TestRunList";
+import MyRuns from "./TestRun/MyRuns";
+import RunDetails from "./TestRun/RunDetails";
+import RunProgressDashboard from "./TestRun/RunProgressDashboard";
+import EditTestRun from "./TestRun/EditTestRun";
+import TesterExecutions from "./Execution/TesterExecutions";
+import BugReport from "./Bugs/BugReport";
+import BugDashboard from "./Bugs/BugDashboard";
+
+import ExecutionHistory from "./Execution/ExecutionHistory";
+import ExecutionCompare from "./Execution/ExecutionCompare";
+import SuiteExecute from "./Dashboard/Tester/Suites/SuiteExecute";
+import SuiteReport from "./Dashboard/Tester/Suites/SuiteReport";
+
+
+import DevTestCases from "./Dashboard/DevTestCases";
+import DevReports from "./Dashboard/DevReports";
+import DevAssigedIssues from "./Dashboard/DevAssignedIssues";
+import AdminControls from "./Dashboard/AdminControls";
+import Profile from "./Dashboard/Profile";
+
+import AdminRoles from "./Dashboard/AdminRoles";
+import AdminUsers from "./Dashboard/AdminUsers";
+import AdminSettings from "./Dashboard/AdminSettings";
+import AdminAudit from "./Dashboard/AdminAudit";
+import AdminBackup from "./Dashboard/AdminBackup";
+import AdminProjects from "./Dashboard/AdminProjects";
+import ExecutionReport from "./Reports/ExecutionReport";
+import BugReportAnalytics from "./Reports/BugReportAnalytics";
+import DeveloperPerformanceReport from "./Reports/DeveloperPerformanceReport";
+import TesterPerformanceReport from "./Reports/TesterPerformanceReport";
 
 
 import "./styles.css";
@@ -63,23 +96,73 @@ function App() {
   <Route path="/reset/:token" element={<ResetPassword />} />
   <Route path="/verify/:token" element={<Verify />} />
   <Route path="/change-password" element={<ChangePassword />} />
+ 
+
   
    <Route path="/testcases/:id/edit" element={<EditTestCase />} />
  
-   <Route path="/admin/dashboard" element={<AdminDashboard />}>
+  
+  
+
+
+  <Route path="/admin/dashboard" element={<AdminDashboard />}>
+
+  {/* DEFAULT */}
+  <Route index element={<div />} />
+
+  {/* TEST MANAGEMENT */}
   <Route path="testcases" element={<AdminTestCases />} />
-</Route>
-<Route path="/developer/dashboard" element={<DeveloperDashboard />} />
-<Route path="/dashboard/home" element={<HomePage />} />
+  <Route path="testruns" element={<TestRunList />} />
+  <Route path="testruns/create" element={<CreateTestRun />} />
+  <Route path="bugs" element={<BugDashboard />} />
+
+  {/* ⭐ ADMIN CONTROLS */}
+  <Route path="users" element={<AdminUsers />} />
+  <Route path="projects" element={<AdminProjects />} />
+  <Route path="roles" element={<AdminRoles />} />
+  <Route path="audit" element={<AdminAudit />} />
+  <Route path="settings" element={<AdminSettings />} />
+  <Route path="backup" element={<AdminBackup />} />
+
+  <Route path="reports/execution" element={<ExecutionReport />} />
+  <Route path="reports/bugs" element={<BugReportAnalytics />} />
   <Route
-  path="/dashboard/testcases/:id/versions"
-  element={<VersionsList />}
+  path="reports/developer-performance"
+  element={<DeveloperPerformanceReport />}
+/>
+<Route
+  path="reports/tester-performance"
+  element={<TesterPerformanceReport />}
+/>
+<Route
+  path="/admin/dashboard/testruns/edit/:id"
+  element={<EditTestRun />}
 />
 
-<Route
-  path="/dashboard/version/:id"
-  element={<VersionDetail />}
+<Route path="testruns" element={<TestRunList />} />
+
+<Route path="testcases" element={<AdminTestCases />} />
+
+ 
+  <Route path="testruns/create" element={<CreateTestRun />} />
+
+  <Route
+  path="/admin/dashboard/testruns/:id"
+  element={<RunProgressDashboard />}
 />
+</Route>
+
+<Route path="/profile" element={<Profile />} />
+
+<Route path="/dashboard/home" element={<HomePage />} />
+  
+
+
+
+
+
+
+
 
 
 
@@ -102,6 +185,17 @@ function App() {
 >
   <Route index element={null} />
 
+  <Route path="reports/execution" element={<ExecutionReport />} />
+  <Route path="reports/bugs" element={<BugReportAnalytics />} />
+  <Route
+  path="reports/developer-performance"
+  element={<DeveloperPerformanceReport />}
+/>
+<Route
+  path="reports/tester-performance"
+  element={<TesterPerformanceReport />}
+/>
+
   <Route path="home" element={<HomePage />} />
   <Route path="testcases" element={<TestCases />} />
  <Route path="testcases/edit/:id" element={<EditTestCase />} />
@@ -110,7 +204,90 @@ function App() {
   <Route path="templates" element={<TemplateList />} />
   <Route path="import" element={<ImportTestCases />} />
   <Route path="suites" element={<SuitesList />} />
+
+   <Route path="execution" element={<ExecutionList />} />
+
+  <Route path="execution/:id" element={<ExecutionPage />} />
+  <Route path="/dashboard/bugs" element={<BugDashboard />} />
+
+   <Route
+  path="my-runs"
+  element={<MyRuns />}
+/>
+<Route path="my-runs/:id" element={<RunDetails />} />
+<Route
+  path="my-executions"
+  element={<TesterExecutions />}
+/>
+<Route
+  path="/dashboard/bug-report"
+  element={<BugReport />}
+/>
+<Route
+  path="/dashboard/compare"
+  element={<ExecutionCompare />}
+/>
+<Route
+  path="/dashboard/testcases/:id/versions"
+  element={<VersionsList />}
+/>
+
+<Route
+  path="/dashboard/version/:id"
+  element={<VersionDetail />}
+/>
+
+
+<Route
+  path="/dashboard/suites/:suiteId/execute"
+  element={<SuiteExecute />}
+/>
+
+<Route
+  path="/dashboard/suite-report/suite/:suiteId"
+  element={<SuiteReport />}
+/>
+
+<Route
+  path="/dashboard/execution-history/:testCaseId"
+  element={<ExecutionHistory />}
+/>
+
 </Route>
+
+
+
+
+
+
+
+
+<Route path="/developer" element={<DeveloperDashboard />}>
+
+  <Route path="dashboard" element={<div />} />
+
+  <Route path="testcases" element={<DevTestCases />} />
+
+  <Route path="reports" element={<DevReports />} />
+
+  <Route path="issues" element={<DevAssigedIssues />} />
+
+  <Route path="reports/execution" element={<ExecutionReport />} />
+  <Route path="reports/bugs" element={<BugReportAnalytics />} />
+  <Route
+  path="reports/developer-performance"
+  element={<DeveloperPerformanceReport />}
+/>
+<Route
+  path="reports/tester-performance"
+  element={<TesterPerformanceReport />}
+/>
+
+  
+
+</Route>
+
+
 
 
 
