@@ -17,25 +17,77 @@ function CreateTestRun() {
   const [selectedCases, setSelectedCases] = useState([]);
   const [selectedTesters, setSelectedTesters] = useState([]);
 
+  const [milestones, setMilestones] = useState([]);
+const [selectedMilestone, setSelectedMilestone] = useState("");
+
   const [showDropdown, setShowDropdown] = useState(false);
+  const projectId = localStorage.getItem("projectId");
 
   /* LOAD DATA */
 
   useEffect(() => {
+  if (!projectId) return;
 
-    fetch("http://localhost:5000/api/testcases")
-      .then(r => r.json())
-      .then(setTestCases);
+  fetch(`http://localhost:5000/api/projects/${projectId}/milestones`, {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  })
+    .then(res => res.json())
+    .then(setMilestones);
 
-    fetch("http://localhost:5000/api/users?role=tester")
-      .then(r => r.json())
-      .then(setTesters);
+}, [projectId]);
 
-  }, []);
+  useEffect(() => {
+
+  if (!projectId) return;
+
+  const token = localStorage.getItem("token");
+
+  // LOAD TEST CASES
+  fetch(`http://localhost:5000/testcases?projectId=${projectId}`, {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setTestCases(data);
+      } else {
+        console.error("Testcases API error:", data);
+        setTestCases([]);
+      }
+    })
+    .catch(() => setTestCases([]));
+
+  // LOAD TESTERS
+  fetch("http://localhost:5000/api/users?role=tester", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setTesters(data);
+      } else {
+        console.error("Users API error:", data);
+        setTesters([]);
+      }
+    })
+    .catch(() => setTesters([]));
+
+}, [projectId]);  // 🔥 ADD projectId dependency
 
   /* CREATE RUN */
 
  const createRun = async () => {
+
+  if (!projectId) {
+  alert("Please select a project first");
+  return;
+}
 
   const res = await fetch(
     "http://localhost:5000/api/testruns",
@@ -47,6 +99,8 @@ function CreateTestRun() {
         description,
         startDate,
         endDate,
+         projectId,
+          milestoneId: selectedMilestone || null,
         testCaseIds: selectedCases,
         testerIds: selectedTesters
       })
@@ -66,6 +120,9 @@ function CreateTestRun() {
 
   }
 };
+if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
 
   return (
     <div className="testrun-page">
@@ -84,6 +141,23 @@ function CreateTestRun() {
         />
 
       </div>
+
+      <div className="form-group">
+  <label>Associate Milestone</label>
+
+  <select
+    value={selectedMilestone}
+    onChange={e => setSelectedMilestone(e.target.value)}
+  >
+    <option value="">None</option>
+
+    {milestones.map(ms => (
+      <option key={ms.id} value={ms.id}>
+        {ms.name}
+      </option>
+    ))}
+  </select>
+</div>
 
       <div className="form-group">
 

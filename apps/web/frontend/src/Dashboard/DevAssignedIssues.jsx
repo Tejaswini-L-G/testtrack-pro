@@ -18,6 +18,23 @@ const [commitLink, setCommitLink] = useState("");
 const [resolutionNote, setResolutionNote] = useState("");
 const [resolutionMode, setResolutionMode] = useState("");
 const [openDiscussion, setOpenDiscussion] = useState({});
+ const [searchResults, setSearchResults] = useState(null);
+ const [issues, setIssues] = useState([]);
+
+
+useEffect(() => {
+  if (searchResults?.bugs?.length > 0) {
+
+    const searchedIds = searchResults.bugs.map(b => b.id);
+
+    const prioritized = [
+      ...issues.filter(b => searchedIds.includes(b.id)),
+      ...issues.filter(b => !searchedIds.includes(b.id))
+    ];
+
+    setIssues(prioritized);
+  }
+}, [searchResults]);
 
   useEffect(() => {
 

@@ -15,6 +15,9 @@ const [cloneSuccess, setCloneSuccess] = useState(false);
 const [searchTerm, setSearchTerm] = useState("");
 const [filterStatus, setFilterStatus] = useState("");
 const [filterPriority, setFilterPriority] = useState("");
+const [projectId, setProjectId] = useState(
+  localStorage.getItem("projectId")
+);
 
 
   
@@ -23,10 +26,12 @@ const [filterPriority, setFilterPriority] = useState("");
 
   // 🔹 Fetch data on load
 useEffect(() => {
+  if (!projectId) return;
+
   fetchTestCases();
   fetchUsers();
   fetchSuites();
-}, []);
+}, [projectId]);
 
 
 const fetchUsers = async () => {
@@ -48,11 +53,14 @@ const fetchUsers = async () => {
 
   const fetchTestCases = async () => {
     try {
-      const res = await fetch("http://localhost:5000/testcases", {
-        headers: {
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-      });
+      const res = await fetch(
+  `http://localhost:5000/testcases?projectId=${projectId}`,
+  {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  }
+);
 
       const data = await res.json();
       setTestCases(data);
@@ -359,11 +367,14 @@ const handleBulkSuite = async (suiteId) => {
 
 const fetchSuites = async () => {
   try {
-    const res = await fetch("http://localhost:5000/testsuites", {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-    });
+   const res = await fetch(
+  `http://localhost:5000/testsuites?projectId=${projectId}`,
+  {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token"),
+    },
+  }
+);
 
     const data = await res.json();
     setSuites(data);
@@ -398,6 +409,15 @@ const activeFiltersCount =
   (searchTerm ? 1 : 0) +
   (filterStatus ? 1 : 0) +
   (filterPriority ? 1 : 0);
+
+
+  if (!projectId) {
+  return (
+    <div style={{ padding: "40px", textAlign: "center" }}>
+      <h2>Please select a project first.</h2>
+    </div>
+  );
+}
 
  return (
     <div className="testcases-container">
@@ -702,7 +722,7 @@ const activeFiltersCount =
 
 <button
   className="btn-link"
-  onClick={() => navigate(`/dashboard/testcases/view/${tc.id}`)}
+  onClick={() => navigate(`/dashboard/testcases/${tc.id}`)}
 >
   View
 </button>

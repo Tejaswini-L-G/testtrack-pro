@@ -5,6 +5,22 @@ function AdminTestCases() {
   const [testCases, setTestCases] = useState([]);
   const [view, setView] = useState("active");
   const [selected, setSelected] = useState([]);
+  const [searchResults, setSearchResults] = useState(null);
+
+
+  useEffect(() => {
+  if (searchResults?.testCases?.length > 0) {
+
+    const searchedIds = searchResults.testCases.map(tc => tc.id);
+
+    const prioritized = [
+      ...testCases.filter(tc => searchedIds.includes(tc.id)),
+      ...testCases.filter(tc => !searchedIds.includes(tc.id))
+    ];
+
+    setTestCases(prioritized);
+  }
+}, [searchResults]);
 
   useEffect(() => {
     fetchTestCases();

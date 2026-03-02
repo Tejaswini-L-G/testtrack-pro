@@ -20,6 +20,7 @@ const [affectedVersion, setVersion] = useState("");
   const step = params.get("step");
   const action = params.get("action");
   const expected = params.get("expected");
+  const projectId = localStorage.getItem("projectId");
 
   const [title, setTitle] = useState(
     `Failure in ${testCaseId} — Step ${step}`
@@ -67,6 +68,7 @@ formData.append("actualBehavior", actualBehavior);
 formData.append("type", type);
 formData.append("environment", environment);
 formData.append("affectedVersion", affectedVersion);
+formData.append("projectId", projectId);
 
 
   if (evidence) {
@@ -95,6 +97,12 @@ formData.append("affectedVersion", affectedVersion);
 
   setLoading(false);
 };
+
+
+
+if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
   return (
     <div className="bug-fullscreen">
 

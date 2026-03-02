@@ -6,14 +6,21 @@ function TestRunList() {
     const navigate = useNavigate();
 
   const [runs, setRuns] = useState([]);
+  const projectId = localStorage.getItem("projectId");
 
-  useEffect(() => {
+ useEffect(() => {
 
-    fetch("http://localhost:5000/api/testruns")
-      .then(r => r.json())
-      .then(setRuns);
+  if (!projectId) return;
 
-  }, []);
+  fetch(`http://localhost:5000/api/testruns?projectId=${projectId}`)
+    .then(r => r.json())
+    .then(setRuns);
+
+}, [projectId]);
+
+if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
 
   const deleteRun = async (id) => {
 

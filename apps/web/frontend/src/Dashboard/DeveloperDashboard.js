@@ -3,11 +3,14 @@ import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./Dashboard.css";
 import ProfileMenu from "../Dashboard/Profile";
 import DashboardWidgets from "../Reports/DashboardWidgets";
+import ProjectSelector from "../Projects/ProjectSelector";
+import DeveloperNavbar from "../Dashboard/DeveloperNavbar";
 
 function DeveloperDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const [searchResults, setSearchResults] = useState(null);
 
   const [stats, setStats] = useState({
     assigned: 0,
@@ -16,6 +19,47 @@ function DeveloperDashboard() {
     retest: 0
   });
 
+  const [projectName, setProjectName] = useState("");
+const [projectId, setProjectId] = useState(
+  localStorage.getItem("projectId")
+);
+
+useEffect(() => {
+
+  const loadProjectName = async () => {
+
+    if (!projectId) {
+      setProjectName("");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/projects/${projectId}`,
+        {
+          headers: {
+            Authorization: "Bearer " + localStorage.getItem("token")
+          }
+        }
+      );
+
+      if (!res.ok) {
+        setProjectName("");
+        return;
+      }
+
+      const data = await res.json();
+      setProjectName(data.name);
+
+    } catch (err) {
+      console.error("Failed to load project name");
+      setProjectName("");
+    }
+  };
+
+  loadProjectName();
+
+}, [projectId]);
   useEffect(() => {
     fetch("http://localhost:5000/dashboard/developer", {
       headers: {
@@ -42,13 +86,20 @@ useEffect(() => {
 
       {/* 🔵 TOPBAR */}
 <div className="topbar">
+  <DeveloperNavbar onSearchResults={setSearchResults} />
   <ProfileMenu />
 </div>
-
       {/* 🔵 SIDEBAR */}
       <aside className="sidebar">
 
         <h2 className="logo">TestTrack Pro</h2>
+
+        <div className="project-display">
+    Project: <strong>{projectName || "Not Selected"}</strong>
+  </div>
+
+  <ProjectSelector />
+
 
         <nav className="sidebar-nav">
 
@@ -87,6 +138,10 @@ useEffect(() => {
           >
             View Test Case Details
           </button>
+
+          <button onClick={() => navigate("/dashboard/milestones")}>
+  Milestones
+</button>
 
          <div className="reports-panel">
 
@@ -144,6 +199,8 @@ useEffect(() => {
         {location.pathname === "/developer/dashboard" && (
           <>
             <h1>Developer Dashboard</h1>
+
+            
 
             <div className="stats-grid">
 

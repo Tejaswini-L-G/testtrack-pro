@@ -232,6 +232,7 @@ const completeExecution = async () => {
   });
 
   alert("Execution Completed Successfully ✅");
+  navigate(-1);
 
 
 // ⭐ Sequential suite flow
@@ -272,13 +273,13 @@ const suiteCases = allCases.filter(
 
   alert("Suite execution completed 🎉");
 
-  navigate("/dashboard/execution");
+ navigate(-1);
 
   return;
 }
   
 
-  navigate("/dashboard/execution");
+  navigate(-1);
 };
   /* ===============================
      LOADING STATE

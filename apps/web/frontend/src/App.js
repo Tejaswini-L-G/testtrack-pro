@@ -61,8 +61,14 @@ import ExecutionReport from "./Reports/ExecutionReport";
 import BugReportAnalytics from "./Reports/BugReportAnalytics";
 import DeveloperPerformanceReport from "./Reports/DeveloperPerformanceReport";
 import TesterPerformanceReport from "./Reports/TesterPerformanceReport";
-
-
+import CrossProjectReport from "./Projects/CrossProjectReport";
+import ProjectCustomFields from "./Projects/ProjectCustomFields";
+import ProjectWorkflow from "./Projects/ProjectWorkflow";
+import ProjectModules from "./Projects/ProjectModules";
+import ProjectEnvironments from "./Projects/ProjectEnvironments";
+import ProjectMilestones from "./Projects/ProjectMilestones";
+import MilestoneDashboard from "./Projects/MilestoneDashboard";
+import GlobalSearch from "./Search/GlobalSearch";
 import "./styles.css";
 
 
@@ -150,12 +156,40 @@ function App() {
   path="/admin/dashboard/testruns/:id"
   element={<RunProgressDashboard />}
 />
+
+<Route
+  path="reports/cross-project"
+  element={<CrossProjectReport />}
+/>
+<Route
+  path="/admin/dashboard/custom-fields"
+  element={<ProjectCustomFields />}
+/>
+
+<Route path="/admin/dashboard/workflows" element={<ProjectWorkflow />} />
+<Route
+  path="/admin/dashboard/modules"
+  element={<ProjectModules />}
+/>
+
+<Route
+  path="/admin/dashboard/environments"
+  element={<ProjectEnvironments />}
+/>
+
+<Route
+  path="/admin/dashboard/milestones"
+  element={<ProjectMilestones />}
+/>
 </Route>
+
+
 
 <Route path="/profile" element={<Profile />} />
 
 <Route path="/dashboard/home" element={<HomePage />} />
   
+<Route path="/search" element={<GlobalSearch />} />
 
 
 
@@ -166,14 +200,6 @@ function App() {
 
 
 
-<Route
-  path="/dashboard"
-  element={
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  }
-/>
 
 <Route
   path="/dashboard"
@@ -199,7 +225,7 @@ function App() {
   <Route path="home" element={<HomePage />} />
   <Route path="testcases" element={<TestCases />} />
  <Route path="testcases/edit/:id" element={<EditTestCase />} />
-  <Route path="testcases/view/:id" element={<ViewTestCase />} />
+  <Route path="testcases/:id" element={<ViewTestCase />} />
   <Route path="testcases/create" element={<CreateTestCase />} />
   <Route path="templates" element={<TemplateList />} />
   <Route path="import" element={<ImportTestCases />} />
@@ -208,8 +234,7 @@ function App() {
    <Route path="execution" element={<ExecutionList />} />
 
   <Route path="execution/:id" element={<ExecutionPage />} />
-  <Route path="/dashboard/bugs" element={<BugDashboard />} />
-
+  <Route path="bugs" element={<BugDashboard />} />
    <Route
   path="my-runs"
   element={<MyRuns />}
@@ -253,6 +278,12 @@ function App() {
   element={<ExecutionHistory />}
 />
 
+<Route
+  path="/dashboard/milestones"
+  element={<MilestoneDashboard />}
+/>
+
+
 </Route>
 
 
@@ -283,7 +314,10 @@ function App() {
   element={<TesterPerformanceReport />}
 />
 
-  
+  <Route
+  path="/developer/milestones"
+  element={<MilestoneDashboard />}
+/>
 
 </Route>
 

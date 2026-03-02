@@ -122,6 +122,11 @@ function SuiteReport() {
     return <h2 style={{ padding: "20px" }}>Loading report...</h2>;
   }
 
+  const projectId = localStorage.getItem("projectId");
+
+if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
   return (
     <div className="suite-report-page">
 

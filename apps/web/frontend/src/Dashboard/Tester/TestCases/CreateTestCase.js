@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import "./CreateTestCase.css";
+
 
 function CreateTestCase() {
   const [title, setTitle] = useState("");
@@ -9,6 +10,79 @@ function CreateTestCase() {
   const [priority, setPriority] = useState("Medium");
   const [severity, setSeverity] = useState("Major");
   const [type, setType] = useState("Functional");
+  const [customFields, setCustomFields] = useState([]);
+  const [modules, setModules] = useState([]);
+const [customValues, setCustomValues] = useState({});
+const [environments, setEnvironments] = useState([]);
+const [selectedEnv, setSelectedEnv] = useState("");
+ const token = localStorage.getItem("token");
+
+  const projectId = localStorage.getItem("projectId");
+
+  useEffect(() => {
+  if (!projectId) return;
+
+  fetch(`http://localhost:5000/api/projects/${projectId}/environments`, {
+    headers: { Authorization: "Bearer " + token }
+  })
+    .then(res => res.json())
+    .then(setEnvironments);
+}, [projectId]);
+
+  useEffect(() => {
+  if (projectId) {
+    fetchModules();
+  }
+}, [projectId]);
+
+const fetchModules = async () => {
+  if (!projectId) return;
+
+  const res = await fetch(
+    `http://localhost:5000/api/projects/${projectId}/modules`,
+    {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    console.error("Failed to fetch modules");
+    return;
+  }
+
+  const data = await res.json();
+  setModules(data);
+};
+  useEffect(() => {
+
+  const token = localStorage.getItem("token");
+
+  if (!projectId || !token) return;
+
+  fetch(`http://localhost:5000/api/projects/${projectId}/custom-fields`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to fetch fields");
+      return res.json();
+    })
+    .then(data => {
+      console.log("Custom fields:", data);
+      setCustomFields(data);
+    })
+    .catch(err => console.error(err));
+
+}, [projectId]);
+
+useEffect(() => {
+    if (!projectId) {
+      setError("Please select a project first.");
+    }
+  }, [projectId]);
 
   // 🔹 Context section toggle
 
@@ -49,6 +123,12 @@ const [cleanupSteps, setCleanupSteps] = useState("");
   const handleSubmit = async () => {
     setMessage("");
     setError("");
+    for (let field of customFields) {
+  if (field.required && !customValues[field.id]) {
+    setError(`${field.name} is required`);
+    return;
+  }
+}
 
     try {
       await axios.post(
@@ -68,6 +148,9 @@ const [cleanupSteps, setCleanupSteps] = useState("");
   testDataRequirements,
   environment,
   cleanupSteps,
+  projectId,
+  environment: selectedEnv,
+  customValues
         },
         {
           headers: {
@@ -117,7 +200,18 @@ const [cleanupSteps, setCleanupSteps] = useState("");
         <div className="tc-grid">
           <div className="tc-field">
             <label>Module / Feature</label>
-            <input value={module} onChange={e => setModule(e.target.value)} />
+           <select
+  value={module}
+  onChange={e => setModule(e.target.value)}
+>
+  <option value="">Select Module</option>
+
+  {modules.map(m => (
+    <option key={m.id} value={m.name}>
+      {m.name}
+    </option>
+  ))}
+</select>
           </div>
 
           <div className="tc-field">
@@ -149,6 +243,21 @@ const [cleanupSteps, setCleanupSteps] = useState("");
               <option>Integration</option>
             </select>
           </div>
+
+          <div className="tc-field">
+  <label>Environment</label>
+  <select
+    value={selectedEnv}
+    onChange={e => setSelectedEnv(e.target.value)}
+  >
+    <option value="">Select Environment</option>
+    {environments.map(env => (
+      <option key={env.id} value={env.name}>
+        {env.name}
+      </option>
+    ))}
+  </select>
+</div>
         </div>
       </div>
 
@@ -216,6 +325,65 @@ const [cleanupSteps, setCleanupSteps] = useState("");
   {showContext ? "Hide Test Context ▲" : "Show Test Context ▼"}
 </button>
 
+
+{customFields.length > 0 && (
+  <div className="tc-section">
+    <h3>Project Specific Fields</h3>
+
+    <div className="tc-grid">
+      {customFields.map(field => {
+
+        if (field.type === "text")
+          return (
+            <div className="tc-field" key={field.id}>
+              <label>
+                {field.name}
+                {field.required && " *"}
+              </label>
+              <input
+                value={customValues[field.id] || ""}
+                onChange={e =>
+                  setCustomValues({
+                    ...customValues,
+                    [field.id]: e.target.value
+                  })
+                }
+              />
+            </div>
+          );
+
+        if (field.type === "select")
+          return (
+            <div className="tc-field" key={field.id}>
+              <label>
+                {field.name}
+                {field.required && " *"}
+              </label>
+              <select
+                value={customValues[field.id] || ""}
+                onChange={e =>
+                  setCustomValues({
+                    ...customValues,
+                    [field.id]: e.target.value
+                  })
+                }
+              >
+                <option value="">Select {field.name}</option>
+                {JSON.parse(field.options || "[]").map(opt => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+
+        return null;
+      })}
+    </div>
+  </div>
+)}
+
 {showContext && (
   <div className="context-section">
 
@@ -234,7 +402,11 @@ const [cleanupSteps, setCleanupSteps] = useState("");
 
       <div className="tc-field">
         <label>Impact if Test Fails</label>
-        <textarea rows={3} />
+        <textarea
+  value={impactIfFails}
+  onChange={(e) => setImpactIfFails(e.target.value)}
+  rows={3}
+/>
       </div>
 
       <div className="tc-field">
@@ -248,17 +420,29 @@ const [cleanupSteps, setCleanupSteps] = useState("");
 
       <div className="tc-field">
         <label>Test Data Requirements</label>
-        <textarea rows={3} />
+       <textarea
+  value={testDataRequirements}
+  onChange={(e) => setTestDataRequirements(e.target.value)}
+  rows={3}
+/>
       </div>
 
       <div className="tc-field">
         <label>Environment Requirements</label>
-        <textarea rows={3} />
+        <textarea
+  value={environment}
+  onChange={(e) => setEnvironment(e.target.value)}
+  rows={3}
+/>
       </div>
 
       <div className="tc-field">
         <label>Cleanup Steps</label>
-        <textarea rows={3} />
+        <textarea
+  value={cleanupSteps}
+  onChange={(e) => setCleanupSteps(e.target.value)}
+  rows={3}
+/>
       </div>
 
     </div>

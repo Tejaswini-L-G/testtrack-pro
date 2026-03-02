@@ -20,6 +20,7 @@ function EditTestRun() {
   const [selectedTesters, setSelectedTesters] = useState([]);
 
   const [showDropdown, setShowDropdown] = useState(false);
+  const projectId = localStorage.getItem("projectId");
 
   /* LOAD DATA */
 
@@ -29,11 +30,15 @@ function EditTestRun() {
       .then(r => r.json())
       .then(data => {
 
+        setTestCases(Array.isArray(data.testCases) ? data.testCases : []);
+
         setName(data.name || "");
         setDescription(data.description || "");
 
         setStartDate(data.startDate?.slice(0, 10));
         setEndDate(data.endDate?.slice(0, 10));
+
+        
 
         setSelectedCases(
           data.testCases?.map(tc => tc.testCaseId) || []
@@ -45,7 +50,7 @@ function EditTestRun() {
 
       });
 
-    fetch("http://localhost:5000/api/testcases")
+    fetch(`http://localhost:5000/testcases?projectId=${projectId}`)
       .then(r => r.json())
       .then(setTestCases);
 
@@ -54,6 +59,10 @@ function EditTestRun() {
       .then(setTesters);
 
   }, [id]);
+
+  if (!projectId) {
+  return <h2>Please select a project first.</h2>;
+}
 
   /* SAVE */
 
@@ -154,7 +163,8 @@ function EditTestRun() {
 
       <div className="checkbox-list">
 
-        {testCases.map(tc => (
+       {Array.isArray(testCases) &&
+  testCases.map(tc => (
 
           <label key={tc.id} className="checkbox-item">
 
