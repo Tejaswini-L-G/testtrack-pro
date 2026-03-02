@@ -12,6 +12,9 @@ function TestCases() {
   const [cloneId, setCloneId] = useState(null);
 const [includeAttachments, setIncludeAttachments] = useState(false);
 const [cloneSuccess, setCloneSuccess] = useState(false);
+const [searchTerm, setSearchTerm] = useState("");
+const [filterStatus, setFilterStatus] = useState("");
+const [filterPriority, setFilterPriority] = useState("");
 
 
   
@@ -370,6 +373,31 @@ const fetchSuites = async () => {
   }
 };
 
+const filteredTestCases = testCases.filter((tc) => {
+  const search = searchTerm.toLowerCase().trim();
+
+  const matchesSearch =
+    tc.testCaseId?.toString().toLowerCase().includes(search) ||
+    tc.title?.toLowerCase().includes(search) ||
+    tc.module?.toLowerCase().includes(search) ||
+    tc.priority?.toLowerCase().includes(search) ||
+    tc.status?.toLowerCase().includes(search);
+
+  const matchesStatus = filterStatus
+    ? tc.status === filterStatus
+    : true;
+
+  const matchesPriority = filterPriority
+    ? tc.priority === filterPriority
+    : true;
+
+  return matchesSearch && matchesStatus && matchesPriority;
+});
+
+const activeFiltersCount =
+  (searchTerm ? 1 : 0) +
+  (filterStatus ? 1 : 0) +
+  (filterPriority ? 1 : 0);
 
  return (
     <div className="testcases-container">
@@ -528,19 +556,50 @@ const fetchSuites = async () => {
 
       {/* Filters */}
       <div className="filter-bar">
-        <input placeholder="Search test cases..." />
-        <select>
-          <option>Status</option>
-          <option>Draft</option>
-          <option>Approved</option>
-        </select>
-        <select>
-          <option>Priority</option>
-          <option>Critical</option>
-          <option>High</option>
-          <option>Medium</option>
-        </select>
+        <input
+  type="text"
+  placeholder="Search by ID, title, module..."
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+/>
+        <select
+  value={filterStatus}
+  onChange={(e) => setFilterStatus(e.target.value)}
+>
+  <option value="">All Status</option>
+  <option>Draft</option>
+  <option>Ready for Review</option>
+  <option>Approved</option>
+  <option>Deprecated</option>
+  <option>Archived</option>
+</select>
+       <select
+  value={filterPriority}
+  onChange={(e) => setFilterPriority(e.target.value)}
+>
+  <option value="">All Priority</option>
+  <option>Critical</option>
+  <option>High</option>
+  <option>Medium</option>
+  <option>Low</option>
+</select>
       </div>
+
+      <button
+  className="btn-secondary"
+  onClick={() => {
+    setSearchTerm("");
+    setFilterStatus("");
+    setFilterPriority("");
+  }}
+>
+  Clear Filters
+</button>
+{activeFiltersCount > 0 && (
+  <span className="filter-count">
+    {activeFiltersCount} filters applied
+  </span>
+)}
 
 {cloneSuccess && (
   <div className="success-banner">
@@ -569,14 +628,14 @@ const fetchSuites = async () => {
         </thead>
 
         <tbody>
-          {testCases.length === 0 ? (
+          {filteredTestCases.length === 0 ?  (
             <tr>
               <td colSpan="7" style={{ textAlign: "center", padding: "30px" }}>
                 No test cases found
               </td>
             </tr>
           ) : (
-            testCases.map((tc) => (
+           filteredTestCases.map((tc) =>  (
               <tr key={tc.id}>
                 <td>
                   <input
@@ -631,6 +690,7 @@ const fetchSuites = async () => {
   Template
 </button>
 
+
 <button
   className="btn-link"
   onClick={() =>
@@ -640,10 +700,9 @@ const fetchSuites = async () => {
   History
 </button>
 
-
 <button
   className="btn-link"
-  onClick={() => navigate(`/dashboard/testcases/${tc.id}`)}
+  onClick={() => navigate(`/dashboard/testcases/view/${tc.id}`)}
 >
   View
 </button>
@@ -663,12 +722,10 @@ const fetchSuites = async () => {
 
       <h3>Clone Test Case</h3>
 
-      <div className="clone-options">
-
-  <label className="clone-option">
+      <label className="clone-option">
     <input
       type="radio"
-      name="cloneType"
+      name="attachments"
       checked={includeAttachments === true}
       onChange={() => setIncludeAttachments(true)}
     />
@@ -678,16 +735,12 @@ const fetchSuites = async () => {
   <label className="clone-option">
     <input
       type="radio"
-      name="cloneType"
+      name="attachments"
       checked={includeAttachments === false}
       onChange={() => setIncludeAttachments(false)}
     />
     Clone WITHOUT attachments
   </label>
-
-</div>
-
-
       <div className="modal-actions">
         <button
           className="btn-primary"

@@ -7,7 +7,7 @@ function Sidebar({ links }) {
   return (
     <aside style={{
       width: "240px",
-      background: "#111827",
+      background: "#e199cd",
       color: "#e5e7eb",
       padding: "24px"
     }}>
@@ -26,7 +26,7 @@ function Sidebar({ links }) {
               padding: "10px 12px",
               marginBottom: "6px",
               borderRadius: "4px",
-              background: active ? "#1f2937" : "transparent",
+              background: active ? "#ecb4e4" : "transparent",
               color: active ? "#fff" : "#d1d5db",
               cursor: "pointer"
             }}

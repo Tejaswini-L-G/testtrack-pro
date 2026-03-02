@@ -1,0 +1,163 @@
+/* ===== DASHBOARD GRID ===== */
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 22px;
+  padding: 18px;
+}
+
+/* ===== CARD ===== */
+
+.widget-card {
+  background: linear-gradient(145deg, #ffffff, #f9fafb);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.widget-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* ===== HEADER ===== */
+
+.widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.widget-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+/* ===== ACTION ICONS ===== */
+
+.widget-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drag-hint {
+  font-size: 18px;
+  opacity: 0.35;
+  cursor: grab;
+  transition: opacity 0.2s;
+}
+
+.drag-hint:hover {
+  opacity: 0.7;
+}
+
+.widget-remove {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.widget-remove:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+/* ===== COUNTER ===== */
+
+.widget-counter {
+  font-size: 48px;
+  font-weight: 700;
+  color: #2563eb;
+  text-align: center;
+  margin: auto 0;
+  letter-spacing: -1px;
+}
+
+/* ===== LIST ===== */
+
+.widget-list {
+  padding-left: 18px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-y: auto;
+  max-height: 150px;
+}
+
+.widget-list li {
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+/* ===== CHART ===== */
+
+.widget-chart {
+  flex: 1;
+  margin-top: 6px;
+}
+
+/* ===== TABLE ===== */
+
+.widget-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.widget-table th {
+  text-align: left;
+  color: #6b7280;
+  padding-bottom: 6px;
+  font-weight: 500;
+}
+
+.widget-table td {
+  border-top: 1px solid #f3f4f6;
+  padding: 8px 0;
+  color: #374151;
+}
+
+/* ===== EMPTY STATE ===== */
+
+.widget-empty {
+  padding: 60px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+/* ===== SCROLLBAR (nice) ===== */
+
+.widget-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.widget-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 8px;
+}
+
+.widget-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}

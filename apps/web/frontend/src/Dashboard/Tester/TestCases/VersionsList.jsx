@@ -37,6 +37,13 @@ function VersionsList() {
   return (
     <div className="versions-page">
 
+      <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
+
       <h1 className="versions-title">Version History</h1>
 
       <div className="versions-card">

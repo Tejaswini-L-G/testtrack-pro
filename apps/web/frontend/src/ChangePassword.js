@@ -68,117 +68,146 @@ function ChangePassword() {
     cursor: "pointer",
   };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(135deg, #141e30, #243b55)",
-      }}
-    >
-      <div
+ return (
+  <div
+    style={{
+      background: "white",
+      padding: "30px",
+      borderRadius: "12px",
+      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+      width: "100%",
+      maxWidth: "400px",
+      boxSizing: "border-box",
+      textAlign: "center",
+    }}
+  >
+    <h2 style={{ marginBottom: "20px",color:"black" }}>
+      🔐 Change Password
+    </h2>
+
+    <form onSubmit={submit}>
+
+      {/* Current Password */}
+      <div style={{ position: "relative", marginBottom: "15px" }}>
+        <input
+          type={showCurrent ? "text" : "password"}
+          placeholder="Current Password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            paddingRight: "35px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
+        <span
+          onClick={() => setShowCurrent(!showCurrent)}
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+          }}
+        >
+          {showCurrent ? "🙈" : "👁️"}
+        </span>
+      </div>
+
+      {/* New Password */}
+      <div style={{ position: "relative", marginBottom: "15px" }}>
+        <input
+          type={showNew ? "text" : "password"}
+          placeholder="New Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            paddingRight: "35px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
+        <span
+          onClick={() => setShowNew(!showNew)}
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+          }}
+        >
+          {showNew ? "🙈" : "👁️"}
+        </span>
+      </div>
+
+      {/* Confirm Password */}
+      <div style={{ position: "relative", marginBottom: "20px" }}>
+        <input
+          type={showConfirm ? "text" : "password"}
+          placeholder="Confirm New Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px",
+            paddingRight: "35px",
+            borderRadius: "8px",
+            border: "1px solid #ddd",
+            outline: "none",
+          }}
+        />
+        <span
+          onClick={() => setShowConfirm(!showConfirm)}
+          style={{
+            position: "absolute",
+            right: "10px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            cursor: "pointer",
+          }}
+        >
+          {showConfirm ? "🙈" : "👁️"}
+        </span>
+      </div>
+
+      <button
+        type="submit"
         style={{
-          width: "340px",
-          padding: "25px",
-          borderRadius: "15px",
-          background: "white",
-          boxSizing: "border-box",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-          textAlign: "center",
+          width: "100%",
+          padding: "10px",
+          borderRadius: "8px",
+          border: "none",
+          background: "#4f46e5",
+          color: "white",
+          fontWeight: "600",
+          cursor: "pointer",
         }}
       >
-        <h2>🔐 Change Password</h2>
+        Update Password
+      </button>
 
-        <form onSubmit={submit}>
-          <div style={fieldStyle}>
-            <input
-              type={showCurrent ? "text" : "password"}
-              placeholder="Current Password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                paddingRight: "34px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
-              }}
-            />
-            <span
-              style={eyeStyle}
-              onClick={() => setShowCurrent(!showCurrent)}
-            >
-              {showCurrent ? "🙈" : "👁️"}
-            </span>
-          </div>
+    </form>
 
-          <div style={fieldStyle}>
-            <input
-              type={showNew ? "text" : "password"}
-              placeholder="New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                paddingRight: "34px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
-              }}
-            />
-            <span style={eyeStyle} onClick={() => setShowNew(!showNew)}>
-              {showNew ? "🙈" : "👁️"}
-            </span>
-          </div>
-
-          <div style={fieldStyle}>
-            <input
-              type={showConfirm ? "text" : "password"}
-              placeholder="Confirm New Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                paddingRight: "34px",
-                borderRadius: "8px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
-              }}
-            />
-            <span
-              style={eyeStyle}
-              onClick={() => setShowConfirm(!showConfirm)}
-            >
-              {showConfirm ? "🙈" : "👁️"}
-            </span>
-          </div>
-
-          <button
-            type="submit"
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: "25px",
-              border: "none",
-              background: "linear-gradient(135deg, #4facfe, #00f2fe)",
-              color: "white",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            Update Password
-          </button>
-        </form>
-
-        <p style={{ marginTop: "15px", color: "#555" }}>{message}</p>
-      </div>
-    </div>
-  );
+    {message && (
+      <p
+        style={{
+          marginTop: "15px",
+          fontSize: "14px",
+          color: message.includes("success") ? "green" : "#d9534f",
+        }}
+      >
+        {message}
+      </p>
+    )}
+  </div>
+);
 }
 
 export default ChangePassword;

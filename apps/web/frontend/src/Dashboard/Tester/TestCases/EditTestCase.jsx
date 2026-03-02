@@ -59,7 +59,7 @@ function EditTestCase() {
       );
 
       alert("Test case updated successfully.");
-      navigate("/testcases");
+      navigate("/dashboard/testcases");
 
     } catch (err) {
       console.error("Update failed:", err);

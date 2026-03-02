@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams} from "react-router-dom";
 import "./ViewTestCase.css";
+import { useNavigate } from "react-router-dom";
 
 
 function ViewTestCase() {
   const { id } = useParams();
+  const navigate = useNavigate();
   
   const [testCase, setTestCase] = useState(null);
 
@@ -31,10 +33,44 @@ function ViewTestCase() {
     fetchTestCase();
   }, [id]);
 
+
+
+  const startExecution = async () => {
+
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(
+    "http://localhost:5000/api/executions/start",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify({ testCaseId: testCase.id }),
+    }
+  );
+
+  const data = await res.json();
+
+  console.log("Start API response:", data);
+
+  if (!data?.id) {
+    alert("Failed to start execution");
+    return;
+  }
+
+  navigate(`/dashboard/execution/${testCase.id}`, {
+    state: { executionId: data.id },
+  });
+};
+
   if (!testCase) return <div>Loading...</div>;
 
   return (
     <div className="tc-view-container">
+
+      
       <h2>{testCase.title}</h2>
 
       <div className="tc-section">
@@ -132,9 +168,21 @@ function ViewTestCase() {
   ))}
 </div>
 
+<button
+  className="execute-btn"
+  onClick={() =>
+    navigate(`/dashboard/execution/${testCase.id}`)
+  }
+>
+  Execute
+</button>
+
+
 
 
     </div>
+
+    
   );
 }
 

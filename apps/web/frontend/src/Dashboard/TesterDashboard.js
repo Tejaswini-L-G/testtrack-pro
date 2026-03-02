@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Outlet } from "react-router-dom";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import "./Dashboard.css";
-
+import ProfileMenu from "../Dashboard/Profile";
+import DashboardWidgets from "../Reports/DashboardWidgets";
 
 function TesterDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [user, setUser] = useState(null);
 
   const [stats, setStats] = useState({
     total: 0,
@@ -21,117 +22,201 @@ function TesterDashboard() {
       },
     })
       .then(res => res.json())
-      .then(data => {
-        setStats(data);
-      })
-      .catch(() => {
-        console.error("Failed to load dashboard stats");
-      });
+      .then(data => setStats(data))
+      .catch(() => console.error("Failed to load stats"));
   }, []);
+
+  // ===== LOAD USER =====
+// ===== LOAD USER FROM LOCAL STORAGE =====
+useEffect(() => {
+
+  const storedUser = localStorage.getItem("user");
+
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  } else {
+    console.error("User not found in localStorage");
+  }
+
+}, []);
+// ===== INIT DEFAULT WIDGETS =====
+
 
   const isActive = (path) => location.pathname === path;
 
- return (
-  <div className="dashboard-layout">
+  return (
+    <div className="dashboard-layout">
 
-    {/* Sidebar */}
-    <aside className="sidebar">
-      <h2 className="logo">TestTrack Pro</h2>
+    {/* 🔵 TOPBAR */}
+<div className="topbar">
+  <ProfileMenu />
+</div>
 
-      <nav className="sidebar-nav">
-        <button
-          className={isActive("/dashboard") ? "active" : ""}
-          onClick={() => navigate("/dashboard")}
-        >
-          Dashboard
-        </button>
+      {/* SIDEBAR */}
+      <aside className="sidebar">
 
-        <hr />
+        <h2 className="logo">TestTrack Pro</h2>
 
-        <p className="nav-section">Test Case Management</p>
+        <nav className="sidebar-nav">
 
-        <button
-          className={isActive("/testcases") ? "active" : ""}
-          onClick={() => navigate("/testcases")}
-        >
-          View Test Cases
-        </button>
+          <button
+            className={isActive("/dashboard/home") ? "active" : ""}
+            onClick={() => navigate("/dashboard/home")}
+          >
+            Home
+          </button>
 
-        <button
-          className={isActive("/testcases/create") ? "active" : ""}
-          onClick={() => navigate("/testcases/create")}
-        >
-          Create Test Case
-        </button>
+          <button
+            className={isActive("/dashboard") ? "active" : ""}
+            onClick={() => navigate("/dashboard")}
+          >
+            Dashboard
+          </button>
 
-        <button
-          className={isActive("/templates") ? "active" : ""}
-          onClick={() => navigate("/templates")}
-        >
-          Templates
-        </button>
+          <hr />
 
-        <button
-          className={isActive("/import") ? "active" : ""}
-          onClick={() => navigate("/import")}
-        >
-          Import Test Cases
-        </button>
+          <p className="nav-section">Test Case Management</p>
 
-        <button
-  className={isActive("/suites") ? "active" : ""}
-  onClick={() => navigate("/suites")}
+          <button
+            onClick={() => navigate("/dashboard/testcases")}
+          >
+            View Test Cases
+          </button>
+
+          <button
+            onClick={() => navigate("/dashboard/testcases/create")}
+          >
+            Create Test Case
+          </button>
+
+          <button
+            onClick={() => navigate("/dashboard/templates")}
+          >
+            Templates
+          </button>
+
+          <button
+            onClick={() => navigate("/dashboard/import")}
+          >
+            Import Test Cases
+          </button>
+
+          <button
+            onClick={() => navigate("/dashboard/suites")}
+          >
+            Test Suites
+          </button>
+
+          <button
+  onClick={() => navigate("/dashboard/execution")}
 >
-  Test Suites
+  Execute Test Cases
+</button>
+
+<button
+  onClick={() => navigate("/dashboard/my-runs")}
+>
+  My Test Runs
+</button>
+
+<button
+  onClick={() => navigate("/dashboard/my-executions")}
+>
+  My Executions
+</button>
+
+<button onClick={() => navigate("/dashboard/bugs")}>
+  My Bugs
 </button>
 
 
-        <hr />
+<div className="reports-panel">
 
-        <button
-          onClick={() => {
-            localStorage.removeItem("token");
-            navigate("/");
-          }}
-        >
-          Logout
-        </button>
-      </nav>
-    </aside>
+  <h4>Reports & Analytics</h4>
 
-    {/* Main Content */}
-    <main className="dashboard-content">
+  <div className="reports-buttons">
 
-      {location.pathname === "/dashboard" && (
-        <>
-          <h1>Tester Dashboard</h1>
+   <button
+  onClick={() => navigate("/dashboard/reports/execution")}
+>
+  📊 Execution Report
+</button>
 
-          <div className="stats-grid">
-            <div className="stat-card">
-              <span>Total Test Cases</span>
-              <strong>{stats.total}</strong>
-            </div>
+    <button
+      onClick={() => navigate("/dashboard/reports/bugs")}
+    >
+      🐞 Bug Report
+    </button>
 
-            <div className="stat-card">
-              <span>Draft</span>
-              <strong>{stats.draft}</strong>
-            </div>
+    <button
+      onClick={() => navigate("/dashboard/reports/developer-performance")}
+    >
+      👨‍💻 Developer Performance
+    </button>
 
-            <div className="stat-card">
-              <span>Approved</span>
-              <strong>{stats.approved}</strong>
-            </div>
-          </div>
-        </>
-      )}
+    <button
+      onClick={() => navigate("/dashboard/reports/tester-performance")}
+    >
+      🧪 Tester Performance
+    </button>
 
-      {/* This renders child pages like ViewTestCase */}
-      <Outlet />
-
-    </main>
   </div>
-);
 
+</div>
+
+          <hr />
+
+          <button
+            className="logout-btn"
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/dashboard/home");
+            }}
+          >
+            Logout
+          </button>
+
+        </nav>
+      </aside>
+
+      {/* RIGHT CONTENT */}
+      <main className="dashboard-content">
+
+        {/* Dashboard Home Content */}
+       {/* Dashboard Home Content */}
+{location.pathname === "/dashboard" && (
+  <>
+    <h1>Tester Dashboard</h1>
+
+    <div className="stats-grid">
+      <div className="stat-card">
+        <span>Total Test Cases</span>
+        <strong>{stats.total}</strong>
+      </div>
+
+      <div className="stat-card">
+        <span>Draft</span>
+        <strong>{stats.draft}</strong>
+      </div>
+
+      <div className="stat-card">
+        <span>Approved</span>
+        <strong>{stats.approved}</strong>
+      </div>
+    </div>
+
+    {/* ⭐ DASHBOARD WIDGETS */}
+    <DashboardWidgets user={user} />
+
+  </>
+)}
+
+        {/* CHILD PAGES RENDER HERE */}
+        <Outlet />
+
+      </main>
+    </div>
+  );
 }
 
 export default TesterDashboard;
