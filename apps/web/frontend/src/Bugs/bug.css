@@ -293,19 +293,36 @@
 }
 
 .export-btn {
-  background: #16a34a;
+  margin-left: auto;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: #2563eb;
   color: white;
-  padding: 10px 18px;
-  border-radius: 8px;
   border: none;
-  font-weight: 600;
   cursor: pointer;
-  float: right;
+  font-size: 13px;
+  transition: 0.2s ease;
 }
 
 .export-btn:hover {
-  background: #15803d;
+  background: #1e40af;
 }
+
+
+/* Advanced filter wrapper spacing */
+.bugs-header > div {
+  width: 100%;
+}
+
+/* If AdvancedFilterPanel has a container class */
+.advanced-filter-panel {
+  background: #ffffff;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin-top: 10px;
+}
+
 .bugs-header {
   display: flex;
   justify-content: space-between;  /* ⭐ pushes button right */
@@ -752,4 +769,422 @@
   padding: 8px;
   background: #eef2ff;
   border-radius: 6px;
+}
+
+/* =============================== */
+/* BUG HEADER LAYOUT */
+/* =============================== */
+
+.bugs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* =============================== */
+/* QUICK FILTERS */
+/* =============================== */
+
+.quick-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-filters button {
+  padding: 5px 14px;
+  border-radius: 16px;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-filters button:hover {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.quick-filters button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+.advanced-filter-panel {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.advanced-filter-panel select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+}
+
+.advanced-filter-panel button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.advanced-filter-panel button:hover {
+  background: #1d4ed8;
+}
+
+.advanced-filter-panel input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+}
+
+/* ===== Toolbar ===== */
+
+.bug-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.quick-filter-group {
+  display: flex;
+  gap: 10px;
+}
+
+.quick-filter-group button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #f5f6f8;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.quick-filter-group button:hover {
+  background: #e4e6eb;
+}
+
+/* ===== Advanced Filter Card ===== */
+
+.advanced-filter-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  margin-bottom: 25px;
+}
+
+/* Filter Row */
+
+.filter-row {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.filter-row select {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.apply-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.apply-btn:hover {
+  background: #1e40af;
+}
+
+/* Preset Row */
+
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.preset-row input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.load-preset {
+  min-width: 200px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* ===== Preset Row Alignment Fix ===== */
+
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* Share checkbox container */
+.share-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Remove default checkbox weird spacing */
+.share-checkbox input {
+  margin: 0;
+  transform: translateY(1px);
+}
+
+/* Save Button */
+.save-btn {
+  padding: 8px 18px;        /* better proportions */
+  border-radius: 6px;
+  background: #2563eb;      /* match your theme blue */
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;             /* force consistent height */
+  transition: 0.2s ease;
+}
+
+.save-btn:hover {
+  background: #1e40af;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ============================= */
+/* ===== FILTER BUTTON GROUP ==== */
+/* ============================= */
+
+.bugs-header button {
+  padding: 8px 16px;
+  border-radius: 20px;              /* pill style */
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+  min-height: 36px;
+}
+
+/* Hover Effect */
+.bugs-header button:hover {
+  background: #f3f4f6;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* Active Button */
+.bugs-header button.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+/* Optional: subtle click effect */
+.bugs-header button:active {
+  transform: scale(0.97);
+}
+
+
+/* HEADER LAYOUT */
+.bugs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* FILTER GROUP - FORCE ONE LINE */
+.filter-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;     /* 🚀 prevents wrapping */
+  white-space: nowrap;
+}
+
+/* Prevent buttons from shrinking */
+.filter-group button {
+  flex-shrink: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.advanced-filter-panel {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.advanced-filter-panel select,
+.advanced-filter-panel input {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.advanced-filter-panel select:focus,
+.advanced-filter-panel input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.advanced-filter-panel > select:nth-of-type(-n+3),
+.advanced-filter-panel > button:first-of-type {
+  display: inline-flex;
+}
+
+.advanced-filter-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.advanced-filter-panel button:first-of-type {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.advanced-filter-panel button:first-of-type:hover {
+  background: #1e40af;
+}
+/* Preset input */
+.advanced-filter-panel input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Share checkbox */
+.advanced-filter-panel label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Save button */
+.advanced-filter-panel button:nth-of-type(2) {
+  background: #16a34a;
+  color: white;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.advanced-filter-panel button:nth-of-type(2):hover {
+  background: #15803d;
+}
+.advanced-filter-panel select:last-of-type {
+  width: 100%;
+  margin-top: 10px;
 }

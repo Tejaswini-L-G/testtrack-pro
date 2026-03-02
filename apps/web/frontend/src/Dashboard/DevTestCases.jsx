@@ -4,6 +4,23 @@ import "./Developer.css";
 function DevTestCases() {
 
   const [cases, setCases] = useState([]);
+   const [searchResults, setSearchResults] = useState(null);
+const [testCases, setTestCases] = useState([]);
+
+useEffect(() => {
+  if (searchResults?.testCases?.length > 0) {
+
+    const searchedIds = searchResults.testCases.map(tc => tc.id);
+
+    const prioritized = [
+      ...testCases.filter(tc => searchedIds.includes(tc.id)),
+      ...testCases.filter(tc => !searchedIds.includes(tc.id))
+    ];
+
+    setTestCases(prioritized);
+  }
+}, [searchResults]);
+
 
   useEffect(() => {
 

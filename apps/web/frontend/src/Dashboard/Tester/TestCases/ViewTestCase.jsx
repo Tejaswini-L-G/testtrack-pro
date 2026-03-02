@@ -68,9 +68,10 @@ function ViewTestCase() {
   if (!testCase) return <div>Loading...</div>;
 
   return (
+       
+    
     <div className="tc-view-container">
 
-      
       <h2>{testCase.title}</h2>
 
       <div className="tc-section">
@@ -90,7 +91,94 @@ function ViewTestCase() {
           <div className="tc-label">Description</div>
           <div className="tc-value">{testCase.description}</div>
         </div>
+
+<div className="tc-field">
+  <div className="tc-label">Priority</div>
+  <div className="tc-value">{testCase.priority}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Severity</div>
+  <div className="tc-value">{testCase.severity}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Type</div>
+  <div className="tc-value">{testCase.type}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Status</div>
+  <div className="tc-value">{testCase.status}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Environment</div>
+  <div className="tc-value">{testCase.environment}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Test Data</div>
+  <div className="tc-value">{testCase.testData}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Preconditions</div>
+  <div className="tc-value">{testCase.preconditions}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Postconditions</div>
+  <div className="tc-value">{testCase.postconditions}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Impact If Fails</div>
+  <div className="tc-value">{testCase.impactIfFails}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Test Data Requirements</div>
+  <div className="tc-value">{testCase.testDataRequirements}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Cleanup Steps</div>
+  <div className="tc-value">{testCase.cleanupSteps}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Created By</div>
+  <div className="tc-value">{testCase.createdBy?.name}</div>
+</div>
+
+<div className="tc-field">
+  <div className="tc-label">Created At</div>
+  <div className="tc-value">
+    {new Date(testCase.createdAt).toLocaleString()}
+  </div>
+</div>
+
       </div>
+
+      <div className="tc-section">
+  <h3>Project Specific Fields</h3>
+
+  {testCase.TestCaseCustomValue?.length === 0 && (
+    <p>No custom fields.</p>
+  )}
+
+  {testCase.TestCaseCustomValue?.map((item) => (
+    <div key={item.id} className="tc-field">
+      <div className="tc-label">
+        {item.field.name}
+      </div>
+      <div className="tc-value">
+        {item.value}
+      </div>
+    </div>
+  ))}
+</div>
 
       <div className="tc-section">
         <h3>Test Steps</h3>

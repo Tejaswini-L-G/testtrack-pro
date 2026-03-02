@@ -4,6 +4,7 @@ import "./Dashboard.css";
 import ProfileMenu from "../Dashboard/Profile";
 import DashboardWidgets from "../Reports/DashboardWidgets";
 import ProjectSelector from "../Projects/ProjectSelector";
+import Navbar from "../Dashboard/Navbar";
 
 
 function TesterDashboard() {
@@ -88,9 +89,11 @@ useEffect(() => {
 
   return (
     <div className="dashboard-layout">
+        
 
     {/* 🔵 TOPBAR */}
 <div className="topbar">
+  <Navbar />
   <ProfileMenu />
 </div>
 
@@ -176,6 +179,10 @@ useEffect(() => {
 
 <button onClick={() => navigate("/dashboard/bugs")}>
   My Bugs
+</button>
+
+<button onClick={() => navigate("/dashboard/milestones")}>
+  Milestones
 </button>
 
 

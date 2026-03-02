@@ -40,7 +40,8 @@ model User {
   DashboardWidget DashboardWidget[]
   Project         Project[]
   AuditLog        AuditLog[]
-  projects ProjectMember[]
+  projects        ProjectMember[]
+  FilterPreset    FilterPreset[]
 }
 
 model TestCase {
@@ -77,11 +78,12 @@ model TestCase {
   versions TestCaseVersion[]
   steps    TestStep[]
 
-  suiteId String?
-  suite   TestSuite? @relation(fields: [suiteId], references: [id])
-  order   Int?
-  projectId String
-project   Project @relation(fields: [projectId], references: [id])
+  suiteId             String?
+  suite               TestSuite?            @relation(fields: [suiteId], references: [id])
+  order               Int?
+  projectId           String
+  project             Project               @relation(fields: [projectId], references: [id])
+  TestCaseCustomValue TestCaseCustomValue[]
 }
 
 model TestStep {
@@ -137,8 +139,8 @@ model TestSuite {
   testCases TestCase[]
 
   isDeleted Boolean @default(false)
- projectId String
-project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
 }
 
 model TestCaseTemplate {
@@ -197,6 +199,8 @@ model ExecutionStep {
   notes  String?
 
   execution TestExecution @relation(fields: [executionId], references: [id])
+
+  @@unique([executionId, stepNumber])
 }
 
 model ExecutionEvidence {
@@ -227,8 +231,10 @@ model TestRun {
   testCases     TestRunCase[]
   assignments   TestRunAssignment[]
   TestExecution TestExecution[]
-  projectId String
-project   Project @relation(fields: [projectId], references: [id])
+  projectId     String
+  project       Project             @relation(fields: [projectId], references: [id])
+  milestoneId   String?
+  milestone     ProjectMilestone?   @relation(fields: [milestoneId], references: [id])
 }
 
 model TestRunCase {
@@ -286,9 +292,9 @@ model Bug {
   fixedAt        DateTime?
   startedAt      DateTime?
 
-  comments BugComment[]
+  comments  BugComment[]
   projectId String
-project   Project @relation(fields: [projectId], references: [id])
+  project   Project      @relation(fields: [projectId], references: [id])
 }
 
 model BugComment {
@@ -346,51 +352,128 @@ model Project {
 
   createdById String?
   createdBy   User?   @relation(fields: [createdById], references: [id])
-  
-  testCases   TestCase[]
-  testSuites  TestSuite[]
-  testRuns    TestRun[]
-  bugs        Bug[]
-  members ProjectMember[]
+
+  testCases          TestCase[]
+  testSuites         TestSuite[]
+  testRuns           TestRun[]
+  bugs               Bug[]
+  members            ProjectMember[]
+  ProjectCustomField ProjectCustomField[]
+  ProjectWorkflow    ProjectWorkflow[]
+  ProjectModule      ProjectModule[]
+  ProjectEnvironment ProjectEnvironment[]
+  ProjectMilestone   ProjectMilestone[]
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String
-  action    String
-  entity    String
-  entityId  String?
-  details   String?
-  
+  id       String  @id @default(uuid())
+  userId   String
+  action   String
+  entity   String
+  entityId String?
+  details  String?
+
   createdAt DateTime @default(now())
 
-  user User? @relation(fields: [userId], references: [id])
+  user       User?   @relation(fields: [userId], references: [id])
   isArchived Boolean @default(false)
 }
 
 model SystemConfig {
-  id              String  @id @default(uuid())
+  id              String   @id @default(uuid())
   defaultSeverity String?
   defaultPriority String?
-  emailEnabled    Boolean @default(true)
-  autoAssignBug   Boolean @default(false)
-  maxUploadSize   Int     @default(10) // in MB
+  emailEnabled    Boolean  @default(true)
+  autoAssignBug   Boolean  @default(false)
+  maxUploadSize   Int      @default(10) // in MB
   updatedAt       DateTime @updatedAt
-  
 }
 
 model ProjectMember {
-  id        String   @id @default(uuid())
+  id String @id @default(uuid())
 
   userId    String
   projectId String
 
-  user      User     @relation(fields: [userId], references: [id])
-  project   Project  @relation(fields: [projectId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
 
-  role      String?  // optional: project-level role
+  role String? // optional: project-level role
 
   createdAt DateTime @default(now())
 
   @@unique([userId, projectId])
+}
+
+model ProjectCustomField {
+  id       String  @id @default(uuid())
+  name     String
+  type     String // text, select, number, date
+  required Boolean @default(false)
+  options  String? // JSON string for dropdown options
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdAt           DateTime              @default(now())
+  TestCaseCustomValue TestCaseCustomValue[]
+}
+
+model TestCaseCustomValue {
+  id    String @id @default(uuid())
+  value String
+
+  testCaseId String
+  testCase   TestCase @relation(fields: [testCaseId], references: [id])
+
+  fieldId String
+  field   ProjectCustomField @relation(fields: [fieldId], references: [id])
+}
+
+model ProjectWorkflow {
+  id        String  @id @default(uuid())
+  name      String // Bug or TestCase
+  statuses  String // JSON array
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+}
+
+model ProjectModule {
+  id        String  @id @default(uuid())
+  name      String
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model ProjectEnvironment {
+  id        String   @id @default(uuid())
+  name      String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model ProjectMilestone {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  targetDate     DateTime
+  targetPassRate Float
+  projectId      String
+  project        Project  @relation(fields: [projectId], references: [id])
+  createdAt      DateTime @default(now())
+
+  testRuns TestRun[]
+}
+
+model FilterPreset {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String
+  filters   Json
+  isShared  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

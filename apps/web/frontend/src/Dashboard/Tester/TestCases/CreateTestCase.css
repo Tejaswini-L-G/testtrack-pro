@@ -242,3 +242,32 @@
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
+
+
+.tc-field select,
+.tc-field input,
+.tc-field textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.tc-field select:focus,
+.tc-field input:focus,
+.tc-field textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+.tc-section h3 {
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.tc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}

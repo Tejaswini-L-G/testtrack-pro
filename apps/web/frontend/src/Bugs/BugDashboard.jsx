@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./bug.css";
 import BugComments from "./BugComments";
+import AdvancedFilterPanel from "../Search/AdvancedFilterPanel";
 
 function BugsList() {
 
@@ -10,12 +11,92 @@ function BugsList() {
 const [selectedDev, setSelectedDev] = useState({});
 const [openDiscussion, setOpenDiscussion] = useState({});
 const projectId = localStorage.getItem("projectId");
+const [workflowStatuses, setWorkflowStatuses] = useState([]);
+const [activeFilter, setActiveFilter] = useState(null);
+const [searchResults, setSearchResults] = useState(null);
+
+useEffect(() => {
+  if (searchResults?.bugs?.length > 0) {
+
+    const searchedIds = searchResults.bugs.map(b => b.id);
+
+    const prioritized = [
+      ...bugs.filter(b => searchedIds.includes(b.id)),
+      ...bugs.filter(b => !searchedIds.includes(b.id))
+    ];
+
+    setBugs(prioritized);
+  }
+}, [searchResults]);
+
+useEffect(() => {
+  if (!projectId) return;
+
+  fetch(
+    `http://localhost:5000/api/projects/${projectId}/workflows/Bug`,
+    {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    }
+  )
+    .then(res => res.json())
+    .then(data => {
+      if (data?.statuses) {
+        setWorkflowStatuses(JSON.parse(data.statuses));
+      }
+    });
+}, [projectId]);
+
+
+const loadFiltered = async (type) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const userId = payload.id;
+    const role = payload.role;
+
+    let url = `http://localhost:5000/api/bugs?projectId=${projectId}`;
+
+    if (type === "my") {
+      url = `http://localhost:5000/api/bugs/my/${userId}?projectId=${projectId}`;
+    }
+
+    if (type === "unassigned") {
+      url += `&assignedTo=null`;
+    }
+
+    if (type === "recent") {
+      url += `&sort=recent`;
+    }
+
+    if (type === "high") {
+      url += `&priority=High`;
+    }
+
+    const res = await fetch(url, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    const data = await res.json();
+    setBugs(Array.isArray(data) ? data : []);
+
+  } catch (err) {
+    console.error("Filter error", err);
+  }
+};
+
 
   useEffect(() => {
 
     const loadBugs = async () => {
 
       try {
+
+        
 
         const token = localStorage.getItem("token");
 
@@ -54,7 +135,7 @@ setDevelopers(devData);
 
         console.log("Bugs:", data);
 
-        setBugs(data);
+        setBugs(Array.isArray(data) ? data : []);
 
       } catch (err) {
         console.error(err);
@@ -129,11 +210,63 @@ const role = payload?.role;
 
   if (!projectId) return <h2>Please select a project first.</h2>;
 
+ 
+
+
+
+
+
   return (
     <div className="bugs-container">
 
      <div className="bugs-header">
   <h2>Bug Reports</h2>
+ <div className="filter-group">
+ <button
+  className={activeFilter === "my" ? "active" : ""}
+  onClick={() => {
+    setActiveFilter("my");
+    loadFiltered("my");
+  }}
+>
+  My Items
+</button>
+
+<button
+  className={activeFilter === "unassigned" ? "active" : ""}
+  onClick={() => {
+    setActiveFilter("unassigned");
+    loadFiltered("unassigned");
+  }}
+>
+  Unassigned
+</button>
+
+<button
+  className={activeFilter === "recent" ? "active" : ""}
+  onClick={() => {
+    setActiveFilter("recent");
+    loadFiltered("recent");
+  }}
+>
+  Recently Updated
+</button>
+
+<button
+  className={activeFilter === "high" ? "active" : ""}
+  onClick={() => {
+    setActiveFilter("high");
+    loadFiltered("high");
+  }}
+>
+  High Priority
+</button>
+</div>
+<AdvancedFilterPanel
+  onApply={(filteredData) => {
+    setBugs(filteredData);
+  }}
+/>
 
   <button
   className="export-btn"
@@ -158,7 +291,7 @@ const role = payload?.role;
         <p>No bugs found</p>
       ) : (
 
-        bugs.map(bug => (
+       Array.isArray(bugs) && bugs.map(bug => (
 
           <div key={bug.id} className="bug-card">
 

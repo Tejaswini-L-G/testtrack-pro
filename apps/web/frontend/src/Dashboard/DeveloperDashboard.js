@@ -4,12 +4,13 @@ import "./Dashboard.css";
 import ProfileMenu from "../Dashboard/Profile";
 import DashboardWidgets from "../Reports/DashboardWidgets";
 import ProjectSelector from "../Projects/ProjectSelector";
-
+import DeveloperNavbar from "../Dashboard/DeveloperNavbar";
 
 function DeveloperDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
+  const [searchResults, setSearchResults] = useState(null);
 
   const [stats, setStats] = useState({
     assigned: 0,
@@ -85,9 +86,9 @@ useEffect(() => {
 
       {/* 🔵 TOPBAR */}
 <div className="topbar">
+  <DeveloperNavbar onSearchResults={setSearchResults} />
   <ProfileMenu />
 </div>
-
       {/* 🔵 SIDEBAR */}
       <aside className="sidebar">
 
@@ -137,6 +138,10 @@ useEffect(() => {
           >
             View Test Case Details
           </button>
+
+          <button onClick={() => navigate("/dashboard/milestones")}>
+  Milestones
+</button>
 
          <div className="reports-panel">
 

@@ -25,7 +25,7 @@ function Profile() {
   }, []);
 
   return (
-    <div className="topbar">
+  <div style={{ position: "relative" }}>
 
       <div
         className="profile-avatar"

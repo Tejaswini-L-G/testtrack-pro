@@ -334,3 +334,107 @@
 .export-btn:hover {
   background: #1d4ed8;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Make layout flex */
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+  position: relative;
+}
+
+/* Fix sidebar */
+.sidebar {
+  width: 240px;
+  background: #0f172a;
+  color: white;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+/* Push main content right */
+.dashboard-content {
+  margin-left: 240px;
+  padding: 20px;
+}
+
+/* Fix topbar alignment */
+.topbar {
+  position: fixed;
+  left: 240px;
+  right: 0;
+  top: 0;
+  height: 60px;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  color: white;
+  z-index: 1000;
+}
+
+/* Add spacing below topbar */
+.dashboard-content {
+  margin-top: 60px;
+}
