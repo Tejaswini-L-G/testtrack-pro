@@ -78,6 +78,14 @@ function TesterDashboard() {
           Import Test Cases
         </button>
 
+        <button
+  className={isActive("/suites") ? "active" : ""}
+  onClick={() => navigate("/suites")}
+>
+  Test Suites
+</button>
+
+
         <hr />
 
         <button

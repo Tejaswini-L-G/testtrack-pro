@@ -7,11 +7,41 @@ function TestCases() {
   
   const [testCases, setTestCases] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [suites, setSuites] = useState([]);
+  const [cloneId, setCloneId] = useState(null);
+const [includeAttachments, setIncludeAttachments] = useState(false);
+const [cloneSuccess, setCloneSuccess] = useState(false);
 
-  // 🔹 Fetch Test Cases
-  useEffect(() => {
-    fetchTestCases();
-  }, []);
+
+  
+
+  
+
+  // 🔹 Fetch data on load
+useEffect(() => {
+  fetchTestCases();
+  fetchUsers();
+  fetchSuites();
+}, []);
+
+
+const fetchUsers = async () => {
+  try {
+    const res = await fetch("http://localhost:5000/users", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+
+    const data = await res.json();
+    setUsers(data);
+
+  } catch (err) {
+    console.error("Failed to fetch users");
+  }
+};
+
 
   const fetchTestCases = async () => {
     try {
@@ -50,19 +80,8 @@ const handleEdit = (id) => {
   };
 
  // 🔹 Clone Single
-const handleClone = async (id) => {
-  if (!window.confirm("Are you sure you want to clone this test case?"))
-    return;
 
-  await fetch(`http://localhost:5000/testcases/${id}/clone`, {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-  });
 
-  fetchTestCases(); // Refresh list
-};
 
 
   // 🔹 Bulk Delete
@@ -108,42 +127,248 @@ const handleCreateTemplate = async (id) => {
 const handleBulkStatus = async (status) => {
   if (!status) return;
 
-  await fetch("http://localhost:5000/testcases/bulk-status", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      testCaseIds: selected,
-      status,
-    }),
-  });
+  try {
+    const res = await fetch("http://localhost:5000/testcases/bulk-status", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        testCaseIds: selected,
+        status,
+      }),
+    });
 
-  setSelected([]);
-  fetchTestCases();
+    const data = await res.json();   // ⭐ IMPORTANT
+
+    alert(data.message);
+
+    setSelected([]);
+    fetchTestCases();
+
+  } catch (err) {
+    console.error("Bulk status error:", err);
+  }
 };
+
 
 // 🔹 Bulk Priority Update
 const handleBulkPriority = async (priority) => {
   if (!priority) return;
 
-  await fetch("http://localhost:5000/testcases/bulk-priority", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + localStorage.getItem("token"),
-    },
-    body: JSON.stringify({
-      testCaseIds: selected,
-      priority,
-    }),
-  });
+  try {
+    const res = await fetch("http://localhost:5000/testcases/bulk-priority", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        testCaseIds: selected,
+        priority,
+      }),
+    });
+
+    const data = await res.json();   // ⭐ IMPORTANT
+
+    alert(data.message);
+
+    setSelected([]);
+    fetchTestCases();
+
+  } catch (err) {
+    console.error("Bulk priority error:", err);
+  }
+};
+
+const handleBulkSeverity = async (severity) => {
+  if (!severity) return;
+
+  try {
+    const res = await fetch("http://localhost:5000/testcases/bulk-severity", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        testCaseIds: selected,
+        severity,
+      }),
+    });
+
+    const data = await res.json();
+    alert(data.message);
+
+    setSelected([]);
+    fetchTestCases();
+
+  } catch (err) {
+    console.error("Bulk severity error:", err);
+  }
+};
+
+const handleBulkAssignee = async (assignedTesterId) => {
+  if (!assignedTesterId) return;
+
+  try {
+    const res = await fetch("http://localhost:5000/testcases/bulk-assignee", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        testCaseIds: selected,
+        assignedTesterId,
+      }),
+    });
+
+    const data = await res.json();
+    alert(data.message);
+
+    setSelected([]);
+    fetchTestCases();
+
+  } catch (err) {
+    console.error("Bulk assignee error:", err);
+  }
+};
+
+const handleExportCSV = async () => {
+  const res = await fetch(
+    "http://localhost:5000/testcases/export/csv",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({ testCaseIds: selected }),
+    }
+  );
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "testcases.csv";
+  a.click();
+};
+
+const handleExportExcel = async () => {
+  const res = await fetch(
+    "http://localhost:5000/testcases/export/excel",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({ testCaseIds: selected }),
+    }
+  );
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "testcases.xlsx";
+  a.click();
+};
+
+
+
+
+const handleSeverityChange = (e) => {
+  const severity = e.target.value;
+  if (severity !== "Severity") handleBulkSeverity(severity);
+};
+
+const handleAssigneeChange = (e) => {
+  const assignee = e.target.value;
+  if (assignee !== "Assign To") handleBulkAssignee(assignee);
+};
+
+
+// 🔹 Dropdown handlers
+const handleStatusChange = (e) => {
+  const status = e.target.value;
+  if (status !== "Status") handleBulkStatus(status);
+};
+
+const handlePriorityChange = (e) => {
+  const priority = e.target.value;
+  if (priority !== "Priority") handleBulkPriority(priority);
+};
+
+const handleBulkModule = async (module) => {
+  const res = await fetch(
+    "http://localhost:5000/testcases/bulk-module",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        testCaseIds: selected,
+        module,
+      }),
+    }
+  );
+
+  const data = await res.json();
+  alert(data.message);
 
   setSelected([]);
   fetchTestCases();
 };
 
+const handleBulkSuite = async (suiteId) => {
+  if (!suiteId) return;
+
+  const res = await fetch(
+    "http://localhost:5000/testcases/bulk-suite",
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+      body: JSON.stringify({
+        testCaseIds: selected,
+        suiteId,
+      }),
+    }
+  );
+
+  const data = await res.json();
+  alert(data.message);
+
+  setSelected([]);
+  fetchTestCases();
+};
+
+
+const fetchSuites = async () => {
+  try {
+    const res = await fetch("http://localhost:5000/testsuites", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token"),
+      },
+    });
+
+    const data = await res.json();
+    setSuites(data);
+
+  } catch (err) {
+    console.error("Failed to fetch suites");
+  }
+};
 
 
  return (
@@ -187,12 +412,114 @@ const handleBulkPriority = async (priority) => {
   </div>
 
   {selected.length > 0 && (
-    <button className="btn-danger" onClick={handleBulkDelete}>
-      Delete Selected
-    </button>
+    <div className="bulk-actions">
+
+      {/* 🔹 Bulk Status */}
+      <select
+        className="bulk-select"
+        onChange={handleStatusChange}
+        defaultValue="Status"
+      >
+        <option disabled>Status</option>
+        <option>Draft</option>
+        <option>Ready for Review</option>
+        <option>Approved</option>
+        <option>Deprecated</option>
+        <option>Archived</option>
+      </select>
+
+      {/* 🔹 Bulk Priority */}
+      <select
+        className="bulk-select"
+        onChange={handlePriorityChange}
+        defaultValue="Priority"
+      >
+        <option disabled>Priority</option>
+        <option>Critical</option>
+        <option>High</option>
+        <option>Medium</option>
+        <option>Low</option>
+      </select>
+
+
+      <select
+  className="bulk-select"
+  onChange={handleSeverityChange}
+  defaultValue="Severity"
+>
+  <option disabled>Severity</option>
+  <option>Blocker</option>
+  <option>Critical</option>
+  <option>Major</option>
+  <option>Minor</option>
+  <option>Trivial</option>
+</select>
+
+
+<select
+  className="bulk-select"
+  onChange={handleAssigneeChange}
+  defaultValue="Assign To"
+>
+  <option disabled>Assign To</option>
+
+  {users.map(u => (
+    <option key={u.id} value={u.id}>
+      {u.name}
+    </option>
+  ))}
+
+</select>
+
+<select onChange={(e) => handleBulkModule(e.target.value)}>
+  <option>Move to Module</option>
+  <option>Authentication</option>
+  <option>Payments</option>
+  <option>Dashboard</option>
+</select>
+
+<select
+  className="bulk-select"
+  onChange={(e) => handleBulkSuite(e.target.value)}
+  defaultValue=""
+>
+  <option value="" disabled>
+    Move to Suite
+  </option>
+
+  {suites.map((suite) => (
+    <option key={suite.id} value={suite.id}>
+      {suite.name}
+    </option>
+  ))}
+</select>
+
+
+<button className="btn-secondary" onClick={handleExportCSV}>
+  Export CSV
+</button>
+
+<button className="btn-secondary" onClick={handleExportExcel}>
+  Export Excel
+</button>
+
+
+
+
+
+      {/* 🔹 Bulk Delete */}
+      <button
+        className="btn-danger"
+        onClick={handleBulkDelete}
+      >
+        Delete Selected
+      </button>
+
+    </div>
   )}
 
 </div>
+
 
 
 
@@ -214,6 +541,16 @@ const handleBulkPriority = async (priority) => {
           <option>Medium</option>
         </select>
       </div>
+
+{cloneSuccess && (
+  <div className="success-banner">
+    Test case cloned successfully
+  </div>
+)}
+
+
+
+
 
       {/* Table */}
       <div className="tc-table-wrapper">
@@ -273,10 +610,11 @@ const handleBulkPriority = async (priority) => {
 
                   <button
   className="btn-link"
-  onClick={() => handleClone(tc.id)}
+  onClick={() => setCloneId(tc.id)}
 >
   Clone
 </button>
+
 
 
                   <button
@@ -295,13 +633,20 @@ const handleBulkPriority = async (priority) => {
 
 <button
   className="btn-link"
+  onClick={() =>
+    navigate(`/dashboard/testcases/${tc.id}/versions`)
+  }
+>
+  History
+</button>
+
+
+<button
+  className="btn-link"
   onClick={() => navigate(`/dashboard/testcases/${tc.id}`)}
 >
   View
 </button>
-
-
-
 
                 </td>
               </tr>
@@ -310,7 +655,84 @@ const handleBulkPriority = async (priority) => {
         </tbody>
       </table>
       </div>
+
+
+{cloneId && (
+  <div className="modal-overlay">
+    <div className="clone-modal">
+
+      <h3>Clone Test Case</h3>
+
+      <div className="clone-options">
+
+  <label className="clone-option">
+    <input
+      type="radio"
+      name="cloneType"
+      checked={includeAttachments === true}
+      onChange={() => setIncludeAttachments(true)}
+    />
+    Clone WITH attachments
+  </label>
+
+  <label className="clone-option">
+    <input
+      type="radio"
+      name="cloneType"
+      checked={includeAttachments === false}
+      onChange={() => setIncludeAttachments(false)}
+    />
+    Clone WITHOUT attachments
+  </label>
+
+</div>
+
+
+      <div className="modal-actions">
+        <button
+          className="btn-primary"
+          onClick={async () => {
+
+            await fetch(
+              `http://localhost:5000/testcases/${cloneId}/clone`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization:
+                    "Bearer " + localStorage.getItem("token"),
+                },
+                body: JSON.stringify({ includeAttachments }),
+              }
+            );
+
+            setCloneId(null);
+            setIncludeAttachments(false);
+            setCloneSuccess(true);
+
+            fetchTestCases();
+
+            setTimeout(() => setCloneSuccess(false), 3000);
+          }}
+        >
+          Clone
+        </button>
+
+        <button
+          className="btn-secondary"
+          onClick={() => setCloneId(null)}
+        >
+          Cancel
+        </button>
       </div>
+
+    </div>
+  </div>
+)}
+
+
+      </div>
+      
    
     
   );

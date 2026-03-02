@@ -39,6 +39,12 @@ model TestCase {
   type             String
   status           String
   preconditions    String?
+
+
+impactIfFails        String?
+
+testDataRequirements String?
+
   testData         String?
   environment      String?
   postconditions   String?
@@ -50,12 +56,16 @@ model TestCase {
   isDeleted        Boolean           @default(false)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
-  suiteId          String?
+  
   attachments      Attachment[]
   createdBy        User              @relation(fields: [createdById], references: [id])
-  suite            TestSuite?        @relation("SuiteTestCases", fields: [suiteId], references: [id])
+  
   versions         TestCaseVersion[]
   steps            TestStep[]
+
+  suiteId   String?
+  suite     TestSuite? @relation(fields: [suiteId], references: [id])
+
 }
 
 model TestStep {
@@ -99,10 +109,11 @@ model TestSuite {
   name        String
   description String?
   createdById String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  testCases   TestCase[] @relation("SuiteTestCases")
   createdBy   User       @relation(fields: [createdById], references: [id])
+  testCases   TestCase[]
+  createdAt   DateTime   @default(now())
+
+  isDeleted   Boolean  @default(false)
 }
 
 model TestCaseTemplate {
@@ -117,6 +128,10 @@ model TestCaseTemplate {
   createdAt   DateTime       @default(now())
   steps       TemplateStep[]
   createdBy   User           @relation(fields: [createdById], references: [id])
+
+ category String @default("General")
+
+  isGlobal    Boolean  @default(true)  // ⭐ org-wide
 }
 
 model TemplateStep {
