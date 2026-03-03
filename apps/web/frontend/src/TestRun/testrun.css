@@ -1630,3 +1630,145 @@ select:focus {
 .create-run-btn:hover {
   background: #059669;
 }
+
+.admin-content-page {
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+
+.admin-content-page h2 {
+  margin-bottom: 20px;
+}
+.admin-content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;   /* only this scrolls */
+  box-sizing: border-box;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.date-row {
+  display: flex;
+  gap: 20px;
+}
+
+.checkbox-list {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;   /* change from height to min-height */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Dropdown Container */
+.dropdown {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Selected Box */
+.dropdown-selected {
+  border: 1px solid #ddd;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-top: 6px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 6px 0;
+}
+
+/* Each Tester Row */
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 14px;
+}
+
+/* Hover Effect */
+.dropdown-item:hover {
+  background: #f4f6f9;
+}
+
+/* Checkbox Styling */
+.dropdown-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Scrollbar (optional professional look) */
+.dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+
+
+
+.create-run-btn {
+  margin-top: 30px;
+  padding: 12px 20px;
+  font-size: 15px;
+  border-radius: 6px;
+  background: #1e7d4f;
+  color: white;
+  border: none;
+  cursor: pointer;
+  width: 200px;
+}
+
+.create-run-btn:hover {
+  background: #16633d;
+}

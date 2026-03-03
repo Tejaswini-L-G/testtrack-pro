@@ -15,6 +15,8 @@ const [showProfile, setShowProfile] = useState(false);
 const [userInfo, setUserInfo] = useState(null);
 const [user, setUser] = useState(null);
 const [searchResults, setSearchResults] = useState(null);
+const [showReportsMenu, setShowReportsMenu] = useState(false);
+const [showTestManagementMenu, setShowTestManagementMenu] = useState(false);
 
 
 
@@ -127,7 +129,7 @@ useEffect(() => {
 
   <nav className="admin-nav">
 
-    <button onClick={() => navigate("/dashboard/home")}>
+    <button onClick={() => navigate("/home")}>
       Home
     </button>
 
@@ -135,18 +137,21 @@ useEffect(() => {
       Dashboard
     </button>
 
+    
+   <hr />
+
     {/* ⭐ ONE ADMIN CONTROLS BUTTON */}
    <button
-  onClick={() =>
-    setShowAdminControls(prev => !prev)
-  }
+  className="nav-main-btn"
+  onClick={() => setShowAdminControls(prev => !prev)}
 >
-  Admin Controls
+  ⚙ Admin Controls
+  <span>{showAdminControls ? "▲" : "▼"}</span>
 </button>
 
 
 {showAdminControls && (
-  <div className="admin-controls-panel">
+  <div className="submenu-panel">
 
     <div className="admin-controls-title">
       Admin Management
@@ -209,57 +214,77 @@ useEffect(() => {
   </div>
 )}
     
-<div className="reports-panel">
+{/* ================= REPORTS ================= */}
 
-  <h4>Reports & Analytics</h4>
+   <hr />
+<button
+  className="nav-main-btn"
+  onClick={() => setShowReportsMenu(!showReportsMenu)}
+>
+  📊 Reports & Analytics
+  <span>{showReportsMenu ? "▲" : "▼"}</span>
+</button>
 
-  <div className="reports-buttons">
+{showReportsMenu && (
+  <div className="submenu-panel">
 
-    <button
-      onClick={() =>navigate("/admin/dashboard/reports/execution")}
-    >
-      📊 Execution Report
+    <button onClick={() => navigate("/admin/dashboard/reports/execution")}>
+      Execution Report
     </button>
 
-    <button
-      onClick={() => navigate("/admin/dashboard/reports/bugs")}
-    >
-      🐞 Bug Report
+    <button onClick={() => navigate("/admin/dashboard/reports/bugs")}>
+      Bug Report
     </button>
 
-    <button
-      onClick={() => navigate("/admin/dashboard/reports/developer-performance")}
-    >
-      👨‍💻 Developer Performance
+    <button onClick={() => navigate("/admin/dashboard/reports/developer-performance")}>
+      Developer Performance
     </button>
 
-    <button
-      onClick={() => navigate("/admin/dashboard/reports/tester-performance")}
-    >
-      🧪 Tester Performance
+    <button onClick={() => navigate("/admin/dashboard/reports/tester-performance")}>
+      Tester Performance
     </button>
 
   </div>
+)}
 
-</div>
     {/* ⭐ PROFILE BUTTON */}
    
 
-    <hr />
+    
 
-    <button className={isActive("/admin/testcases") ? "active" : ""} 
-    onClick={() => navigate("/admin/dashboard/testcases")} > 
-    View Test Cases </button>
-     <button className={ isActive("/admin/dashboard/testruns/create") ? "active" : "" }
-      onClick={() => navigate("/admin/dashboard/testruns/create") } > 
-      Create Test Run </button> 
-      <button className={ isActive("/admin/dashboard/testruns") ? "active" : "" }
-       onClick={() => navigate("/admin/dashboard/testruns") } >
-         View Test Runs </button> 
-         <button onClick={() => navigate("/admin/dashboard/bugs")}>
+   <hr />
+
+<button
+  className="nav-main-btn"
+  onClick={() => setShowTestManagementMenu(!showTestManagementMenu)}
+>
+  🗂 Test Management
+  <span>{showTestManagementMenu ? "▲" : "▼"}</span>
+</button>
+
+{showTestManagementMenu && (
+  <div className="submenu-panel">
+
+    <button onClick={() => navigate("/admin/dashboard/testcases")}>
+      View Test Cases
+    </button>
+
+    <button onClick={() => navigate("/admin/dashboard/testruns/create")}>
+      Create Test Run
+    </button>
+
+    <button onClick={() => navigate("/admin/dashboard/testruns")}>
+      View Test Runs
+    </button>
+
+    <button onClick={() => navigate("/admin/dashboard/bugs")}>
       View Bugs
     </button>
+
+  </div>
+)}
  
+   <hr />
 
     <button
       className="logout-btn"

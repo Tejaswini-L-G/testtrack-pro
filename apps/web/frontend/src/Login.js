@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { FcGoogle } from "react-icons/fc";
 
 function Login({ switchModal })  {
   const [email, setEmail] = useState("");
@@ -174,17 +175,26 @@ localStorage.setItem("user", JSON.stringify(res.data.user));  // ⭐ FIXED
 
       {/* OAuth Buttons */}
       <button
-        onClick={loginWithGoogle}
-        style={{
-          width: "100%",
-          background: "#fff",
-          color: "#444",
-          border: "1px solid #ddd",
-          marginBottom: "10px",
-        }}
-      >
-        Login with Google
-      </button>
+  onClick={loginWithGoogle}
+  style={{
+    width: "100%",
+    background: "#fff",
+    color: "#444",
+    border: "1px solid #ddd",
+    marginBottom: "10px",
+    padding: "10px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "10px",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "500"
+  }}
+>
+  <FcGoogle size={20} />
+  Login with Google
+</button>
 
       <button
         onClick={loginWithGitHub}

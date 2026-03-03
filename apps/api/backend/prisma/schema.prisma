@@ -42,6 +42,8 @@ model User {
   AuditLog        AuditLog[]
   projects        ProjectMember[]
   FilterPreset    FilterPreset[]
+  notifications Notification[]
+preference    NotificationPreference?
 }
 
 model TestCase {
@@ -476,4 +478,46 @@ model FilterPreset {
   isShared  Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+
+
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String   // BUG_ASSIGNED, STATUS_CHANGED, COMMENT, etc
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  referenceId String?
+}
+
+model NotificationPreference {
+  id      String @id @default(uuid())
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String @unique
+
+  bugAssignedEmail     Boolean @default(true)
+  bugAssignedInApp     Boolean @default(true)
+
+  statusChangedEmail   Boolean @default(true)
+  statusChangedInApp   Boolean @default(true)
+
+  commentEmail         Boolean @default(false)
+  commentInApp         Boolean @default(true)
+
+  testAssignedEmail    Boolean @default(true)
+  testAssignedInApp    Boolean @default(true)
+
+  retestEmail          Boolean @default(true)
+  retestInApp          Boolean @default(true)
+
+  quietHoursStart      String?
+  quietHoursEnd        String?
 }

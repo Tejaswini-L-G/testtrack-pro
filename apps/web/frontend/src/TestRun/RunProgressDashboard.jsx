@@ -63,7 +63,7 @@ function RunProgressDashboard() {
 
 
   return (
-    <div className="fullscreen-page">
+   <div className="admin-content-page">
 
       <div className="progress-container">
 
@@ -113,17 +113,19 @@ function RunProgressDashboard() {
     <p className="empty-text">No executions yet</p>
   )}
 
-  {executions.map(exec => (
+ {executions.map(exec => (
 
-  <div className={`progress-item status-${exec.status}`}>
+  <div
+    key={exec.id}
+    className={`progress-item status-${exec.status}`}
+  >
       <p>
         <strong>Test Case:</strong> {exec.testCaseId}
       </p>
 
       <p>
-        <strong>Tester:</strong>{" "}
-        <p><strong>Tester:</strong> {exec.testerName}</p>
-      </p>
+  <strong>Tester:</strong> {exec.testerName}
+</p>
 
       <p>
         <strong>Status:</strong> {exec.status}

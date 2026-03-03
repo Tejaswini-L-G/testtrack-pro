@@ -72,6 +72,13 @@ function ViewTestCase() {
     
     <div className="tc-view-container">
 
+      <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
+
       <h2>{testCase.title}</h2>
 
       <div className="tc-section">

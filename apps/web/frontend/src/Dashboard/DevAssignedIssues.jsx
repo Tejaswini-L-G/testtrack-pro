@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import "./Developer.css";
 import BugComments from "../Bugs/BugComments";
+import { useLocation } from "react-router-dom";
 
 function DevAssignedIssues() {
+  const location = useLocation();
 
   const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,37 @@ useEffect(() => {
 
   }, []);
 
+
+ useEffect(() => {
+
+  const params = new URLSearchParams(location.search);
+  const highlightId = params.get("highlight");
+  const shouldOpen = params.get("openDiscussion");
+
+  if (highlightId && bugs.length > 0) {
+
+    const element = document.getElementById(highlightId);
+
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("highlight-bug");
+
+      setTimeout(() => {
+        element.classList.remove("highlight-bug");
+      }, 3000);
+    }
+
+    // 🔥 AUTO OPEN DISCUSSION
+    if (shouldOpen === "true") {
+      setOpenDiscussion(prev => ({
+        ...prev,
+        [highlightId]: true
+      }));
+    }
+
+  }
+
+}, [bugs, location.search]);
   const updateStatus = async (bugId, status, extra = {}) => {
 
   const token = localStorage.getItem("token");
@@ -253,7 +286,7 @@ if (sortBy === "Priority") {
 
        filteredBugs.map(bug => (
 
-          <div key={bug.id} className="dev-bug-card">
+         <div key={bug.id} id={bug.id} className="issue-card">
 
             {/* HEADER */}
             <div className="bug-header">
@@ -370,59 +403,64 @@ if (sortBy === "Priority") {
 
       {selectedBug && (
 
-  <div className="resolution-panel">
+  <div className="resolution-overlay">
+    <div className="resolution-modal">
 
-    <h3>
-  {resolutionMode === "Fixed"
-    ? "Submit Fix Details"
-    : "Provide Rejection Reason"}
-</h3>
+      <h3>
+        {resolutionMode === "Fixed"
+          ? "Submit Fix Details"
+          : "Provide Rejection Reason"}
+      </h3>
 
-    <label>Fix Notes</label>
-    <textarea
-      rows="4"
-      value={fixNotes}
-      onChange={e => setFixNotes(e.target.value)}
-    />
+      <label>Fix Notes</label>
+      <textarea
+        rows="4"
+        value={fixNotes}
+        onChange={e => setFixNotes(e.target.value)}
+      />
 
-    <label>Commit Link / ID</label>
-    <input
-      value={commitLink}
-      onChange={e => setCommitLink(e.target.value)}
-      placeholder="abc123def or Git URL"
-    />
+      <label>Commit Link / ID</label>
+      <input
+        value={commitLink}
+        onChange={e => setCommitLink(e.target.value)}
+        placeholder="abc123def or Git URL"
+      />
 
-    <label>Resolution Reason (if Won't Fix)</label>
-    <textarea
-      rows="3"
-      value={resolutionNote}
-      onChange={e => setResolutionNote(e.target.value)}
-    />
+      <label>Resolution Reason (if Won't Fix)</label>
+      <textarea
+        rows="3"
+        value={resolutionNote}
+        onChange={e => setResolutionNote(e.target.value)}
+      />
 
-    <button
-  className="btn-save"
-  onClick={() =>
-    updateStatus(selectedBug, resolutionMode, {
-      fixNotes,
-      commitLink,
-      resolutionNote
-    })
-  }
->
-  Submit
-</button>
-    <button
-      className="btn-cancel"
-      onClick={() => {
-  setSelectedBug(null);
-  setFixNotes("");
-  setCommitLink("");
-  setResolutionNote("");
-}}
-    >
-      Cancel
-    </button>
+      <div className="resolution-actions">
+        <button
+          className="btn-save"
+          onClick={() =>
+            updateStatus(selectedBug, resolutionMode, {
+              fixNotes,
+              commitLink,
+              resolutionNote
+            })
+          }
+        >
+          Submit
+        </button>
 
+        <button
+          className="btn-cancel"
+          onClick={() => {
+            setSelectedBug(null);
+            setFixNotes("");
+            setCommitLink("");
+            setResolutionNote("");
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+
+    </div>
   </div>
 
 )}

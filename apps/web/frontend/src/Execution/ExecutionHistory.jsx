@@ -56,7 +56,7 @@ function ExecutionHistory() {
             </div>
 
             <p>
-              <strong>Completed:</strong>{" "}
+              <strong>Status:</strong>{" "}
               {exec.completedAt
                 ? new Date(exec.completedAt).toLocaleString()
                 : "In Progress"}

@@ -1,28 +1,15 @@
-/* ===== TOPBAR ===== */
-
-.topbar {
-  height: 64px;
-  background: #1e293b; /* match dark theme */
-  border-bottom: 1px solid #334155;
-
-  display: flex;
-  align-items: center;
-  justify-content: center; /* center content */
-
-  padding: 0 24px;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-/* ===== AVATAR ===== */
+/* ============================= */
+/* PROFILE AVATAR (Top Right) */
+/* ============================= */
 
 .profile-avatar {
   width: 42px;
   height: 42px;
   border-radius: 50%;
 
-  background: #2563eb;
-  color: white;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+
   font-weight: 700;
   font-size: 18px;
 
@@ -31,12 +18,12 @@
   justify-content: center;
 
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
 }
 
 .profile-avatar:hover {
-  background: #1d4ed8;
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4);
 }
 
 .profile-avatar.large {
@@ -45,66 +32,244 @@
   font-size: 20px;
 }
 
-/* ===== PROFILE MENU ===== */
+
+/* ============================= */
+/* PROFILE DROPDOWN MENU */
+/* ============================= */
 
 .profile-menu {
   position: absolute;
   top: 70px;
-  right: 24px;
+  right: 0;
 
-  width: 260px;
-  background: #ffffff;
-
-  border-radius: 14px;
+  width: 280px;
   padding: 18px;
 
-  box-shadow: 0 12px 28px rgba(237, 227, 227, 0.18);
+  background: #1e293b; /* dark background */
+  border: 1px solid #334155;
+  border-radius: 16px;
+
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+
   z-index: 2000;
+  animation: dropdownFade 0.18s ease-in-out;
+
+  color: #f1f5f9; /* ensure all text visible */
 }
 
-/* Header inside dropdown */
+/* Dropdown animation */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ============================= */
+/* PROFILE HEADER */
+/* ============================= */
 
 .profile-header {
   display: flex;
-  gap: 12px;
   align-items: center;
-  margin-bottom: 10px;
+  gap: 14px;
+  margin-bottom: 14px;
 }
 
 .profile-header h4 {
   margin: 0;
   font-size: 16px;
+  font-weight: 600;
+  color: #f8fafc; /* bright white */
 }
 
 .profile-header p {
-  margin: 0;
+  margin: 2px 0 0 0;
   font-size: 13px;
-  color: #6b7280;
+  color: #94a3b8; /* soft gray */
 }
 
-/* Role */
 
-.profile-menu .role {
+/* ============================= */
+/* ROLE BADGE */
+/* ============================= */
+
+.role {
+  margin-top: 6px;
+  margin-bottom: 16px;
+
+  display: inline-block;
+  padding: 6px 12px;
+
+  font-size: 12px;
   font-weight: 600;
-  color: #2563eb;
-  margin-bottom: 12px;
+  letter-spacing: 0.4px;
+
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.15);
+
+  border-radius: 999px;
 }
 
-/* Logout button */
+
+/* ============================= */
+/* LOGOUT BUTTON */
+/* ============================= */
 
 .profile-menu button {
   width: 100%;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 10px 0;
 
-  background: #ef4444;
-  color: white;
+  border-radius: 10px;
   border: none;
 
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+
   font-weight: 600;
+  font-size: 14px;
+
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .profile-menu button:hover {
-  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.35);
+}
+
+.profile-menu button:active {
+  transform: scale(0.97);
+}
+
+.profile-header div {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.profile-header h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #010810;
+  line-height: 1.4;
+}
+.profile-header p {
+  margin: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== PROFESSIONAL MODAL ===== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 4000;
+}
+
+.modal-box {
+  width: 420px;
+  background: #1e293b;
+  border-radius: 20px;
+  padding: 32px;
+
+  border: 1px solid #334155;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+
+  animation: scaleFade 0.2s ease;
+}
+
+@keyframes scaleFade {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+/* ========================= */
+/* DROPDOWN BUTTON BASE */
+/* ========================= */
+
+.profile-menu button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+
+  border-radius: 10px;
+  border: none;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ========================= */
+/* CHANGE PASSWORD BUTTON */
+/* ========================= */
+
+.change-password-btn {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  color: #ffffff;
+}
+
+.change-password-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.4);
+  color:pink;
+}
+
+/* ========================= */
+/* LOGOUT BUTTON */
+/* ========================= */
+
+.profile-menu button:last-child {
+  background: #f3f4f6;
+  color: #dc2626;
+  border: 1px solid #e5e7eb;
+}
+
+.profile-menu button:last-child:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
 }
