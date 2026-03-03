@@ -479,6 +479,7 @@ model FilterPreset {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+<<<<<<< Updated upstream
 
 
 
@@ -521,3 +522,17 @@ model NotificationPreference {
   quietHoursStart      String?
   quietHoursEnd        String?
 }
+=======
+model ReportSchedule {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   // TEST_EXECUTION / BUG / DEV_PERFORMANCE
+  frequency   String   // DAILY / WEEKLY / MONTHLY
+  dayOfWeek   Int?     // 0-6 (for weekly)
+  time        String   // "09:00"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+>>>>>>> Stashed changes
