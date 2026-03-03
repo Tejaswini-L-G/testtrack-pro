@@ -92,3 +92,27 @@
   padding: 20px;
   color: #777;
 }
+
+
+
+
+
+.progress-wrapper {
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 25px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2563eb;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 500;
+}

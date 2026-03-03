@@ -137,30 +137,18 @@ useEffect(() => {
             </div>
 
             <button
-              className="create-run-btn"
-              disabled={status === "Completed"}
-              onClick={() =>
-                navigate(
-                  `/dashboard/execution/${tc.testCaseId}?runId=${run.id}`
-                )
-              }
-            >
-              {status === "Completed"
-                ? "Executed"
-                : status === "In Progress"
-                ? "Continue"
-                : "Execute"}
-            </button>
-
-<button
-  className="reexecute-btn"
+  className="create-run-btn"
   onClick={() =>
     navigate(
       `/dashboard/execution/${tc.testCaseId}?runId=${run.id}`
     )
   }
 >
-  Re-Execute
+  {status === "Completed"
+    ? "Re-Execute"
+    : status === "In Progress"
+    ? "Continue"
+    : "Execute"}
 </button>
 
 

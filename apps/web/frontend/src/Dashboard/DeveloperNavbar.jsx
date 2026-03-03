@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
+import NotificationBell from "../Notification/NotificationBell";
+import NotificationSettings from "../Notification/NotificationSettings";
+import { Settings } from "lucide-react";
 
 function DeveloperNavbar({ onSearchResults }) {
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);
   const dropdownRef = useRef(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const navigate = useNavigate();
   const projectId = localStorage.getItem("projectId");
@@ -61,13 +65,24 @@ function DeveloperNavbar({ onSearchResults }) {
 
   return (
     <div className="navbar-wrapper">
-      <div className="navbar-search" ref={dropdownRef}>
 
+     <div className="nav-actions">
+  <NotificationBell />
+
+  <button
+    className="nav-settings-btn"
+    onClick={() => setShowSettings(true)}
+  >
+    <Settings size={20} />
+  </button>
+</div>
+      <div className="navbar-search" ref={dropdownRef}>
+        
         <input
           type="text"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search test cases, bugs..."
+          placeholder=" 🔍 Search test cases, bugs..."
         />
 
         {results && (
@@ -107,6 +122,11 @@ function DeveloperNavbar({ onSearchResults }) {
         )}
 
       </div>
+       {showSettings && (
+  <NotificationSettings
+    onClose={() => setShowSettings(false)}
+  />
+)}
     </div>
   );
 }

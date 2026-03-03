@@ -232,8 +232,21 @@ const completeExecution = async () => {
   });
 
   alert("Execution Completed Successfully ✅");
-  navigate(-1);
 
+// If execution came from Test Run → go back to run details
+if (runId) {
+  navigate("/dashboard/my-runs/" + runId);
+  return;
+}
+
+// If execution came from Suite → go back to suite page
+if (suiteId) {
+  navigate(-1);
+  return;
+}
+
+// Default → go back
+navigate(-1);
 
 // ⭐ Sequential suite flow
 if (suiteId) {
@@ -372,9 +385,18 @@ const step =
 </div>
 
 
-      <div className="progress-bar">
-        Step {currentStep + 1} of {stepsData.length}
-      </div>
+      <div className="progress-wrapper">
+  <div
+    className="progress-fill"
+    style={{
+      width: `${((currentStep + 1) / stepsData.length) * 100}%`
+    }}
+  />
+</div>
+
+<p className="progress-text">
+  Step {currentStep + 1} of {stepsData.length}
+</p>
 
      {/* STEP CARD */}
 

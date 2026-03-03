@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
+import NotificationBell from "../Notification/NotificationBell";
+import NotificationSettings from "../Notification/NotificationSettings";
+import { Settings } from "lucide-react";
 
 function Navbar() {
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
 
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -87,6 +92,17 @@ const getBasePath = () => {
 
   return (
     <div className="navbar-wrapper">
+      
+      <div className="nav-actions">
+  <NotificationBell />
+
+  <button
+    className="nav-settings-btn"
+    onClick={() => setShowSettings(true)}
+  >
+    <Settings size={20} />
+  </button>
+</div>
 
       <div className="navbar-center">
 
@@ -187,11 +203,16 @@ const getBasePath = () => {
           )}
 
         </div>
-
+        {showSettings && (
+  <NotificationSettings
+    onClose={() => setShowSettings(false)}
+  />
+)}
       </div>
 
     </div>
   );
+  
 }
 
 export default Navbar;

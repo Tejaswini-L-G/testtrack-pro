@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./testrun.css";
+import { useLocation } from "react-router-dom";
 
 function MyRuns() {
+  const location = useLocation();
 
   const [runs, setRuns] = useState([]);
   const navigate = useNavigate();
@@ -12,6 +14,25 @@ const projectId = localStorage.getItem("projectId");
   const token = localStorage.getItem("token");
   const payload = JSON.parse(atob(token.split(".")[1]));
   const testerId = payload.id;
+
+
+  useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const highlightId = params.get("highlight");
+
+  if (highlightId && runs.length > 0) {
+    const element = document.getElementById(highlightId);
+
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("highlight-run");
+
+      setTimeout(() => {
+        element.classList.remove("highlight-run");
+      }, 3000);
+    }
+  }
+}, [runs, location.search]);
 
  useEffect(() => {
 
@@ -41,9 +62,10 @@ const projectId = localStorage.getItem("projectId");
       {runs.map(run => (
 
         <div
-          key={run.id}
-          className="run-card"
-        >
+  key={run.id}
+  id={run.id}   // ⭐ ADD THIS
+  className="run-card"
+>
 
           <h3>{run.name}</h3>
 

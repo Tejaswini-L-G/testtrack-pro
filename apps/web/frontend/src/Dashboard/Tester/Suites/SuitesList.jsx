@@ -6,8 +6,10 @@ function SuitesList() {
   const navigate = useNavigate();
   const [suites, setSuites] = useState([]);
   const [testCases, setTestCases] = useState([]);
-  const [selectedSuite, setSelectedSuite] = useState(null);
+ const [viewSuiteId, setViewSuiteId] = useState(null);
+const [assignSuiteId, setAssignSuiteId] = useState("");
   const [selectedCases, setSelectedCases] = useState([]);
+  const [selectedSuite, setSelectedSuite] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
@@ -79,16 +81,16 @@ const toggleArchived = () => {
   // ===== REORDER FUNCTIONS (VIEW PAGE) =====
 
 
-  useEffect(() => {
+ useEffect(() => {
 
-  if (!selectedSuite) return;
+  if (!viewSuiteId) return;
 
-  fetch(`http://localhost:5000/api/suites/${selectedSuite}/testcases`)
+  fetch(`http://localhost:5000/api/suites/${viewSuiteId}/testcases`)
     .then(r => r.json())
     .then(setSuiteCases)
     .catch(() => alert("Failed to load suite cases"));
 
-}, [selectedSuite]);
+}, [viewSuiteId]);
 
 // ===== REORDER FUNCTIONS (VIEW PAGE) =====
 
@@ -121,7 +123,7 @@ const saveOrder = async () => {
   try {
 
     await fetch(
-      `http://localhost:5000/api/suites/${selectedSuite}/reorder`,
+      `http://localhost:5000/api/suites/${viewSuiteId}/reorder`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -141,25 +143,44 @@ const saveOrder = async () => {
 };
 
   const handleCreate = async () => {
-    if (!name.trim()) return alert("Suite name required");
+  if (!name.trim()) return alert("Suite name required");
 
-    await fetch("http://localhost:5000/suites", {
+  try {
+    const res = await fetch("http://localhost:5000/suites", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
-      body: JSON.stringify({ name, description,module,
-  parentId: parentSuite || null ,
-projectId}),
+      body: JSON.stringify({
+        name,
+        description,
+        module,
+        parentId: parentSuite || null,
+        projectId
+      }),
     });
 
+    if (!res.ok) {
+      alert("Failed to create suite ❌");
+      return;
+    }
+
+    alert("Suite created successfully ✅");
+
+    // Reset form
     setName("");
     setDescription("");
     setModule("");
     setParentSuite("");
+
     fetchSuites();
-  };
+
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong ❌");
+  }
+};
 
   const toggleSelect = (id) => {
     if (selectedCases.includes(id)) {
@@ -450,13 +471,13 @@ if (!projectId) {
   <td>
   <button
   onClick={() =>
-    setSelectedSuite(
-      selectedSuite === s.id ? null : s.id
+    setViewSuiteId(
+      viewSuiteId === s.id ? null : s.id
     )
   }
   className="btn-view"
 >
-  {selectedSuite === s.id ? "Hide" : "View"}
+  {viewSuiteId === s.id ? "Hide" : "View"}
 </button>
 
   <button
@@ -569,89 +590,106 @@ if (!projectId) {
         </tbody>
       </table>
 
-     {selectedSuite && (
-  <div className="suite-view">
-    <h3>
-      Test Cases in Suite
-    </h3>
+   {viewSuiteId && (
 
-    
+  <div className="suite-modal-overlay">
 
-    <button
-  className="save-order-btn"
-  onClick={saveOrder}
+    <div className="suite-modal-large">
+
+      <div className="suite-modal-header">
+        <h3>Suite Test Cases</h3>
+       <button
+  className="suite-modal-close"
+  onClick={() => setViewSuiteId(null)}
 >
-  💾 Save Order
+  ✕
 </button>
+      </div>
 
+      <button
+        className="suite-save-order-btn"
+        onClick={saveOrder}
+      >
+        💾 Save Order
+      </button>
 
+      <div className="suite-modal-scroll">
 
-    <div className="suite-scroll">
-     {suiteCases.map((tc, index) => (
+        {suiteCases.map((tc, index) => (
+
           <div key={tc.id} className="suite-testcase">
+
             <div className="suite-testcase-info">
-  <div className="suite-title">
-    {tc.testCaseId} — {tc.title}
-  </div>
+              <div className="suite-title">
+                {tc.testCaseId} — {tc.title}
+              </div>
 
-  <div className="suite-meta">
-    <span>{tc.module}</span>
-
-    <span className={`badge ${tc.priority?.toLowerCase()}`}>
-      {tc.priority}
-    </span>
-
-    <span className={`badge ${tc.status?.toLowerCase()}`}>
-      {tc.status}
-    </span>
-  </div>
-</div>
+              <div className="suite-meta">
+                <span>{tc.module}</span>
+                <span className={`badge ${tc.priority?.toLowerCase()}`}>
+                  {tc.priority}
+                </span>
+                <span className={`badge ${tc.status?.toLowerCase()}`}>
+                  {tc.status}
+                </span>
+              </div>
+            </div>
 
             <div className="suite-actions">
-              
-              <div className="suite-actions">
-
-  <button
-    className="reorder-btn"
-    onClick={() => moveUp(index)}
-  >
-    ↑
-  </button>
-
-  <button
-    className="reorder-btn"
-    onClick={() => moveDown(index)}
-  >
-    ↓
-  </button>
-
-  
-</div>
-
 
               <button
-                className="btn-link delete"
+                className="suite-reorder-btn"
+                onClick={() => moveUp(index)}
+              >
+                ↑
+              </button>
+
+              <button
+                className="suite-reorder-btn"
+                onClick={() => moveDown(index)}
+              >
+                ↓
+              </button>
+
+              <button
+                className="suite-delete-btn"
                 onClick={() =>
                   deleteTestCaseInsideSuite(tc.id)
                 }
               >
                 Delete
               </button>
+
             </div>
+
           </div>
+
         ))}
+
+      </div>
+
     </div>
+
   </div>
+
 )}
 
 
-
       {editSuiteId && (
-  <div className="suite-edit-box">
 
-    <h3>Edit Test Suite</h3>
+  <div className="modal-overlay">
 
-    <div className="edit-grid">
+    <div className="modal-box">
+
+      <div className="modal-header">
+        <h3>Edit Test Suite</h3>
+       <button
+  className="suite-modal-close"
+  onClick={() => setViewSuiteId(null)}
+>
+  ✕
+</button>
+      </div>
 
       <input
         value={editName}
@@ -662,7 +700,7 @@ if (!projectId) {
       <input
         value={editModule}
         onChange={(e) => setEditModule(e.target.value)}
-        placeholder="Module (e.g., Authentication)"
+        placeholder="Module"
       />
 
       <select
@@ -671,10 +709,7 @@ if (!projectId) {
           setEditParentSuite(e.target.value)
         }
       >
-        <option value="">
-          Parent Suite (optional)
-        </option>
-
+        <option value="">Parent Suite</option>
         {suites
           .filter((s) => s.id !== editSuiteId)
           .map((s) => (
@@ -684,38 +719,37 @@ if (!projectId) {
           ))}
       </select>
 
-    </div>
+      <textarea
+        value={description}
+        onChange={(e) =>
+          setDescription(e.target.value)
+        }
+        placeholder="Suite Description"
+      />
 
-    <textarea
-      value={description}
-      onChange={(e) =>
-        setDescription(e.target.value)
-      }
-      placeholder="Suite Description"
-      className="edit-textarea"
-    />
+      <div className="modal-actions">
 
-    <div className="edit-actions">
+        <button
+          className="btn-update"
+          onClick={handleUpdateSuite}
+        >
+          Update
+        </button>
 
-      <button
-        className="btn-update"
-        onClick={handleUpdateSuite}
-      >
-        Update Suite
-      </button>
+        <button
+          className="btn-cancel"
+          onClick={() => setEditSuiteId(null)}
+        >
+          Cancel
+        </button>
 
-      <button
-        className="btn-cancel"
-        onClick={() => setEditSuiteId(null)}
-      >
-        Cancel
-      </button>
+      </div>
 
     </div>
 
   </div>
-)}
 
+)}
       <hr className="divider" />
 
       {/* Assign Section */}

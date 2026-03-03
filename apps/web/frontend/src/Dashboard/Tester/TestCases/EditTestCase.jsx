@@ -72,7 +72,14 @@ function EditTestCase() {
 
   return (
   <div className="edit-page">
-
+<div>
+    <button
+        className="back-btn"
+        onClick={() => navigate(-1)}
+      >
+        ← 
+      </button>
+</div>
     <div className="edit-card">
 
       <h1 className="edit-title">Edit Test Case</h1>

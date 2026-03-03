@@ -98,7 +98,7 @@ function EditTestRun() {
   };
 
   return (
-    <div className="fullscreen-page">
+     <div className="admin-content-page">
 
       {/* BACK BUTTON */}
 
@@ -220,51 +220,46 @@ function EditTestRun() {
 
           <div className="dropdown-menu">
 
-            {testers.map(user => (
+           {testers.map(user => (
 
-              <label
-                key={user.id}
-                className="dropdown-item"
-              >
+  <label
+    key={user.id}
+    className="dropdown-item"
+  >
 
-                <input
-                  type="checkbox"
-                  checked={selectedTesters.includes(user.id)}
-                  onChange={(e) => {
+    <input
+      type="checkbox"
+      checked={selectedTesters.includes(user.id)}
+      onChange={(e) => {
+        if (e.target.checked)
+          setSelectedTesters([...selectedTesters, user.id]);
+        else
+          setSelectedTesters(
+            selectedTesters.filter(id => id !== user.id)
+          );
+      }}
+    />
 
-                    if (e.target.checked)
-                      setSelectedTesters([
-                        ...selectedTesters,
-                        user.id
-                      ]);
-                    else
-                      setSelectedTesters(
-                        selectedTesters.filter(
-                          id => id !== user.id
-                        )
-                      );
+    {user.name || user.email}
 
-                  }}
-                />
-
-                {user.name || user.email}
-
-              </label>
-
-            ))}
+  </label>
+))}
 
           </div>
 
         )}
 
-      </div>
 
-      <button
+         <button
         className="create-run-btn"
         onClick={updateRun}
       >
         Save Changes
       </button>
+
+      </div>
+
+     
 
 
 

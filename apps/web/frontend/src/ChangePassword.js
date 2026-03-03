@@ -71,15 +71,16 @@ function ChangePassword() {
  return (
   <div
     style={{
-      background: "white",
-      padding: "30px",
-      borderRadius: "12px",
-      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-      width: "100%",
-      maxWidth: "400px",
-      boxSizing: "border-box",
-      textAlign: "center",
-    }}
+  background: "#ffffff",
+  padding: "32px",
+  borderRadius: "16px",
+  boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
+  width: "100%",
+  maxWidth: "420px",
+  boxSizing: "border-box",
+  textAlign: "center",
+  border: "1px solid #e5e7eb",
+}}
   >
     <h2 style={{ marginBottom: "20px",color:"black" }}>
       🔐 Change Password
