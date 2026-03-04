@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import "./bug.css";
 import BugComments from "./BugComments";
 import AdvancedFilterPanel from "../Search/AdvancedFilterPanel";
+import { useLocation } from "react-router-dom";
 
 function BugsList() {
+  const location = useLocation();
 
   const [bugs, setBugs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,6 +16,24 @@ const projectId = localStorage.getItem("projectId");
 const [workflowStatuses, setWorkflowStatuses] = useState([]);
 const [activeFilter, setActiveFilter] = useState(null);
 const [searchResults, setSearchResults] = useState(null);
+
+
+useEffect(() => {
+
+  const params = new URLSearchParams(location.search);
+  const highlightId = params.get("highlight");
+  const shouldOpen = params.get("openDiscussion");
+
+  if (highlightId && shouldOpen === "true") {
+
+    setOpenDiscussion(prev => ({
+      ...prev,
+      [highlightId]: true
+    }));
+
+  }
+
+}, [location.search]);
 
 useEffect(() => {
   if (searchResults?.bugs?.length > 0) {
@@ -147,7 +167,7 @@ setDevelopers(devData);
 
     loadBugs();
 
-  }, []);
+ }, [location.search]);
 
 
 const assignBug = async (bugId) => {
@@ -199,6 +219,24 @@ const updateStatus = async (bugId, newStatus) => {
   alert(`Bug marked as ${newStatus}`);
   window.location.reload();
 };
+ useEffect(() => {
+  const params = new URLSearchParams(location.search);
+  const highlightId = params.get("highlight");
+
+  if (highlightId && bugs.length > 0) {
+    const element = document.getElementById(highlightId);
+
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("highlight-bug");
+
+      setTimeout(() => {
+        element.classList.remove("highlight-bug");
+      }, 3000);
+    }
+  }
+}, [bugs, location.search]);
+
 
 
 
@@ -209,8 +247,6 @@ const role = payload?.role;
   if (loading) return <p>Loading bugs...</p>;
 
   if (!projectId) return <h2>Please select a project first.</h2>;
-
- 
 
 
 
@@ -293,7 +329,11 @@ const role = payload?.role;
 
        Array.isArray(bugs) && bugs.map(bug => (
 
-          <div key={bug.id} className="bug-card">
+          <div
+  key={bug.id}
+  id={bug.id}
+  className="bug-card"
+>
 
             <h3>{bug.title}</h3>
 
@@ -326,10 +366,12 @@ const role = payload?.role;
       Start Work
     </button>
 
-    <button onClick={() => updateStatus(bug.id, "Won't Fix")}>
-      Won't Fix
-    </button>
-
+    <button
+  className="btn-wontfix"
+  onClick={() => updateStatus(bug.id, "Won't Fix")}
+>
+  Won't Fix
+</button>
     <button onClick={() => updateStatus(bug.id, "Duplicate")}>
       Duplicate
     </button>
@@ -349,15 +391,21 @@ const role = payload?.role;
 )}
 
 {role === "tester" && bug.status === "Fixed" && (
-  <>
-    <button onClick={() => updateStatus(bug.id, "Verified")}>
-      Verify Fix
+  <div className="tester-actions">
+    <button
+      className="btn-verify"
+      onClick={() => updateStatus(bug.id, "Verified")}
+    >
+      ✔ Verify Fix
     </button>
 
-    <button onClick={() => updateStatus(bug.id, "Reopened")}>
-      Reopen
+    <button
+      className="btn-reopen"
+      onClick={() => updateStatus(bug.id, "Reopened")}
+    >
+      ↩ Reopen
     </button>
-  </>
+  </div>
 )}
 
 {role === "tester" && bug.status === "Verified" && (
@@ -398,6 +446,15 @@ const role = payload?.role;
     <span className="commit-url">
       {bug.commitLink}
     </span>
+  </p>
+
+
+
+)}
+
+{bug.branchName && (
+  <p>
+    <strong>Branch:</strong> {bug.branchName}
   </p>
 )}
 

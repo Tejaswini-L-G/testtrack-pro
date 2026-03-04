@@ -6,6 +6,9 @@ function AdminTestCases() {
   const [view, setView] = useState("active");
   const [selected, setSelected] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
+  const projectId = localStorage.getItem("projectId");
+
+
 
 
   useEffect(() => {
@@ -28,10 +31,10 @@ function AdminTestCases() {
   }, [view]);
 
   const fetchTestCases = async () => {
-    const url =
-      view === "deleted"
-        ? "http://localhost:5000/admin/testcases/deleted"
-        : "http://localhost:5000/admin/testcases";
+   const url =
+  view === "deleted"
+    ? `http://localhost:5000/admin/testcases/deleted?projectId=${projectId}`
+    : `http://localhost:5000/admin/testcases?projectId=${projectId}`;
 
     const res = await fetch(url, {
       headers: {

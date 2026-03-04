@@ -1,0 +1,403 @@
+/* CENTER POPUP STYLE */
+/* CENTER MODAL */
+.notification-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(3px);
+  z-index: 10000;
+}
+
+.notification-dropdown {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  max-height: 520px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
+  z-index: 10001;
+  overflow-y: auto;
+}
+
+
+
+
+/* Header */
+.dropdown-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  font-weight: 600;
+  font-size: 16px;
+  color: #111827;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Mark all read button */
+.dropdown-header button {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #4f46e5;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropdown-header button:hover {
+  opacity: 0.7;
+}
+
+/* Notification item */
+.notification-item {
+  padding: 14px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: #f9fafb;
+}
+
+/* Unread highlight */
+.notification-item.unread {
+  background: #eef2ff;
+  border-left: 4px solid #4f46e5;
+}
+
+/* Title */
+.notification-item strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Message */
+.notification-item p {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+/* Timestamp */
+.notification-item small {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Empty state */
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* =====================================================
+   NOTIFICATION BELL
+===================================================== */
+/* =========================================
+   OVERLAY
+========================================= */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+}
+
+/* =========================================
+   MODAL CONTAINER
+========================================= */
+
+.settings-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px;
+  max-height: 85vh;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;   /* VERY IMPORTANT */
+}
+
+/* =========================================
+   HEADER (STICKY)
+========================================= */
+
+.settings-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid #eee;
+  background: #ffffff;
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+}
+
+/* =========================================
+   SCROLLABLE CONTENT
+========================================= */
+
+.settings-content {
+  flex: 1;
+  overflow-y: auto;    /* ONLY THIS SCROLLS */
+  padding: 10px 0;
+}
+
+/* Scrollbar styling */
+.settings-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background: #cfcfcf;
+  border-radius: 4px;
+}
+
+/* =========================================
+   GROUP CARD STYLE
+========================================= */
+
+.settings-group {
+  margin: 18px 25px;
+  padding: 18px 20px;
+  background: #f9fafc;
+  border-radius: 12px;
+  border: 1px solid #ececec;
+}
+
+.settings-group h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+/* =========================================
+   ROW STYLE
+========================================= */
+
+.pref-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* =========================================
+   QUIET HOURS
+========================================= */
+
+.quiet-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.quiet-row input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+}
+
+/* =========================================
+   FOOTER (FIXED BOTTOM)
+========================================= */
+
+.settings-actions {
+  padding: 18px 25px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #ffffff;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.save-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.save-btn:hover {
+  background: #43a047;
+}
+
+.cancel-btn {
+  background: #eee;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* =========================================
+   TOGGLE SWITCH
+========================================= */
+
+.switch {
+  position: relative;
+  width: 44px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background-color: #d0d0d0;
+  border-radius: 22px;
+  transition: 0.3s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  top: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background-color: #4caf50;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 600px) {
+  .settings-modal {
+    width: 95vw;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.notification-item {
+  position: relative;
+  padding-right: 35px;
+}
+
+.notification-content {
+  cursor: pointer;
+}
+
+.delete-notification {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #aaa;
+  transition: 0.2s ease;
+}
+
+.delete-notification:hover {
+  color: #e53935;
+  transform: scale(1.1);
+}

@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Profile.css";
+import ChangePassword from "../ChangePassword";
 
 function Profile() {
   const [open, setOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const navigate = useNavigate();
 
@@ -25,8 +28,9 @@ function Profile() {
   }, []);
 
   return (
-  <div style={{ position: "relative" }}>
+    <div style={{ position: "relative" }}>
 
+      {/* Avatar */}
       <div
         className="profile-avatar"
         onClick={() => setOpen(prev => !prev)}
@@ -34,6 +38,7 @@ function Profile() {
         {userInfo?.name?.charAt(0).toUpperCase() || "U"}
       </div>
 
+      {/* Dropdown */}
       {open && (
         <div className="profile-menu">
 
@@ -43,12 +48,22 @@ function Profile() {
             </div>
 
             <div>
-              <h4>{userInfo?.name}</h4>
+              <h4>{userInfo?.name || "No Name"}</h4>
               <p>{userInfo?.email}</p>
             </div>
           </div>
 
           <p className="role">{userInfo?.role}</p>
+
+          <button
+            className="change-password-btn"
+            onClick={() => {
+              setOpen(false);
+              setShowModal(true);
+            }}
+          >
+            Change Password
+          </button>
 
           <button
             onClick={() => {
@@ -61,6 +76,22 @@ function Profile() {
 
         </div>
       )}
+
+      {/* Change Password Modal */}
+      {showModal && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="modal-box"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ChangePassword />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

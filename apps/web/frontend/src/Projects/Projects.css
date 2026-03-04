@@ -538,3 +538,409 @@
   background: #fee2e2;
   color: #991b1b;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===============================
+   CROSS PROJECT REPORT PAGE
+================================ */
+.cross-project-page {
+  padding: 28px;
+  width: 100%;
+}
+
+/* PAGE TITLE */
+
+.cross-project-page h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #1f2937;
+}
+
+/* ===============================
+   GLOBAL STATS
+================================ */
+
+/* ===============================
+   STATS GRID - FORCE ONE ROW
+================================ */
+.stats-grid {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  flex: 1;              /* all cards share equal width */
+  min-width: 180px;     /* prevents shrinking too much */
+
+  padding: 16px;
+  text-align: center;
+
+  background: white;
+  border-radius: 10px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+
+.stat-card strong {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.stat-card span {
+  font-size: 13px;
+  color: #6b7280;
+}
+/* TITLE */
+
+.stat-card span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.stat-card strong {
+  font-size: 22px;
+  font-weight: 700;
+}
+/* ===============================
+   PROJECT COMPARISON
+================================ */
+
+.cross-project-page h3 {
+  margin-bottom: 18px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0e58d0;
+}
+
+/* PROJECT GRID */
+
+.project-comparison {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* PROJECT CARD */
+
+.project-summary-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.project-summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+}
+
+/* PROJECT NAME */
+
+.project-summary-card h4 {
+  margin-bottom: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #f136d8;
+}
+
+/* PROJECT STATS */
+
+.project-summary-card p {
+  font-size: 15px;
+  color: #02070e;
+  margin-bottom: 6px;
+}
+
+/* OPTIONAL BADGE STYLE */
+
+.project-summary-card p span {
+  font-weight: 600;
+  color: #111827;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===============================
+   WORKFLOW PAGE
+================================ */
+
+.workflow-page {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 25px 30px;
+
+  background: #ffffff;
+  border-radius: 14px;
+
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* PAGE TITLE */
+
+.workflow-page h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #1f2937;
+}
+
+/* WORKFLOW TYPE SELECT */
+
+.workflow-page select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+
+  margin-bottom: 20px;
+
+  background: white;
+}
+
+/* ===============================
+   CURRENT WORKFLOW CARD
+================================ */
+
+.workflow-display {
+  background: #f9fafb;
+
+  padding: 20px;
+  border-radius: 12px;
+
+  border: 1px solid #e5e7eb;
+
+  margin-top: 15px;
+}
+
+.workflow-display h4 {
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* STATUS BADGES */
+
+.status-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.status-badge {
+  background: #e0f2fe;
+  color: #0369a1;
+
+  padding: 6px 12px;
+  border-radius: 20px;
+
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ===============================
+   ACTION BUTTONS
+================================ */
+
+.workflow-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.workflow-actions button {
+  padding: 7px 14px;
+
+  border-radius: 6px;
+  border: none;
+
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* EDIT BUTTON */
+
+.workflow-actions button:first-child {
+  background: #2563eb;
+  color: white;
+}
+
+.workflow-actions button:first-child:hover {
+  background: #1d4ed8;
+}
+
+/* DELETE BUTTON */
+
+.delete-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.delete-btn:hover {
+  background: #fecaca;
+}
+
+/* ===============================
+   EDIT MODE
+================================ */
+
+.workflow-page textarea {
+  width: 100%;
+  min-height: 120px;
+
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+
+  font-size: 14px;
+  margin-bottom: 15px;
+
+  resize: vertical;
+}
+
+/* SAVE BUTTON */
+
+.workflow-page button {
+  padding: 10px 16px;
+
+  background: #2563eb;
+  color: white;
+
+  border: none;
+  border-radius: 8px;
+
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.workflow-page button:hover {
+  background: #1d4ed8;
+}

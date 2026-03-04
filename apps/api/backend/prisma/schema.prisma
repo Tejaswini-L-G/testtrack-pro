@@ -35,13 +35,17 @@ model User {
   bugComments BugComment[]
   active      Boolean      @default(true)
 
-  Role            Role?             @relation(fields: [roleId], references: [id])
+  Role            Role?                   @relation(fields: [roleId], references: [id])
   roleId          String?
   DashboardWidget DashboardWidget[]
   Project         Project[]
   AuditLog        AuditLog[]
   projects        ProjectMember[]
   FilterPreset    FilterPreset[]
+  notifications   Notification[]
+  preference      NotificationPreference?
+  ReportSchedule  ReportSchedule[]
+  ApiKey          ApiKey[]
 }
 
 model TestCase {
@@ -291,7 +295,7 @@ model Bug {
   resolutionNote String?
   fixedAt        DateTime?
   startedAt      DateTime?
-
+  branchName String?
   comments  BugComment[]
   projectId String
   project   Project      @relation(fields: [projectId], references: [id])
@@ -476,4 +480,88 @@ model FilterPreset {
   isShared  Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String // BUG_ASSIGNED, STATUS_CHANGED, COMMENT, etc
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user        User    @relation(fields: [userId], references: [id])
+  userId      String
+  referenceId String?
+}
+
+model NotificationPreference {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+
+  bugAssignedEmail Boolean @default(true)
+  bugAssignedInApp Boolean @default(true)
+
+  statusChangedEmail Boolean @default(true)
+  statusChangedInApp Boolean @default(true)
+
+  commentEmail Boolean @default(false)
+  commentInApp Boolean @default(true)
+
+  testAssignedEmail Boolean @default(true)
+  testAssignedInApp Boolean @default(true)
+
+  retestEmail Boolean @default(true)
+  retestInApp Boolean @default(true)
+
+  quietHoursStart String?
+  quietHoursEnd   String?
+}
+
+model ReportSchedule {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String // TEST_EXECUTION / BUG / DEV_PERFORMANCE
+  frequency String // DAILY / WEEKLY / MONTHLY
+  dayOfWeek Int? // 0-6 (for weekly)
+  time      String // "09:00"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user                  User                    @relation(fields: [userId], references: [id])
+  ReportScheduleHistory ReportScheduleHistory[]
+}
+
+model ReportScheduleHistory {
+  id         String   @id @default(uuid())
+  scheduleId String
+  executedAt DateTime @default(now())
+  status     String // SUCCESS / FAILED
+  message    String?
+
+  schedule ReportSchedule @relation(fields: [scheduleId], references: [id])
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Commit {
+  id        String   @id @default(uuid())
+  hash      String
+  message   String
+  branch    String
+  author    String
+  createdAt DateTime @default(now())
+
+  bugId String?
 }

@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Navbar.css";
+import NotificationBell from "../Notification/NotificationBell";
+import NotificationSettings from "../Notification/NotificationSettings";
+import { Settings } from "lucide-react";
 
 function AdminNavbar({ onSearchResults }) {
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const navigate = useNavigate();
   const projectId = localStorage.getItem("projectId");
@@ -40,6 +44,16 @@ if (onSearchResults) {
 
   return (
     <div className="navbar-wrapper">
+      <div className="nav-actions">
+  <NotificationBell />
+
+  <button
+    className="nav-settings-btn"
+    onClick={() => setShowSettings(true)}
+  >
+    <Settings size={20} />
+  </button>
+</div>
 
       <div className="navbar-search">
 
@@ -47,7 +61,7 @@ if (onSearchResults) {
           type="text"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search..."
+          placeholder=" 🔍 Search test cases, bugs..."
         />
 
         {results && (
@@ -85,6 +99,11 @@ if (onSearchResults) {
         )}
 
       </div>
+       {showSettings && (
+  <NotificationSettings
+    onClose={() => setShowSettings(false)}
+  />
+)}
 
     </div>
   );

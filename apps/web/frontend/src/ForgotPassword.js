@@ -1,10 +1,10 @@
 import { useState } from "react";
 import axios from "axios";
 
-function ForgotPassword() {
+function ForgotPassword({ switchModal }) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [resetLink, setResetLink] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -15,96 +15,127 @@ function ForgotPassword() {
       });
 
       setMessage(res.data.message);
-      setResetLink(res.data.resetLink);
+      setSuccess(true);
     } catch (err) {
       setMessage(err.response?.data?.message || "Something went wrong");
+      setSuccess(false);
     }
   };
 
   return (
-  <div
-    style={{
-      background: "white",
-      padding: "30px",
-      borderRadius: "12px",
-      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-      width: "100%",
-      maxWidth: "400px",
-      boxSizing: "border-box",
-      textAlign: "center",
-    }}
-  >
-    <h2 style={{ marginBottom: "20px",color:"black" }}>
-      🔑 Forgot Password
-    </h2>
-
-    <form onSubmit={submit}>
-      <input
-        type="email"
-        placeholder="Enter your registered email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100vh",
+        background: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 999,
+      }}
+    >
+      <div
         style={{
+          background: "#fff",
+          padding: "35px",
+          borderRadius: "16px",
           width: "100%",
-          padding: "10px",
-          borderRadius: "8px",
-          border: "1px solid #ddd",
-          marginBottom: "15px",
-          outline: "none",
-        }}
-      />
-
-      <button
-        type="submit"
-        style={{
-          width: "100%",
-          padding: "10px",
-          borderRadius: "8px",
-          border: "none",
-          background: "#4f46e5",
-          color: "white",
-          fontWeight: "600",
-          cursor: "pointer",
+          maxWidth: "400px",
+          textAlign: "center",
+          boxShadow: "0 20px 40px rgba(0,0,0,0.25)",
+          animation: "fadeIn 0.3s ease-in-out",
         }}
       >
-        Generate Reset Link
-      </button>
-    </form>
+        <h2 style={{ marginBottom: "20px" }}>
+          🔑 Forgot Password
+        </h2>
 
-    {message && (
-      <p
-        style={{
-          marginTop: "15px",
-          fontSize: "14px",
-          color: resetLink ? "green" : "#d9534f",
-        }}
-      >
-        {message}
-      </p>
-    )}
+        {!success ? (
+          <>
+            <form onSubmit={submit}>
+              <input
+                type="email"
+                placeholder="Enter your registered email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  marginBottom: "15px",
+                  outline: "none",
+                  fontSize: "14px",
+                }}
+              />
 
-    {resetLink && (
-      <div style={{ marginTop: "20px" }}>
-        <button
-          onClick={() => (window.location.href = resetLink)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "none",
-            background: "#10b981",
-            color: "white",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          Go to Reset Password Page 🔐
-        </button>
+              <button
+                type="submit"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#4f46e5",
+                  color: "#fff",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "0.3s",
+                }}
+              >
+                Generate Reset Link
+              </button>
+            </form>
+
+            {message && (
+              <p
+                style={{
+                  marginTop: "12px",
+                  color: "#ef4444",
+                  fontSize: "14px",
+                }}
+              >
+                {message}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <p
+              style={{
+                color: "#10b981",
+                fontWeight: "500",
+                marginBottom: "20px",
+              }}
+            >
+              {message}
+            </p>
+
+            <button
+              onClick={() => switchModal("login")}
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "8px",
+                border: "none",
+                background: "#10b981",
+                color: "#fff",
+                fontWeight: "600",
+                cursor: "pointer",
+              }}
+            >
+              Back to Login
+            </button>
+          </>
+        )}
       </div>
-    )}
-  </div>
-);
+    </div>
+  );
 }
 
 export default ForgotPassword;

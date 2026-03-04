@@ -70,6 +70,11 @@ import ProjectMilestones from "./Projects/ProjectMilestones";
 import MilestoneDashboard from "./Projects/MilestoneDashboard";
 import GlobalSearch from "./Search/GlobalSearch";
 import OAuthSuccess from "./OAuthSuccess";
+import NotificationSettings from "./Notification/NotificationSettings";
+import ScheduleReport from "./Reports/ScheduleReport";
+import ReportsDashboard from "./Reports/ReportsDashboard";
+
+
 import "./styles.css";
 
 
@@ -104,22 +109,31 @@ function App() {
   <Route path="/verify/:token" element={<Verify />} />
   <Route path="/change-password" element={<ChangePassword />} />
  
+<Route
+  path="/settings/notifications"
+  element={<NotificationSettings />}
+/>
+  
+   
 
   
-   <Route path="/testcases/:id/edit" element={<EditTestCase />} />
- 
-  
-  
 
 
-  <Route path="/admin/dashboard" element={<AdminDashboard />}>
+  <Route
+  path="/admin/dashboard"
+  element={
+    <ProtectedRoute>
+      <AdminDashboard />
+    </ProtectedRoute>
+  }
+>
 
   {/* DEFAULT */}
   <Route index element={<div />} />
 
   {/* TEST MANAGEMENT */}
   <Route path="testcases" element={<AdminTestCases />} />
-  <Route path="testruns" element={<TestRunList />} />
+  
   <Route path="testruns/create" element={<CreateTestRun />} />
   <Route path="bugs" element={<BugDashboard />} />
 
@@ -142,7 +156,7 @@ function App() {
   element={<TesterPerformanceReport />}
 />
 <Route
-  path="/admin/dashboard/testruns/edit/:id"
+  path="testruns/edit/:id"
   element={<EditTestRun />}
 />
 
@@ -150,11 +164,10 @@ function App() {
 
 <Route path="testcases" element={<AdminTestCases />} />
 
- 
-  <Route path="testruns/create" element={<CreateTestRun />} />
-
-  <Route
-  path="/admin/dashboard/testruns/:id"
+ <Route path="reports" element={<ReportsDashboard />} />
+<Route path="reports/schedule" element={<ScheduleReport />} />
+ <Route
+  path="testruns/:id"
   element={<RunProgressDashboard />}
 />
 
@@ -162,35 +175,33 @@ function App() {
   path="reports/cross-project"
   element={<CrossProjectReport />}
 />
-<Route
-  path="/admin/dashboard/custom-fields"
-  element={<ProjectCustomFields />}
-/>
-
-<Route path="/admin/dashboard/workflows" element={<ProjectWorkflow />} />
-<Route
-  path="/admin/dashboard/modules"
-  element={<ProjectModules />}
-/>
+<Route path="custom-fields" element={<ProjectCustomFields />} />
+<Route path="workflows" element={<ProjectWorkflow />} />
+<Route path="modules" element={<ProjectModules />} />
+<Route path="environments" element={<ProjectEnvironments />} />
+<Route path="milestones" element={<ProjectMilestones />} />
 
 <Route
-  path="/admin/dashboard/environments"
-  element={<ProjectEnvironments />}
+  path="/admin/dashboard/milestones-progress"
+  element={<MilestoneDashboard />}
 />
 
-<Route
-  path="/admin/dashboard/milestones"
-  element={<ProjectMilestones />}
-/>
 </Route>
 
 
 
-<Route path="/profile" element={<Profile />} />
+<Route
+  path="/home"
+  element={
+    <ProtectedRoute>
+      <HomePage />
+    </ProtectedRoute>
+  }
+/>
 
-<Route path="/dashboard/home" element={<HomePage />} />
-  
-<Route path="/search" element={<GlobalSearch />} />
+
+
+
 
 
 
@@ -223,7 +234,7 @@ function App() {
   element={<TesterPerformanceReport />}
 />
 
-  <Route path="home" element={<HomePage />} />
+ 
   <Route path="testcases" element={<TestCases />} />
  <Route path="testcases/edit/:id" element={<EditTestCase />} />
   <Route path="testcases/:id" element={<ViewTestCase />} />
@@ -285,6 +296,8 @@ function App() {
 />
 
 
+
+
 </Route>
 
 
@@ -294,7 +307,14 @@ function App() {
 
 
 
-<Route path="/developer" element={<DeveloperDashboard />}>
+<Route
+  path="/developer"
+  element={
+    <ProtectedRoute>
+      <DeveloperDashboard />
+    </ProtectedRoute>
+  }
+>
 
   <Route path="dashboard" element={<div />} />
 
@@ -323,6 +343,15 @@ function App() {
 </Route>
 
 <Route path="/oauth-success" element={<OAuthSuccess />} />
+
+
+
+
+  
+  
+  <Route path="/profile" element={<Profile />} />
+  <Route path="/search" element={<GlobalSearch />} />
+
 
 
 

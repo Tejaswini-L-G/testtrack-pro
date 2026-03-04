@@ -90,7 +90,7 @@ if (!projectId) {
   <button
     className="view-btn"
     onClick={() =>
-      navigate(`/admin/dashboard/testruns/${run.id}`)
+      navigate(`${run.id}`)
     }
   >
     View
@@ -100,7 +100,7 @@ if (!projectId) {
   <button
     className="edit-btn"
     onClick={() =>
-      navigate(`/admin/dashboard/testruns/edit/${run.id}`)
+     navigate(`edit/${run.id}`)
     }
   >
     Edit

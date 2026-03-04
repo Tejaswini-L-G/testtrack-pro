@@ -28,9 +28,7 @@ function HomePage() {
             Register
           </button>
 
-          <button onClick={() => setActiveModal("changePassword")}>
-            Change Password
-          </button>
+         
         </div>
       </header>
 

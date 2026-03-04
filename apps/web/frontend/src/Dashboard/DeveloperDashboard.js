@@ -11,6 +11,8 @@ function DeveloperDashboard() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [searchResults, setSearchResults] = useState(null);
+  const [showWorkspaceMenu, setShowWorkspaceMenu] = useState(false);
+const [showReportsMenu, setShowReportsMenu] = useState(false);
 
   const [stats, setStats] = useState({
     assigned: 0,
@@ -105,7 +107,7 @@ useEffect(() => {
 
           <button
             className={isActive("/developer/home") ? "active" : ""}
-            onClick={() => navigate("/dashboard/home")}
+            onClick={() => navigate("/home")}
           >
             Home
           </button>
@@ -119,63 +121,68 @@ useEffect(() => {
 
           <hr />
 
-          <p className="nav-section">Developer Workspace</p>
+          {/* ================= WORKSPACE ================= */}
 
-          <button
-            onClick={() => navigate("/developer/issues")}
-          >
-            Assigned Issues
-          </button>
-
-          <button
-            onClick={() => navigate("/developer/reports")}
-          >
-            View Test Reports
-          </button>
-
-          <button
-            onClick={() => navigate("/developer/testcases")}
-          >
-            View Test Case Details
-          </button>
-
-          <button onClick={() => navigate("/dashboard/milestones")}>
-  Milestones
+<button
+  className="nav-main-btn"
+  onClick={() => setShowWorkspaceMenu(!showWorkspaceMenu)}
+>
+  👨‍💻 Developer Workspace
+  <span>{showWorkspaceMenu ? "▲" : "▼"}</span>
 </button>
 
-         <div className="reports-panel">
+{showWorkspaceMenu && (
+  <div className="submenu-panel">
+    <button onClick={() => navigate("/developer/issues")}>
+      Assigned Issues
+    </button>
 
-  <h4>Reports & Analytics</h4>
+    <button onClick={() => navigate("/developer/reports")}>
+      View Test Reports
+    </button>
 
-  <div className="reports-buttons">
+    <button onClick={() => navigate("/developer/testcases")}>
+      View Test Case Details
+    </button>
 
-    <button
-      onClick={() => navigate("/developer/reports/execution")}
-    >
+    <button onClick={() => navigate("/dashboard/milestones")}>
+      Milestones
+    </button>
+  </div>
+)}
+         {/* ================= REPORTS ================= */}
+
+
+   <hr />
+
+<button
+  className="nav-main-btn"
+  onClick={() => setShowReportsMenu(!showReportsMenu)}
+>
+  📊 Reports & Analytics
+  <span>{showReportsMenu ? "▲" : "▼"}</span>
+</button>
+
+{showReportsMenu && (
+  <div className="submenu-panel">
+    <button onClick={() => navigate("/developer/reports/execution")}>
       📊 Execution Report
     </button>
 
-    <button
-      onClick={() => navigate("/developer/reports/bugs")}
-    >
+    <button onClick={() => navigate("/developer/reports/bugs")}>
       🐞 Bug Report
     </button>
 
-    <button
-      onClick={() => navigate("/dashboard/reports/developer-performance")}
-    >
+    <button onClick={() => navigate("/dashboard/reports/developer-performance")}>
       👨‍💻 Developer Performance
     </button>
 
-    <button
-      onClick={() => navigate("/developer/reports/tester-performance")}
-    >
+    <button onClick={() => navigate("/developer/reports/tester-performance")}>
       🧪 Tester Performance
     </button>
-
   </div>
+)}
 
-</div>
 
           <hr />
 

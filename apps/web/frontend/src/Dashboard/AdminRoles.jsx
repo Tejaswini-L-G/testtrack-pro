@@ -179,7 +179,7 @@ const deleteRole = async (id) => {
         {/* ===== LEFT: ROLES LIST ===== */}
         <div className="roles-list">
           <h3>Existing Roles</h3>
-
+{roles.length === 0 && <p>No roles found</p>}
           {Array.isArray(roles) && roles.map(r =>  (
             <div
               key={r.id}

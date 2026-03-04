@@ -1,35 +1,239 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { PrismaClient } = require("@prisma/client");
+
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const passport = require("./Passport");
 const upload = require("./upload");
 const path = require("path");
-
+const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
-
+const cron = require("node-cron");
 const xlsx = require("xlsx");
+
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./docs/swagger");
 
 const { execFile } = require("child_process");
 const logAction = require("./utils/logAction");
 const getUserIdFromToken = require("./utils/getUserFromToken");
+const { sendNotification } = require("./services/notificationService");
+const notificationRoutes = require("./Notification/notificationRoutes");
+const { generateExecutionPdf } = require("./services/reportPdfService");
+const requirePermission = require("./middleware/requirePermission");
+const apiKeyRoutes = require("./routes/apiKeys");
 // or your existing path
+const githubWebhook = require("./routes/githubWebhook");
+
 
 const app = express();
 app.use(passport.initialize());
-
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+app.use(express.json());
 
+app.use("/integrations", githubWebhook);
+app.use("/api/keys", apiKeyRoutes);
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
 
 
+app.use("/api/notifications", notificationRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // limit each IP to 100 requests per minute
+  message: {
+    error: "Too many requests, please try again later."
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use("/api", apiLimiter);
+
+cron.schedule("* * * * *", async () => {
+
+  const now = new Date();
+  const currentDay = now.getDay();
+  const currentTime = now.toTimeString().slice(0,5);
+
+  const schedules = await prisma.reportSchedule.findMany({
+    where: { isActive: true },
+    include: { user: true }
+  });
+
+  for (const sched of schedules) {
+
+    if (
+      sched.frequency === "WEEKLY" &&
+      sched.dayOfWeek === currentDay &&
+      sched.time === currentTime
+    ) {
+
+      try {
+
+        const reportData = await generateTestExecutionData(sched.userId);
+
+        const pdfPath = await generateExecutionPdf(reportData);
+
+        await sendEmail(
+          sched.user.email,
+          "Weekly Test Report",
+          "<h3>Your report is attached</h3>",
+          pdfPath
+        );
+
+        await prisma.reportScheduleHistory.create({
+          data: {
+            scheduleId: sched.id,
+            status: "SUCCESS",
+            message: "Report sent with PDF"
+          }
+        });
+
+      } catch (error) {
+
+        await prisma.reportScheduleHistory.create({
+          data: {
+            scheduleId: sched.id,
+            status: "FAILED",
+            message: error.message
+          }
+        });
+
+      }
+
+    }
+
+  }
+
+});
+
+
+async function generateTestExecutionData(userId) {
+
+  const executions = await prisma.testExecution.findMany({
+    where: {
+      executedById: userId
+    },
+    include: {
+      testRun: true,
+      executedBy: true,
+      steps: true
+    }
+  });
+
+  const total = executions.length;
+
+  let passed = 0;
+  let failed = 0;
+  let inProgress = 0;
+
+  executions.forEach(exec => {
+    if (exec.status === "Passed") passed++;
+    else if (exec.status === "Failed") failed++;
+    else inProgress++;
+  });
+
+  const passRate =
+    total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+
+  /* 🔹 STEP BREAKDOWN */
+
+  let stepPass = 0;
+  let stepFail = 0;
+  let stepBlocked = 0;
+  let stepSkipped = 0;
+
+  executions.forEach(exec => {
+
+    exec.steps.forEach(step => {
+
+      if (step.status === "Pass") stepPass++;
+      else if (step.status === "Fail") stepFail++;
+      else if (step.status === "Blocked") stepBlocked++;
+      else if (step.status === "Skipped") stepSkipped++;
+
+    });
+
+  });
+
+  /* 🔹 EXECUTION BY TESTER */
+
+  const testerStats = {};
+
+  executions.forEach(exec => {
+
+    const name = exec.executedBy?.name || "Unknown";
+
+    if (!testerStats[name]) {
+      testerStats[name] = 0;
+    }
+
+    testerStats[name]++;
+
+  });
+
+  /* 🔹 EXECUTION BY RUN */
+
+  const runStats = {};
+
+  executions.forEach(exec => {
+
+    const run = exec.testRun?.name || "Standalone";
+
+    if (!runStats[run]) {
+      runStats[run] = 0;
+    }
+
+    runStats[run]++;
+
+  });
+
+  return {
+    total,
+    passed,
+    failed,
+    inProgress,
+    passRate,
+
+    stepPass,
+    stepFail,
+    stepBlocked,
+    stepSkipped,
+
+    testerStats,
+    runStats,
+
+    executions
+  };
+}
+
+async function generateTestExecutionReport(userId) {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { executedById: userId }
+  });
+
+  const total = executions.length;
+  const passed = executions.filter(e => e.status === "Passed").length;
+  const failed = executions.filter(e => e.status === "Failed").length;
+
+  const passRate = ((passed / total) * 100).toFixed(1);
+
+  return `
+    <h2>Weekly Test Execution Summary</h2>
+    <p>Total Executed: ${total}</p>
+    <p>Passed: ${passed}</p>
+    <p>Failed: ${failed}</p>
+    <p>Pass Rate: ${passRate}%</p>
+  `;
+}
 
 async function getDeveloperReportData() {
 
@@ -149,8 +353,7 @@ async function generateTestCaseId() {
 
 app.use(express.json());
 
-console.log("EMAIL USER:", process.env.EMAIL_USER);
-console.log("EMAIL PASS LENGTH:", process.env.EMAIL_PASS?.length);
+
 
 const nodemailer = require("nodemailer");
 
@@ -164,7 +367,28 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+async function sendEmail(to, subject, html, attachmentPath = null) {
 
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  };
+
+  // Attach PDF if provided
+  if (attachmentPath) {
+    mailOptions.attachments = [
+      {
+        filename: "report.pdf",
+        path: attachmentPath
+      }
+    ];
+  }
+
+  await transporter.sendMail(mailOptions);
+
+}
 
 function isStrongPassword(password) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password);
@@ -317,12 +541,19 @@ app.post("/register", async (req, res) => {
       },
     });
 
+
+    await prisma.notificationPreference.create({
+  data: {
+    userId: user.id
+  }
+});
+
     // ✅ SEND RESPONSE IMMEDIATELY
     res.json({
       message:
         "Registration successful! Please check your email to verify your account.",
     });
-     console.log("📩 Sending verification email to:", email);
+     
     // 📩 TRY SENDING EMAIL (FAILURE WON'T AFFECT USER NOW)
     try {
       const link = `${process.env.FRONTEND_URL}/verify/${verifyToken}`;
@@ -361,7 +592,7 @@ app.post("/register", async (req, res) => {
     </div>
   `
 });
-console.log("✅ Verification email sent successfully");
+
       
       
     } catch (mailErr) {
@@ -382,6 +613,12 @@ app.post("/login", async (req, res) => {
   // ✅ Check user first
   if (!user) {
     return res.status(401).json({ message: "Invalid login" });
+  }
+
+  if (!user.active) {
+    return res.status(403).json({
+      message: "Account is deactivated. Contact admin."
+    });
   }
 
   // ✅ Email verification
@@ -441,133 +678,129 @@ app.post("/login", async (req, res) => {
 
 app.post("/forgot-password", async (req, res) => {
   try {
-    
-
     const { email } = req.body;
+
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email }
     });
 
+    // Always respond success (prevent email enumeration)
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.json({
+        message: "If this email exists, a reset link has been sent."
+      });
     }
 
-    // 🔑 Generate token
     const token = jwt.sign(
       { email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    // 💾 Save token to DB
     await prisma.user.update({
       where: { email },
       data: {
         resetToken: token,
-        resetExpiry: new Date(Date.now() + 3600000),
-      },
+        resetExpiry: new Date(Date.now() + 3600000)
+      }
     });
 
-    // 🔗 Generate link AFTER token exists
     const link = `${process.env.FRONTEND_URL}/reset/${token}`;
 
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset Request - TestTrack Pro",
+      html: `
+        <div style="font-family: Arial; padding:20px;">
+          <h2>Password Reset</h2>
 
-    // 📩 DEV MODE — PRINT LINK IN TERMINAL
-   await transporter.sendMail({
-  from: `"TestTrack Pro" <${process.env.EMAIL_USER}>`,
-  to: email,
-  subject: "Reset Your Password",
-  html: `
-    <h2>Reset Password</h2>
-    <p>Click below to reset:</p>
-    <a href="${link}" 
-       style="padding:10px 15px;background:#4f46e5;color:white;text-decoration:none;border-radius:5px;">
-       Reset Password
-    </a>
-  `
-});
+          <p>Hello,</p>
 
-res.json({ message: "Reset link sent to email" });
+          <p>We received a request to reset your password.</p>
+
+          <p>
+            <a href="${link}" 
+              style="display:inline-block;
+              padding:10px 20px;
+              background:#4f46e5;
+              color:white;
+              text-decoration:none;
+              border-radius:5px;">
+              Reset Password
+            </a>
+          </p>
+
+          <p>This link will expire in 1 hour.</p>
+
+          <hr />
+
+          <p style="font-size:12px;color:#777;">
+            If you did not request this, you can ignore this email.
+          </p>
+        </div>
+      `
+    });
+
+    res.json({
+      message: "If this email exists, a reset link has been sent."
+    });
 
   } catch (err) {
-    console.error("❌ FORGOT PASSWORD ERROR:", err);
-    res.status(500).json({ message: "Failed to generate reset link" });
+    console.error("FORGOT PASSWORD ERROR:", err);
+    res.status(500).json({ message: "Failed to process request" });
   }
 });
 
 
 
-app.post("/reset-password/:token", async (req, res) => {
+app.post("/change-password", async (req, res) => {
   try {
-    const { token } = req.params;
-    const { newPassword } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
 
-    if (!newPassword) {
-      return res.status(400).json({ message: "New password required" });
+    if (!token) {
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // 🔍 Find user by token
-    const user = await prisma.user.findFirst({
-      where: {
-        resetToken: token,
-        resetExpiry: {
-          gt: new Date(), // ⏰ Must not be expired
-        },
-      },
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    // 🔥 USE ID FROM TOKEN (NOT req.user.email)
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id }
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Reset link expired or invalid" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // 🔐 Strong password check
-    const isStrong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(
-      newPassword
-    );
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
 
-    if (!isStrong) {
-      return res.status(400).json({
-        message:
-          "Password must be 8+ chars, uppercase, lowercase, number & special char",
-      });
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password incorrect" });
     }
 
-    // 🔁 Password history check (last 5)
-    if (user.passwordHistory?.length) {
-      for (const oldHash of user.passwordHistory.slice(-5)) {
-        const reused = await bcrypt.compare(newPassword, oldHash);
-        if (reused) {
-          return res
-            .status(400)
-            .json({ message: "Cannot reuse last 5 passwords" });
-        }
-      }
-    }
-
-    // 🔒 Hash new password
     const hashed = await bcrypt.hash(newPassword, 10);
 
-    // 💾 Save & clear token
     await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashed,
-        resetToken: null,
-        resetExpiry: null,
-        passwordHistory: {
-          push: hashed,
-        },
-      },
+      where: { id: decoded.id },
+      data: { password: hashed }
     });
 
-    res.json({ message: "Password reset successful" });
-  } catch (err) {
-    console.error("RESET PASSWORD ERROR:", err);
-    res.status(500).json({ message: "Reset failed" });
+    res.json({ message: "Password changed successfully" });
+
+  } catch (error) {
+    console.error("CHANGE PASSWORD ERROR:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -1202,7 +1435,7 @@ app.post("/testcases/import/json", authenticate, async (req, res) => {
 });
 
 
-app.post("/testcases", authenticate, async (req, res) => {
+app.post("/testcases", authenticate,  async (req, res) => {
   try {
     if (req.user.role !== "tester") {
       return res.status(403).json({ message: "Only testers can create test cases" });
@@ -2241,11 +2474,20 @@ app.put("/templates/:id", authenticate, async (req, res) => {
 });
 
 app.get("/admin/testcases", authenticate, async (req, res) => {
+
   if (req.user.role !== "admin")
     return res.status(403).json({ message: "Admin only" });
 
+  const { projectId } = req.query;
+
   const testCases = await prisma.testCase.findMany({
-    orderBy: { createdAt: "desc" },
+    where: {
+      projectId: projectId,
+      isDeleted: false
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
   });
 
   res.json(testCases);
@@ -2284,9 +2526,24 @@ app.delete(
 );
 
 app.get("/admin/testcases/deleted", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { projectId } = req.query;
+
+  if (!projectId) {
+    return res.status(400).json({ message: "ProjectId required" });
+  }
+
   const deleted = await prisma.testCase.findMany({
-    where: { isDeleted: true },
-    orderBy: { updatedAt: "desc" }
+    where: {
+      projectId,
+      isDeleted: true
+    },
+    orderBy: {
+      updatedAt: "desc"
+    }
   });
 
   res.json(deleted);
@@ -2524,6 +2781,16 @@ if (!projectId) {
         }
       }
     });
+
+     for (const testerId of testerIds) {
+      await sendNotification({
+        userId: testerId,
+        type: "TEST_ASSIGNED",
+        title: `New Test Run Assigned`,
+        message: `You have been assigned to test run: ${run.name}`,
+        referenceId: run.id
+      });
+    }
 
     res.json(run);
 
@@ -2939,6 +3206,9 @@ app.get("/api/bugs/my/:testerId", async (req, res) => {
       reportedById: testerId,
       projectId
     },
+     include: {
+      assignedTo: true   // ⭐ MUST BE HERE
+    },
     orderBy: {
       createdAt: "desc"
     }
@@ -2966,71 +3236,16 @@ app.get("/api/bugs/export", async (req, res) => {
     csv += `${bug.bugId || ""},"${bug.title}","${bug.description}",${bug.severity},${bug.priority},${bug.status},${bug.testCaseId || ""},${bug.runId || ""},${bug.reportedById || ""},${bug.createdAt}\n`;
   });
 
+
+
+
+
   res.header("Content-Type", "text/csv");
   res.attachment("bug_reports.csv");
   res.send(csv);
 });
 
-app.put("/api/bugs/:id/status", async (req, res) => {
 
-  const bugId = req.params.id;
-  const { status } = req.body;
-
-  const token = req.headers.authorization?.split(" ")[1];
-  const payload = token
-    ? JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
-    : null;
-
-  const role = payload?.role;
-
-  const bug = await prisma.bug.findUnique({
-    where: { id: bugId }
-  });
-
-  if (!bug) return res.status(404).json({ message: "Bug not found" });
-
-  // 🔒 ROLE-BASED PERMISSIONS
-
-  const devActions = ["In Progress", "Fixed", "Won't Fix", "Duplicate"];
-  const testerActions = ["Verified", "Reopened", "Closed"];
-
-  if (role === "developer" && !devActions.includes(status)) {
-    return res.status(403).json({ message: "Not allowed" });
-  }
-
-  if (role === "tester" && !testerActions.includes(status)) {
-    return res.status(403).json({ message: "Not allowed" });
-  }
-
-  // ⭐ Additional resolution data (if provided)
-
-const { fixNotes, commitLink, resolutionNote } = req.body;
-
-const updateData = { status };
-
-// Record timestamps & resolution details
-
-if (status === "In Progress") {
-  updateData.startedAt = new Date();
-}
-
-if (status === "Fixed") {
-  updateData.fixNotes = fixNotes || null;
-  updateData.commitLink = commitLink || null;
-  updateData.fixedAt = new Date();
-}
-
-if (status === "Won't Fix") {
-  updateData.resolutionNote = resolutionNote || null;
-}
-
-const updatedBug = await prisma.bug.update({
-  where: { id: bugId },
-  data: updateData
-});
-
-  res.json(updatedBug);
-});
 
 app.get("/api/executions/history/:testCaseId", async (req, res) => {
 
@@ -3471,38 +3686,138 @@ app.get("/api/users/developers", async (req, res) => {
 });
 
 app.put("/api/bugs/:id/assign", async (req, res) => {
+  try {
+    const { developerId } = req.body;
 
-  const { developerId } = req.body;
+    // 1️⃣ Update bug
+    const bug = await prisma.bug.update({
+      where: { id: req.params.id },
+      data: { assignedToId: developerId },
+      include: { assignedTo: true }
+    });
 
-  const bug = await prisma.bug.update({
-    where: { id: req.params.id },
-    data: { assignedToId: developerId }
-  });
+    // 2️⃣ Send notification to assigned developer
+    await sendNotification({
+      userId: developerId,
+      type: "BUG_ASSIGNED",
+      title: `New bug ${bug.bugId || bug.id} assigned to you`,
+      referenceId: bug.id,
+      message: `Bug "${bug.title}" has been assigned to you.`,
+      link: `/bugs/${bug.id}`,
+      emailTemplate: `
+        <h2>New Bug Assigned</h2>
+        <p>You have been assigned bug <strong>${bug.bugId || bug.id}</strong></p>
+        <p>${bug.title}</p>
+      `
+      
+    });
 
-  res.json(bug);
+    res.json(bug);
 
+  } catch (err) {
+    console.error("ASSIGN BUG ERROR:", err);
+    res.status(500).json({ message: "Failed to assign bug" });
+  }
 });
 
 
 app.put("/api/bugs/:id/status", async (req, res) => {
   try {
+    const bugId = req.params.id;
+    const { status, fixNotes, commitLink,branchName, resolutionNote } = req.body;
 
-    const { id } = req.params;
-    const { status } = req.body;
+    const token = req.headers.authorization?.split(" ")[1];
+    const payload = token
+      ? JSON.parse(Buffer.from(token.split(".")[1], "base64").toString())
+      : null;
 
-    const updated = await prisma.bug.update({
-      where: { id },
-      data: { status }
+    const role = payload?.role;
+
+    const bug = await prisma.bug.findUnique({
+      where: { id: bugId },
+      include: {
+        assignedTo: true,
+        reportedBy: true
+      }
     });
 
-    res.json(updated);
+    if (!bug) return res.status(404).json({ message: "Bug not found" });
+
+    // ROLE PERMISSIONS
+    const devActions = ["In Progress", "Fixed", "Won't Fix", "Duplicate"];
+    const testerActions = ["Verified", "Reopened", "Closed"];
+
+    if (role === "developer" && !devActions.includes(status)) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    if (role === "tester" && !testerActions.includes(status)) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    const updateData = { status };
+
+    if (status === "In Progress") {
+      updateData.startedAt = new Date();
+    }
+
+    if (status === "Fixed") {
+      updateData.fixNotes = fixNotes || null;
+      updateData.commitLink = commitLink || null;
+      updateData.branchName = branchName || null;
+      updateData.fixedAt = new Date();
+    }
+
+    if (status === "Won't Fix") {
+      updateData.resolutionNote = resolutionNote || null;
+    }
+
+    const updatedBug = await prisma.bug.update({
+      where: { id: bugId },
+      data: updateData
+    });
+
+    // 🔔 NOTIFICATIONS SECTION
+
+    const normalizedStatus = status.toLowerCase();
+
+    if (normalizedStatus === "fixed" && bug.reportedById) {
+      await sendNotification({
+        userId: bug.reportedById,
+        type: "RETEST",
+        title: `Bug ${bug.bugId || bug.id} ready for verification`,
+        message: `Developer marked this bug as Fixed.`,
+        referenceId: bug.id
+      });
+    }
+
+    if (normalizedStatus === "won't fix" && bug.reportedById) {
+      await sendNotification({
+        userId: bug.reportedById,
+        type: "STATUS_CHANGED",
+        title: `Bug ${bug.bugId || bug.id} marked Won't Fix`,
+        message: `Developer marked this bug as Won't Fix.`,
+        referenceId: bug.id
+      });
+    }
+
+    if (normalizedStatus === "reopened" && bug.assignedToId) {
+      await sendNotification({
+        userId: bug.assignedToId,
+        type: "STATUS_CHANGED",
+        title: `Bug ${bug.bugId || bug.id} reopened`,
+        message: `Tester reopened this bug.`,
+        referenceId: bug.id
+      });
+    }
+
+    res.json(updatedBug);
 
   } catch (err) {
-    console.error("UPDATE BUG STATUS ERROR:", err);
+    console.error("STATUS UPDATE ERROR:", err);
     res.status(500).json({ message: "Failed to update status" });
   }
 });
-
 app.get("/api/bugs/assigned/:developerId", async (req, res) => {
   try {
 
@@ -3531,32 +3846,94 @@ app.get("/api/bugs/assigned/:developerId", async (req, res) => {
 
 app.post("/api/bugs/:bugId/comments", async (req, res) => {
 
-  const { bugId } = req.params;
-  const { content, parentId } = req.body;
+  try {
 
-  const token = req.headers.authorization?.split(" ")[1];
-  const payload = JSON.parse(
-    Buffer.from(token.split(".")[1], "base64").toString()
-  );
+    const { bugId } = req.params;
+    const { content, parentId } = req.body;
 
-  const authorId = payload.id;
+    const token = req.headers.authorization?.split(" ")[1];
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
 
-  // ⭐ Extract @mentions (simple parser)
-  const mentions = (content.match(/@[\w.]+/g) || [])
-    .map(m => m.substring(1)); // remove "@"
+    const authorId = payload.id;
 
-  const comment = await prisma.bugComment.create({
-    data: {
-      content,
-      bugId,
-      authorId,
-      parentId,
-      mentions
-    },
-    include: { author: true }
-  });
+    // ⭐ Extract @mentions
+    const mentionUsernames = (content.match(/@[\w.]+/g) || [])
+      .map(m => m.substring(1));
 
-  res.json(comment);
+    // ⭐ Create comment
+    const comment = await prisma.bugComment.create({
+      data: {
+        content,
+        bugId,
+        authorId,
+        parentId,
+        mentions: mentionUsernames
+      },
+      include: { author: true }
+    });
+
+    // ============================================
+    // 🔔 SEND NOTIFICATIONS
+    // ============================================
+
+    const bug = await prisma.bug.findUnique({
+      where: { id: bugId },
+      include: {
+        assignedTo: true,
+        reportedBy: true
+      }
+    });
+
+    if (!bug) return res.json(comment);
+
+    const recipients = new Set();
+
+    // ✅ Assigned developer
+    if (bug.assignedToId) {
+      recipients.add(bug.assignedToId);
+    }
+
+    // ✅ Reporter
+    if (bug.reportedById) {
+      recipients.add(bug.reportedById);
+    }
+
+    // ✅ Mentioned users
+    if (mentionUsernames.length > 0) {
+      const mentionedUsers = await prisma.user.findMany({
+        where: {
+          name: { in: mentionUsernames }
+        }
+      });
+
+      mentionedUsers.forEach(u => {
+        recipients.add(u.id);
+      });
+    }
+
+    // ❌ Remove author (no self notification)
+    recipients.delete(authorId);
+
+    // 🔔 Send notification to each
+    for (const userId of recipients) {
+      await sendNotification({
+        userId,
+        type: "COMMENT",
+        title: `New comment on Bug ${bug.bugId || bug.id}`,
+        message: `${comment.author.name} commented on this bug`,
+        referenceId: bug.id
+      });
+    }
+
+    res.json(comment);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to post comment" });
+  }
+
 });
 
 app.get("/api/bugs/:bugId/comments", async (req, res) => {
@@ -3873,7 +4250,45 @@ app.put("/api/admin/users/:id/deactivate", async (req, res) => {
   res.json({ message: "User deactivated" });
 });
 
+app.put("/api/admin/users/:id/activate", async (req, res) => {
 
+  const id = req.params.id;
+
+  try {
+
+    await prisma.user.update({
+      where: { id },
+      data: { active: true }
+    });
+
+    // ⭐ audit log
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+
+      const token = authHeader.split(" ")[1];
+
+      const payload = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64").toString()
+      );
+
+      await logAction(
+        payload.id,
+        "Activate User",
+        `User ID: ${id}`,
+        "User"
+      );
+
+    }
+
+    res.json({ message: "User activated successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Activation failed" });
+  }
+
+});
 
 
 
@@ -4161,6 +4576,16 @@ app.delete("/api/admin/roles/:id", authenticate, async (req, res) => {
 
     const id = req.params.id;
 
+    const usersUsingRole = await prisma.user.findMany({
+  where: { roleId: id }
+});
+
+if (usersUsingRole.length > 0) {
+  return res.status(400).json({
+    message: "Cannot delete role assigned to users"
+  });
+}
+
     // 🔥 FIRST delete related permissions
     await prisma.permission.deleteMany({
       where: { roleId: id }
@@ -4402,7 +4827,14 @@ app.get("/api/reports/execution/:id/export/pdf", async (req, res) => {
 app.get("/api/reports/execution-by-run", async (req, res) => {
   try {
 
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
+
     const runs = await prisma.testRun.findMany({
+       where: { projectId },
       include: {
         TestExecution: {
           include: {
@@ -4554,7 +4986,14 @@ app.get("/api/reports/execution-by-run", async (req, res) => {
 app.get("/api/reports/bugs", async (req, res) => {
   try {
 
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
+
     const bugs = await prisma.bug.findMany({
+       where: { projectId },
       include: {
         assignedTo: true
       }
@@ -4777,8 +5216,14 @@ app.get("/api/reports/bugs/export/pdf", async (req, res) => {
 
 app.get("/api/reports/developer-performance", async (req, res) => {
   try {
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
 
     const bugs = await prisma.bug.findMany({
+      where: { projectId },
       include: { assignedTo: true }
     });
 
@@ -4949,16 +5394,34 @@ app.get("/api/reports/developer-performance/export/pdf", async (req, res) => {
 
 app.get("/api/reports/tester-performance", async (req, res) => {
   try {
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
 
     const executions = await prisma.testExecution.findMany({
-      include: { executedBy: true }
-    });
-
+  where: {
+    testRun: {
+      projectId: projectId
+    }
+  },
+  include: {
+    executedBy: true
+  }
+});
     const bugs = await prisma.bug.findMany({
+       where: { projectId },
       include: { reportedBy: true }
     });
 
-    const assignments = await prisma.testRunAssignment.findMany();
+    const assignments = await prisma.testRunAssignment.findMany({
+  where: {
+    testRun: {
+      projectId: projectId
+    }
+  }
+});
 
     const testerStats = {};
 
@@ -5074,12 +5537,6 @@ app.get("/api/widgets/:userId", async (req, res) => {
   res.json(widgets);
 });
 
-
-
-// ==========================================================
-// SAVE WIDGET ORDER
-// ==========================================================
-
 app.post("/api/widgets/reorder", async (req, res) => {
 
   const { widgets } = req.body;
@@ -5114,12 +5571,6 @@ app.post("/api/widgets", async (req, res) => {
   res.json(widget);
 });
 
-
-
-// ==========================================================
-// CREATE DEFAULT WIDGETS FOR USER ROLE
-// ==========================================================
-
 app.post("/api/widgets/default", async (req, res) => {
 
   const { userId, role } = req.body;
@@ -5137,35 +5588,37 @@ app.post("/api/widgets/default", async (req, res) => {
   // ================= TESTER =================
 
   if (role === "tester") {
-    widgets = [
-      { type: "list", title: "My Pending Tests" },
-      { type: "list", title: "Recent Failures" },
-      { type: "chart", title: "Execution Trend" },
-      { type: "counter", title: "Bug Detection Rate" }
-    ];
-  }
+  widgets = [
+    { type: "list", title: "My Pending Tests" },
+    { type: "list", title: "Recent Failures" },
+    { type: "list", title: "Unread Notifications" },
+    { type: "chart", title: "Execution Trend" },
+    { type: "counter", title: "Bug Detection Rate" },
+    { type: "table", title: "Recent Executions" }
+  ];
+}
 
-  // ================= DEVELOPER =================
+if (role === "developer") {
+  widgets = [
+    { type: "list", title: "Assigned Bugs" },
+    { type: "list", title: "Unread Notifications" },
+    { type: "chart", title: "Bug Status Chart" },
+    { type: "counter", title: "Fix Rate" },
+    { type: "counter", title: "Reopen Rate" },
+    { type: "table", title: "Recent Executions" }
+  ];
+}
 
-  if (role === "developer") {
-    widgets = [
-      { type: "list", title: "Assigned Bugs" },
-      { type: "counter", title: "Fix Rate" },
-      { type: "counter", title: "Reopen Rate" },
-      { type: "counter", title: "Resolution Time" }
-    ];
-  }
-
-  // ================= ADMIN =================
-
-  if (role === "admin") {
-    widgets = [
-      { type: "counter", title: "Overall Execution" },
-      { type: "chart", title: "Bug Status" },
-      { type: "chart", title: "Team Performance" },
-      { type: "list", title: "Active Test Runs" }
-    ];
-  }
+if (role === "admin") {
+  widgets = [
+    { type: "counter", title: "Overall Execution" },
+    { type: "counter", title: "Unread Notifications" },
+    { type: "chart", title: "Execution Trend" },
+    { type: "chart", title: "Bug Status Chart" },
+    { type: "list", title: "Active Test Runs" },
+    { type: "table", title: "Recent Executions" }
+  ];
+}
 
   const created = await prisma.dashboardWidget.createMany({
     data: widgets.map((w, i) => ({
@@ -5178,26 +5631,6 @@ app.post("/api/widgets/default", async (req, res) => {
 
   res.json(created);
 });
-
-// ==========================================================
-// CREATE DEFAULT WIDGETS (RUN ONCE PER USER)
-// ==========================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 app.get("/api/widgets/data/counters/:userId", async (req, res) => {
 
@@ -5271,6 +5704,19 @@ app.get("/api/widgets/data/counters/:userId", async (req, res) => {
     });
   }
 
+  const unread = await prisma.notification.count({
+  where: {
+    userId,
+    isRead: false
+  }
+});
+
+return res.json({
+  "Bug Detection Rate": bugs,
+  "Overall Execution": executions,
+  "Unread Notifications": unread
+});
+
   res.json({});
 });
 
@@ -5343,6 +5789,15 @@ app.get("/api/widgets/data/lists/:userId", async (req, res) => {
       "Active Test Runs": runs.map(r => r.name)
     });
   }
+
+  const notifications = await prisma.notification.findMany({
+  where: { userId, isRead: false },
+  orderBy: { createdAt: "desc" },
+  take: 5
+});
+
+lists["Unread Notifications"] =
+  notifications.map(n => n.title);
 
   res.json({});
 });
@@ -5437,8 +5892,35 @@ app.delete("/api/widgets/:id", async (req, res) => {
 
 });
 
+app.get("/api/widgets/data/notifications/:userId", async (req, res) => {
 
+  const { userId } = req.params;
 
+  const notifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: 5
+  });
+
+  res.json(
+    notifications.map(n => ({
+      title: n.title,
+      message: n.message,
+      read: n.isRead
+    }))
+  );
+});
+
+app.put("/api/widgets/resize/:id", async (req, res) => {
+  const { width } = req.body;
+
+  const updated = await prisma.dashboardWidget.update({
+    where: { id: req.params.id },
+    data: { width }
+  });
+
+  res.json(updated);
+});
 
 app.get("/api/admin/projects", async (req, res) => {
 
@@ -5938,7 +6420,7 @@ app.post("/api/admin/backups/restore-file/:name", authenticate, (req, res) => {
 
 
 
-const cron = require("node-cron");
+
 
 cron.schedule("0 2 * * *", () => {
   console.log("Running auto backup...");
@@ -6634,7 +7116,408 @@ app.get("/api/quick-filter", authenticate, async (req, res) => {
 });
 
 
+
+app.get("/api/notifications", authenticate,async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const notifications = await prisma.notification.findMany({
+      where: { userId: decoded.id },
+      orderBy: { createdAt: "desc" },
+      take: 50
+    });
+
+    res.json(notifications);
+  } catch (err) {
+    console.error("FETCH NOTIFICATIONS ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch notifications" });
+  }
+});
+
+app.get("/api/notifications/unread-count", authenticate,async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const count = await prisma.notification.count({
+      where: {
+        userId: decoded.id,
+        isRead: false
+      }
+    });
+
+    res.json({ count });
+  } catch (err) {
+    console.error("UNREAD COUNT ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch unread count" });
+  }
+});
+
+app.patch("/api/notifications/:id/read",authenticate, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const notification = await prisma.notification.update({
+      where: { id: req.params.id },
+      data: { isRead: true }
+    });
+
+    res.json(notification);
+  } catch (err) {
+    console.error("MARK READ ERROR:", err);
+    res.status(500).json({ message: "Failed to mark as read" });
+  }
+});
+
+app.patch("/api/notifications/mark-all-read",authenticate, async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    await prisma.notification.updateMany({
+      where: {
+        userId: decoded.id,
+        isRead: false
+      },
+      data: { isRead: true }
+    });
+
+    res.json({ message: "All notifications marked as read" });
+  } catch (err) {
+    console.error("MARK ALL READ ERROR:", err);
+    res.status(500).json({ message: "Failed to update notifications" });
+  }
+});
+
+app.get("/api/notifications/preferences", async (req, res) => {
+
+  const token = req.headers.authorization?.split(" ")[1];
+  const payload = JSON.parse(
+    Buffer.from(token.split(".")[1], "base64").toString()
+  );
+
+  const userId = payload.id;
+
+  let pref = await prisma.notificationPreference.findUnique({
+    where: { userId }
+  });
+
+  if (!pref) {
+    pref = await prisma.notificationPreference.create({
+      data: { userId }
+    });
+  }
+
+  res.json(pref);
+});
+
+app.put("/api/notifications/preferences", async (req, res) => {
+
+  const token = req.headers.authorization?.split(" ")[1];
+  const payload = JSON.parse(
+    Buffer.from(token.split(".")[1], "base64").toString()
+  );
+
+  const userId = payload.id;
+
+  const updated = await prisma.notificationPreference.update({
+    where: { userId },
+    data: req.body
+  });
+
+  res.json(updated);
+});
+
+// DELETE single notification
+app.delete("/api/notifications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const token = req.headers.authorization?.split(" ")[1];
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    const userId = payload.id;
+
+    const notification = await prisma.notification.findUnique({
+      where: { id }
+    });
+
+    if (!notification) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    // ✅ Ensure user can only delete their own notifications
+    if (notification.userId !== userId) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    await prisma.notification.delete({
+      where: { id }
+    });
+
+    res.json({ message: "Deleted successfully" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/api/reports/schedule", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    // ✅ Only admin allowed
+    if (payload.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { type, frequency, dayOfWeek, time } = req.body;
+
+    if (!type || !frequency || !time) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const schedule = await prisma.reportSchedule.create({
+      data: {
+        userId: payload.id,
+        type,
+        frequency,
+        dayOfWeek: frequency === "WEEKLY" ? dayOfWeek : null,
+        time
+      }
+    });
+
+    res.json(schedule);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to create schedule" });
+  }
+});
+
+app.get("/api/reports/schedule", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    if (payload.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const schedules = await prisma.reportSchedule.findMany({
+      where: { userId: payload.id }, // ✅ only own schedules
+      include: {
+  ReportScheduleHistory: {
+          orderBy: { executedAt: "desc" },
+          take: 5
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    res.json(schedules);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch schedules" });
+  }
+});
+
+app.delete("/api/reports/schedule/:id", async (req, res) => {
+
+  const scheduleId = req.params.id;
+
+  try {
+
+    await prisma.reportScheduleHistory.deleteMany({
+      where: { scheduleId }
+    });
+
+    await prisma.reportSchedule.delete({
+      where: { id: scheduleId }
+    });
+
+    res.json({ message: "Deleted successfully" });
+
+  } catch (error) {
+
+    console.error(error);
+    res.status(500).json({ message: "Delete failed" });
+
+  }
+
+});
+
+app.put("/api/reports/schedule/:id", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    const schedule = await prisma.reportSchedule.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!schedule || schedule.userId !== payload.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const updated = await prisma.reportSchedule.update({
+      where: { id: req.params.id },
+      data: req.body
+    });
+
+    res.json(updated);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
+
+
+app.post("/api/reports/run/:id", async (req, res) => {
+
+  try {
+
+    const schedule = await prisma.reportSchedule.findUnique({
+      where: { id: req.params.id },
+      include: { user: true }
+    });
+
+    if (!schedule) {
+      return res.status(404).json({ message: "Schedule not found" });
+    }
+
+    if (!schedule.user) {
+      return res.status(400).json({ message: "User not found for schedule" });
+    }
+
+    console.log("Running report for:", schedule.user.email);
+
+    // 🔹 Generate report data
+    const reportData = await generateTestExecutionData(schedule.userId);
+
+    // 🔹 Generate PDF
+    const pdfPath = await generateExecutionPdf(reportData);
+
+    // 🔹 Email body
+    const html = `
+      <h2>Test Execution Report</h2>
+      <p>Total Executed: ${reportData.total}</p>
+      <p>Passed: ${reportData.passed}</p>
+      <p>Failed: ${reportData.failed}</p>
+      <p>Pass Rate: ${reportData.passRate}%</p>
+      <p>See attached PDF for full report.</p>
+    `;
+
+    // 🔹 Send email with attachment
+    await sendEmail(
+      schedule.user.email,
+      "Manual Test Report",
+      html,
+      pdfPath
+    );
+
+    await prisma.reportScheduleHistory.create({
+      data: {
+        scheduleId: schedule.id,
+        status: "SUCCESS",
+        message: "Manual report executed with PDF"
+      }
+    });
+
+    res.json({ message: "Report executed successfully" });
+
+  } catch (error) {
+
+    console.error("Run report error:", error);
+
+    await prisma.reportScheduleHistory.create({
+      data: {
+        scheduleId: req.params.id,
+        status: "FAILED",
+        message: error.message
+      }
+    });
+
+    res.status(500).json({
+      message: "Report execution failed",
+      error: error.message
+    });
+
+  }
+
+});
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const http = require("http");
+const { Server } = require("socket.io");
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "PATCH"]
+  }
+});
+
+// Store user socket mapping
+const userSockets = new Map();
+
+io.on("connection", (socket) => {
+
+  
+
+  socket.on("register", (userId) => {
+    userSockets.set(userId, socket.id);
+  });
+
+  socket.on("disconnect", () => {
+    for (const [userId, socketId] of userSockets.entries()) {
+      if (socketId === socket.id) {
+        userSockets.delete(userId);
+      }
+    }
+  });
+
+});
+
+// Make io globally accessible
+app.set("io", io);
+app.set("userSockets", userSockets);
+
+server.listen(5000, () => {
+  console.log("Server running on port 5000");
 });
