@@ -7,31 +7,233 @@ const jwt = require("jsonwebtoken");
 const passport = require("./Passport");
 const upload = require("./upload");
 const path = require("path");
-
+const rateLimit = require("express-rate-limit");
 const multer = require("multer");
 const csv = require("csv-parser");
 const fs = require("fs");
-
+const cron = require("node-cron");
 const xlsx = require("xlsx");
+
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./docs/swagger");
 
 const { execFile } = require("child_process");
 const logAction = require("./utils/logAction");
 const getUserIdFromToken = require("./utils/getUserFromToken");
 const { sendNotification } = require("./services/notificationService");
 const notificationRoutes = require("./Notification/notificationRoutes");
+const { generateExecutionPdf } = require("./services/reportPdfService");
+const requirePermission = require("./middleware/requirePermission");
+const apiKeyRoutes = require("./routes/apiKeys");
 // or your existing path
+const githubWebhook = require("./routes/githubWebhook");
+
 
 const app = express();
 app.use(passport.initialize());
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+app.use(express.json());
 
+app.use("/integrations", githubWebhook);
+app.use("/api/keys", apiKeyRoutes);
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 
+
+
 app.use("/api/notifications", notificationRoutes);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // limit each IP to 100 requests per minute
+  message: {
+    error: "Too many requests, please try again later."
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+app.use("/api", apiLimiter);
+
+cron.schedule("* * * * *", async () => {
+
+  const now = new Date();
+  const currentDay = now.getDay();
+  const currentTime = now.toTimeString().slice(0,5);
+
+  const schedules = await prisma.reportSchedule.findMany({
+    where: { isActive: true },
+    include: { user: true }
+  });
+
+  for (const sched of schedules) {
+
+    if (
+      sched.frequency === "WEEKLY" &&
+      sched.dayOfWeek === currentDay &&
+      sched.time === currentTime
+    ) {
+
+      try {
+
+        const reportData = await generateTestExecutionData(sched.userId);
+
+        const pdfPath = await generateExecutionPdf(reportData);
+
+        await sendEmail(
+          sched.user.email,
+          "Weekly Test Report",
+          "<h3>Your report is attached</h3>",
+          pdfPath
+        );
+
+        await prisma.reportScheduleHistory.create({
+          data: {
+            scheduleId: sched.id,
+            status: "SUCCESS",
+            message: "Report sent with PDF"
+          }
+        });
+
+      } catch (error) {
+
+        await prisma.reportScheduleHistory.create({
+          data: {
+            scheduleId: sched.id,
+            status: "FAILED",
+            message: error.message
+          }
+        });
+
+      }
+
+    }
+
+  }
+
+});
 
 
+async function generateTestExecutionData(userId) {
+
+  const executions = await prisma.testExecution.findMany({
+    where: {
+      executedById: userId
+    },
+    include: {
+      testRun: true,
+      executedBy: true,
+      steps: true
+    }
+  });
+
+  const total = executions.length;
+
+  let passed = 0;
+  let failed = 0;
+  let inProgress = 0;
+
+  executions.forEach(exec => {
+    if (exec.status === "Passed") passed++;
+    else if (exec.status === "Failed") failed++;
+    else inProgress++;
+  });
+
+  const passRate =
+    total > 0 ? ((passed / total) * 100).toFixed(1) : 0;
+
+  /* 🔹 STEP BREAKDOWN */
+
+  let stepPass = 0;
+  let stepFail = 0;
+  let stepBlocked = 0;
+  let stepSkipped = 0;
+
+  executions.forEach(exec => {
+
+    exec.steps.forEach(step => {
+
+      if (step.status === "Pass") stepPass++;
+      else if (step.status === "Fail") stepFail++;
+      else if (step.status === "Blocked") stepBlocked++;
+      else if (step.status === "Skipped") stepSkipped++;
+
+    });
+
+  });
+
+  /* 🔹 EXECUTION BY TESTER */
+
+  const testerStats = {};
+
+  executions.forEach(exec => {
+
+    const name = exec.executedBy?.name || "Unknown";
+
+    if (!testerStats[name]) {
+      testerStats[name] = 0;
+    }
+
+    testerStats[name]++;
+
+  });
+
+  /* 🔹 EXECUTION BY RUN */
+
+  const runStats = {};
+
+  executions.forEach(exec => {
+
+    const run = exec.testRun?.name || "Standalone";
+
+    if (!runStats[run]) {
+      runStats[run] = 0;
+    }
+
+    runStats[run]++;
+
+  });
+
+  return {
+    total,
+    passed,
+    failed,
+    inProgress,
+    passRate,
+
+    stepPass,
+    stepFail,
+    stepBlocked,
+    stepSkipped,
+
+    testerStats,
+    runStats,
+
+    executions
+  };
+}
+
+async function generateTestExecutionReport(userId) {
+
+  const executions = await prisma.testExecution.findMany({
+    where: { executedById: userId }
+  });
+
+  const total = executions.length;
+  const passed = executions.filter(e => e.status === "Passed").length;
+  const failed = executions.filter(e => e.status === "Failed").length;
+
+  const passRate = ((passed / total) * 100).toFixed(1);
+
+  return `
+    <h2>Weekly Test Execution Summary</h2>
+    <p>Total Executed: ${total}</p>
+    <p>Passed: ${passed}</p>
+    <p>Failed: ${failed}</p>
+    <p>Pass Rate: ${passRate}%</p>
+  `;
+}
 
 async function getDeveloperReportData() {
 
@@ -165,7 +367,28 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+async function sendEmail(to, subject, html, attachmentPath = null) {
 
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  };
+
+  // Attach PDF if provided
+  if (attachmentPath) {
+    mailOptions.attachments = [
+      {
+        filename: "report.pdf",
+        path: attachmentPath
+      }
+    ];
+  }
+
+  await transporter.sendMail(mailOptions);
+
+}
 
 function isStrongPassword(password) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/.test(password);
@@ -390,6 +613,12 @@ app.post("/login", async (req, res) => {
   // ✅ Check user first
   if (!user) {
     return res.status(401).json({ message: "Invalid login" });
+  }
+
+  if (!user.active) {
+    return res.status(403).json({
+      message: "Account is deactivated. Contact admin."
+    });
   }
 
   // ✅ Email verification
@@ -1206,7 +1435,7 @@ app.post("/testcases/import/json", authenticate, async (req, res) => {
 });
 
 
-app.post("/testcases", authenticate, async (req, res) => {
+app.post("/testcases", authenticate,  async (req, res) => {
   try {
     if (req.user.role !== "tester") {
       return res.status(403).json({ message: "Only testers can create test cases" });
@@ -2245,11 +2474,20 @@ app.put("/templates/:id", authenticate, async (req, res) => {
 });
 
 app.get("/admin/testcases", authenticate, async (req, res) => {
+
   if (req.user.role !== "admin")
     return res.status(403).json({ message: "Admin only" });
 
+  const { projectId } = req.query;
+
   const testCases = await prisma.testCase.findMany({
-    orderBy: { createdAt: "desc" },
+    where: {
+      projectId: projectId,
+      isDeleted: false
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
   });
 
   res.json(testCases);
@@ -2288,9 +2526,24 @@ app.delete(
 );
 
 app.get("/admin/testcases/deleted", authenticate, async (req, res) => {
+
+  if (req.user.role !== "admin")
+    return res.status(403).json({ message: "Admin only" });
+
+  const { projectId } = req.query;
+
+  if (!projectId) {
+    return res.status(400).json({ message: "ProjectId required" });
+  }
+
   const deleted = await prisma.testCase.findMany({
-    where: { isDeleted: true },
-    orderBy: { updatedAt: "desc" }
+    where: {
+      projectId,
+      isDeleted: true
+    },
+    orderBy: {
+      updatedAt: "desc"
+    }
   });
 
   res.json(deleted);
@@ -3996,7 +4249,45 @@ app.put("/api/admin/users/:id/deactivate", async (req, res) => {
   res.json({ message: "User deactivated" });
 });
 
+app.put("/api/admin/users/:id/activate", async (req, res) => {
 
+  const id = req.params.id;
+
+  try {
+
+    await prisma.user.update({
+      where: { id },
+      data: { active: true }
+    });
+
+    // ⭐ audit log
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+
+      const token = authHeader.split(" ")[1];
+
+      const payload = JSON.parse(
+        Buffer.from(token.split(".")[1], "base64").toString()
+      );
+
+      await logAction(
+        payload.id,
+        "Activate User",
+        `User ID: ${id}`,
+        "User"
+      );
+
+    }
+
+    res.json({ message: "User activated successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Activation failed" });
+  }
+
+});
 
 
 
@@ -4284,6 +4575,16 @@ app.delete("/api/admin/roles/:id", authenticate, async (req, res) => {
 
     const id = req.params.id;
 
+    const usersUsingRole = await prisma.user.findMany({
+  where: { roleId: id }
+});
+
+if (usersUsingRole.length > 0) {
+  return res.status(400).json({
+    message: "Cannot delete role assigned to users"
+  });
+}
+
     // 🔥 FIRST delete related permissions
     await prisma.permission.deleteMany({
       where: { roleId: id }
@@ -4525,7 +4826,14 @@ app.get("/api/reports/execution/:id/export/pdf", async (req, res) => {
 app.get("/api/reports/execution-by-run", async (req, res) => {
   try {
 
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
+
     const runs = await prisma.testRun.findMany({
+       where: { projectId },
       include: {
         TestExecution: {
           include: {
@@ -4677,7 +4985,14 @@ app.get("/api/reports/execution-by-run", async (req, res) => {
 app.get("/api/reports/bugs", async (req, res) => {
   try {
 
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
+
     const bugs = await prisma.bug.findMany({
+       where: { projectId },
       include: {
         assignedTo: true
       }
@@ -4900,8 +5215,14 @@ app.get("/api/reports/bugs/export/pdf", async (req, res) => {
 
 app.get("/api/reports/developer-performance", async (req, res) => {
   try {
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
 
     const bugs = await prisma.bug.findMany({
+      where: { projectId },
       include: { assignedTo: true }
     });
 
@@ -5072,16 +5393,34 @@ app.get("/api/reports/developer-performance/export/pdf", async (req, res) => {
 
 app.get("/api/reports/tester-performance", async (req, res) => {
   try {
+    const { projectId } = req.query;
+
+if (!projectId) {
+  return res.status(400).json({ message: "ProjectId required" });
+}
 
     const executions = await prisma.testExecution.findMany({
-      include: { executedBy: true }
-    });
-
+  where: {
+    testRun: {
+      projectId: projectId
+    }
+  },
+  include: {
+    executedBy: true
+  }
+});
     const bugs = await prisma.bug.findMany({
+       where: { projectId },
       include: { reportedBy: true }
     });
 
-    const assignments = await prisma.testRunAssignment.findMany();
+    const assignments = await prisma.testRunAssignment.findMany({
+  where: {
+    testRun: {
+      projectId: projectId
+    }
+  }
+});
 
     const testerStats = {};
 
@@ -5197,12 +5536,6 @@ app.get("/api/widgets/:userId", async (req, res) => {
   res.json(widgets);
 });
 
-
-
-// ==========================================================
-// SAVE WIDGET ORDER
-// ==========================================================
-
 app.post("/api/widgets/reorder", async (req, res) => {
 
   const { widgets } = req.body;
@@ -5237,12 +5570,6 @@ app.post("/api/widgets", async (req, res) => {
   res.json(widget);
 });
 
-
-
-// ==========================================================
-// CREATE DEFAULT WIDGETS FOR USER ROLE
-// ==========================================================
-
 app.post("/api/widgets/default", async (req, res) => {
 
   const { userId, role } = req.body;
@@ -5260,35 +5587,37 @@ app.post("/api/widgets/default", async (req, res) => {
   // ================= TESTER =================
 
   if (role === "tester") {
-    widgets = [
-      { type: "list", title: "My Pending Tests" },
-      { type: "list", title: "Recent Failures" },
-      { type: "chart", title: "Execution Trend" },
-      { type: "counter", title: "Bug Detection Rate" }
-    ];
-  }
+  widgets = [
+    { type: "list", title: "My Pending Tests" },
+    { type: "list", title: "Recent Failures" },
+    { type: "list", title: "Unread Notifications" },
+    { type: "chart", title: "Execution Trend" },
+    { type: "counter", title: "Bug Detection Rate" },
+    { type: "table", title: "Recent Executions" }
+  ];
+}
 
-  // ================= DEVELOPER =================
+if (role === "developer") {
+  widgets = [
+    { type: "list", title: "Assigned Bugs" },
+    { type: "list", title: "Unread Notifications" },
+    { type: "chart", title: "Bug Status Chart" },
+    { type: "counter", title: "Fix Rate" },
+    { type: "counter", title: "Reopen Rate" },
+    { type: "table", title: "Recent Executions" }
+  ];
+}
 
-  if (role === "developer") {
-    widgets = [
-      { type: "list", title: "Assigned Bugs" },
-      { type: "counter", title: "Fix Rate" },
-      { type: "counter", title: "Reopen Rate" },
-      { type: "counter", title: "Resolution Time" }
-    ];
-  }
-
-  // ================= ADMIN =================
-
-  if (role === "admin") {
-    widgets = [
-      { type: "counter", title: "Overall Execution" },
-      { type: "chart", title: "Bug Status" },
-      { type: "chart", title: "Team Performance" },
-      { type: "list", title: "Active Test Runs" }
-    ];
-  }
+if (role === "admin") {
+  widgets = [
+    { type: "counter", title: "Overall Execution" },
+    { type: "counter", title: "Unread Notifications" },
+    { type: "chart", title: "Execution Trend" },
+    { type: "chart", title: "Bug Status Chart" },
+    { type: "list", title: "Active Test Runs" },
+    { type: "table", title: "Recent Executions" }
+  ];
+}
 
   const created = await prisma.dashboardWidget.createMany({
     data: widgets.map((w, i) => ({
@@ -5301,26 +5630,6 @@ app.post("/api/widgets/default", async (req, res) => {
 
   res.json(created);
 });
-
-// ==========================================================
-// CREATE DEFAULT WIDGETS (RUN ONCE PER USER)
-// ==========================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 app.get("/api/widgets/data/counters/:userId", async (req, res) => {
 
@@ -5394,6 +5703,19 @@ app.get("/api/widgets/data/counters/:userId", async (req, res) => {
     });
   }
 
+  const unread = await prisma.notification.count({
+  where: {
+    userId,
+    isRead: false
+  }
+});
+
+return res.json({
+  "Bug Detection Rate": bugs,
+  "Overall Execution": executions,
+  "Unread Notifications": unread
+});
+
   res.json({});
 });
 
@@ -5466,6 +5788,15 @@ app.get("/api/widgets/data/lists/:userId", async (req, res) => {
       "Active Test Runs": runs.map(r => r.name)
     });
   }
+
+  const notifications = await prisma.notification.findMany({
+  where: { userId, isRead: false },
+  orderBy: { createdAt: "desc" },
+  take: 5
+});
+
+lists["Unread Notifications"] =
+  notifications.map(n => n.title);
 
   res.json({});
 });
@@ -5560,8 +5891,35 @@ app.delete("/api/widgets/:id", async (req, res) => {
 
 });
 
+app.get("/api/widgets/data/notifications/:userId", async (req, res) => {
 
+  const { userId } = req.params;
 
+  const notifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: 5
+  });
+
+  res.json(
+    notifications.map(n => ({
+      title: n.title,
+      message: n.message,
+      read: n.isRead
+    }))
+  );
+});
+
+app.put("/api/widgets/resize/:id", async (req, res) => {
+  const { width } = req.body;
+
+  const updated = await prisma.dashboardWidget.update({
+    where: { id: req.params.id },
+    data: { width }
+  });
+
+  res.json(updated);
+});
 
 app.get("/api/admin/projects", async (req, res) => {
 
@@ -6061,7 +6419,7 @@ app.post("/api/admin/backups/restore-file/:name", authenticate, (req, res) => {
 
 
 
-const cron = require("node-cron");
+
 
 cron.schedule("0 2 * * *", () => {
   console.log("Running auto backup...");
@@ -6918,8 +7276,209 @@ app.delete("/api/notifications/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.post("/api/reports/schedule", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    // ✅ Only admin allowed
+    if (payload.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const { type, frequency, dayOfWeek, time } = req.body;
+
+    if (!type || !frequency || !time) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const schedule = await prisma.reportSchedule.create({
+      data: {
+        userId: payload.id,
+        type,
+        frequency,
+        dayOfWeek: frequency === "WEEKLY" ? dayOfWeek : null,
+        time
+      }
+    });
+
+    res.json(schedule);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to create schedule" });
+  }
+});
+
+app.get("/api/reports/schedule", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    if (payload.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const schedules = await prisma.reportSchedule.findMany({
+      where: { userId: payload.id }, // ✅ only own schedules
+      include: {
+  ReportScheduleHistory: {
+          orderBy: { executedAt: "desc" },
+          take: 5
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    res.json(schedules);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch schedules" });
+  }
+});
+
+app.delete("/api/reports/schedule/:id", async (req, res) => {
+
+  const scheduleId = req.params.id;
+
+  try {
+
+    await prisma.reportScheduleHistory.deleteMany({
+      where: { scheduleId }
+    });
+
+    await prisma.reportSchedule.delete({
+      where: { id: scheduleId }
+    });
+
+    res.json({ message: "Deleted successfully" });
+
+  } catch (error) {
+
+    console.error(error);
+    res.status(500).json({ message: "Delete failed" });
+
+  }
+
+});
+
+app.put("/api/reports/schedule/:id", async (req, res) => {
+  try {
+
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+    const payload = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64").toString()
+    );
+
+    const schedule = await prisma.reportSchedule.findUnique({
+      where: { id: req.params.id }
+    });
+
+    if (!schedule || schedule.userId !== payload.id) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const updated = await prisma.reportSchedule.update({
+      where: { id: req.params.id },
+      data: req.body
+    });
+
+    res.json(updated);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
 
 
+
+app.post("/api/reports/run/:id", async (req, res) => {
+
+  try {
+
+    const schedule = await prisma.reportSchedule.findUnique({
+      where: { id: req.params.id },
+      include: { user: true }
+    });
+
+    if (!schedule) {
+      return res.status(404).json({ message: "Schedule not found" });
+    }
+
+    if (!schedule.user) {
+      return res.status(400).json({ message: "User not found for schedule" });
+    }
+
+    console.log("Running report for:", schedule.user.email);
+
+    // 🔹 Generate report data
+    const reportData = await generateTestExecutionData(schedule.userId);
+
+    // 🔹 Generate PDF
+    const pdfPath = await generateExecutionPdf(reportData);
+
+    // 🔹 Email body
+    const html = `
+      <h2>Test Execution Report</h2>
+      <p>Total Executed: ${reportData.total}</p>
+      <p>Passed: ${reportData.passed}</p>
+      <p>Failed: ${reportData.failed}</p>
+      <p>Pass Rate: ${reportData.passRate}%</p>
+      <p>See attached PDF for full report.</p>
+    `;
+
+    // 🔹 Send email with attachment
+    await sendEmail(
+      schedule.user.email,
+      "Manual Test Report",
+      html,
+      pdfPath
+    );
+
+    await prisma.reportScheduleHistory.create({
+      data: {
+        scheduleId: schedule.id,
+        status: "SUCCESS",
+        message: "Manual report executed with PDF"
+      }
+    });
+
+    res.json({ message: "Report executed successfully" });
+
+  } catch (error) {
+
+    console.error("Run report error:", error);
+
+    await prisma.reportScheduleHistory.create({
+      data: {
+        scheduleId: req.params.id,
+        status: "FAILED",
+        message: error.message
+      }
+    });
+
+    res.status(500).json({
+      message: "Report execution failed",
+      error: error.message
+    });
+
+  }
+
+});
 const PORT = process.env.PORT || 5000;
 const http = require("http");
 const { Server } = require("socket.io");

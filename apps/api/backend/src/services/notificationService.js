@@ -89,22 +89,25 @@ if (pref.quietHoursStart && pref.quietHoursEnd) {
 
   // 4️⃣ Create In-App Notification
   if (sendInApp) {
-  await prisma.notification.create({
-    data: {
-      userId,
-      type,
-      title,
-      message,
-      referenceId,   // ✅ ADD THIS
-      link
-    }
-  });
+  const notification = await prisma.notification.create({
+  data: {
+    userId,
+    type,
+    title,
+    message,
+    referenceId,
+    link
+  }
+});
+  
 const io = require("../server").io || null;
-const socketId = userSockets.get(userId);
+if (ioInstance && userSockets) {
+  const socketId = userSockets.get(userId);
 
-  if (socketId && ioInstance) {
+  if (socketId) {
     ioInstance.to(socketId).emit("new_notification", notification);
   }
+}
   }
 
   // 5️⃣ Send Email Notification
