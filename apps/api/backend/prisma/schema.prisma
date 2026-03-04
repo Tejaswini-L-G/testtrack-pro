@@ -295,7 +295,7 @@ model Bug {
   resolutionNote String?
   fixedAt        DateTime?
   startedAt      DateTime?
-
+  branchName String?
   comments  BugComment[]
   projectId String
   project   Project      @relation(fields: [projectId], references: [id])

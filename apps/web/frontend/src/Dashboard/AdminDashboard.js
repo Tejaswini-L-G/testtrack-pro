@@ -210,6 +210,11 @@ useEffect(() => {
 <button onClick={() => navigate("/admin/dashboard/milestones")}>
   Project Milestones
 </button>
+<button
+  onClick={() => navigate("/admin/dashboard/milestones-progress")}
+>
+  Milestone Progress
+</button>
 
   </div>
 )}
@@ -243,6 +248,12 @@ useEffect(() => {
     <button onClick={() => navigate("/admin/dashboard/reports/tester-performance")}>
       Tester Performance
     </button>
+    <button
+    className="admin-btn schedule-btn"
+   onClick={() => navigate("/admin/dashboard/reports/schedule")}
+  >
+    🕒 Schedule Report Email
+  </button>
 
   </div>
 )}

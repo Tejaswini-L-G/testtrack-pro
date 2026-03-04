@@ -4,12 +4,21 @@ import "./Report.css";
 export default function ExecutionReport() {
 
   const [reports, setReports] = useState(null);
+  const projectId = localStorage.getItem("projectId");
+
+  
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/reports/execution-by-run")
+    fetch(`http://localhost:5000/api/reports/execution-by-run?projectId=${projectId}`)
       .then(res => res.json())
-      .then(data => setReports(data))
-      .catch(() => setReports([]));
+  .then(data => {
+    if (Array.isArray(data)) {
+      setReports(data);
+    } else {
+      setReports([]);
+    }
+  })
+  .catch(() => setReports([]));
   }, []);
 
   if (reports === null)

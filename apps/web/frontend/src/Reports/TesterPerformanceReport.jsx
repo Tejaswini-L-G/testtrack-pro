@@ -4,11 +4,18 @@ import "./Report.css";
 export default function TesterPerformanceReport() {
 
   const [data, setData] = useState(null);
+  const projectId = localStorage.getItem("projectId");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/reports/tester-performance")
+    fetch(`http://localhost:5000/api/reports/tester-performance?projectId=${projectId}`)
       .then(res => res.json())
-      .then(setData)
+.then(data => {
+  if (Array.isArray(data)) {
+    setData(data);
+  } else {
+    setData([]);
+  }
+})
       .catch(() => setData([]));
   }, []);
 

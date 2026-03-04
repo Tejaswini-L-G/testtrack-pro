@@ -17,6 +17,24 @@ const [workflowStatuses, setWorkflowStatuses] = useState([]);
 const [activeFilter, setActiveFilter] = useState(null);
 const [searchResults, setSearchResults] = useState(null);
 
+
+useEffect(() => {
+
+  const params = new URLSearchParams(location.search);
+  const highlightId = params.get("highlight");
+  const shouldOpen = params.get("openDiscussion");
+
+  if (highlightId && shouldOpen === "true") {
+
+    setOpenDiscussion(prev => ({
+      ...prev,
+      [highlightId]: true
+    }));
+
+  }
+
+}, [location.search]);
+
 useEffect(() => {
   if (searchResults?.bugs?.length > 0) {
 
@@ -428,6 +446,15 @@ const role = payload?.role;
     <span className="commit-url">
       {bug.commitLink}
     </span>
+  </p>
+
+
+
+)}
+
+{bug.branchName && (
+  <p>
+    <strong>Branch:</strong> {bug.branchName}
   </p>
 )}
 

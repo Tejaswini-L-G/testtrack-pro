@@ -12,6 +12,8 @@ export default function DashboardWidgets({ user }) {
 const [listData, setListData] = useState({});
 const [chartData, setChartData] = useState([]);
 const [tableData, setTableData] = useState([]);
+const [showAdd, setShowAdd] = useState(false);
+const [showAddWidget, setShowAddWidget] = useState(false);
 
   // ================= INIT + LOAD =================
 
@@ -101,7 +103,31 @@ const [tableData, setTableData] = useState([]);
     });
   };
 
+ const resizeWidget = async (widget) => {
 
+  let newWidth = widget.width || 1;
+
+  if (newWidth === 1) newWidth = 2;
+  else if (newWidth === 2) newWidth = 3;
+  else newWidth = 1;
+
+  const res = await fetch(
+    `http://localhost:5000/api/widgets/resize/${widget.id}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ width: newWidth })
+    }
+  );
+
+  const updated = await res.json();
+
+  setWidgets(prev =>
+    prev.map(w =>
+      w.id === widget.id ? { ...w, width: newWidth } : w
+    )
+  );
+};
   const removeWidget = (id) => {
 
   fetch(`http://localhost:5000/api/widgets/${id}`, {
@@ -111,13 +137,63 @@ const [tableData, setTableData] = useState([]);
   });
 
 };
-  // ================= RENDER =================
+ 
+const addWidget = async (type, title) => {
+
+  try {
+
+    const res = await fetch("http://localhost:5000/api/widgets", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userId: user.id,
+        type,
+        title
+      })
+    });
+
+    const newWidget = await res.json();
+
+    setWidgets(prev => [
+      ...prev,
+      {
+        ...newWidget,
+        width: newWidget.width || 1
+      }
+    ]);
+
+    setShowAdd(false);
+
+  } catch (err) {
+    console.error("Widget add failed:", err);
+  }
+
+};
+// ================= RENDER =================
 
   if (!widgets.length)
     return <div className="widget-empty">No widgets available</div>;
 
   return (
+
+    <div>
+
+    <div className="widget-toolbar">
+
+  <button
+  className="add-widget-btn"
+  onClick={() => setShowAddWidget(true)}
+>
+  + Add Widget
+</button>
+
+</div>
+
+    
   <div className="widget-grid">
+    
 
     {widgets.map((w, i) => (
 
@@ -127,28 +203,37 @@ const [tableData, setTableData] = useState([]);
         onDragStart={(e) => onDragStart(e, i)}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => onDrop(e, i)}
-        className="widget-card"
+        className={`widget-card widget-width-${w.width || 1}`}
       >
 
        <div className="widget-header">
 
-  <h3>{w.title}</h3>
+  <h3 className="widget-title">{w.title}</h3>
 
   <div className="widget-actions">
 
-    <span className="drag-hint">⠿</span>
+  <span className="drag-hint">⠿</span>
 
-    <button
-      className="widget-remove"
-      onClick={() => removeWidget(w.id)}
-      title="Remove widget"
-    >
-      ×
-    </button>
+  <button
+  className="widget-resize"
+  onClick={() => resizeWidget(w)}
+  title="Resize"
+>
+  ⤢
+</button>
 
-  </div>
+  <button
+    className="widget-remove"
+    onClick={() => removeWidget(w.id)}
+    title="Remove widget"
+  >
+    ×
+  </button>
 
 </div>
+
+</div>
+
 
         {/* ================= COUNTER ================= */}
         {w.type === "counter" && (
@@ -195,7 +280,9 @@ const [tableData, setTableData] = useState([]);
               {tableData.map((row, idx) => (
                 <tr key={idx}>
                   <td>{row.name}</td>
-                  <td>{row.status}</td>
+                  <td className={`status-${row.status}`}>
+  {row.status}
+</td>
                 </tr>
               ))}
             </tbody>
@@ -206,6 +293,48 @@ const [tableData, setTableData] = useState([]);
 
     ))}
 
+    
+
+  {showAddWidget && (
+  <div className="widget-modal-overlay">
+
+    <div className="widget-modal">
+
+      <h2>Add Widget</h2>
+
+      <div className="widget-options">
+
+        <button onClick={() => addWidget("counter","Overall Execution")}>
+          <span>📊</span> Overall Execution
+        </button>
+
+        <button onClick={() => addWidget("chart","Execution Trend")}>
+          <span>📈</span> Execution Trend
+        </button>
+
+        <button onClick={() => addWidget("list","Notifications")}>
+          <span>🔔</span> Notifications
+        </button>
+
+        <button onClick={() => addWidget("table","Recent Executions")}>
+          <span>📋</span> Recent Executions
+        </button>
+
+      </div>
+
+      <button
+  className="widget-close"
+  onClick={() => setShowAddWidget(false)}
+>
+  Cancel
+</button>
+
+    </div>
+
   </div>
+)}
+  </div>
+</div>
+  
 );
 }

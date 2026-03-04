@@ -3724,7 +3724,7 @@ app.put("/api/bugs/:id/assign", async (req, res) => {
 app.put("/api/bugs/:id/status", async (req, res) => {
   try {
     const bugId = req.params.id;
-    const { status, fixNotes, commitLink, resolutionNote } = req.body;
+    const { status, fixNotes, commitLink,branchName, resolutionNote } = req.body;
 
     const token = req.headers.authorization?.split(" ")[1];
     const payload = token
@@ -3764,6 +3764,7 @@ app.put("/api/bugs/:id/status", async (req, res) => {
     if (status === "Fixed") {
       updateData.fixNotes = fixNotes || null;
       updateData.commitLink = commitLink || null;
+      updateData.branchName = branchName || null;
       updateData.fixedAt = new Date();
     }
 

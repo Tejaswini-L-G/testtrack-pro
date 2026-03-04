@@ -22,6 +22,7 @@ const [resolutionMode, setResolutionMode] = useState("");
 const [openDiscussion, setOpenDiscussion] = useState({});
  const [searchResults, setSearchResults] = useState(null);
  const [issues, setIssues] = useState([]);
+ const [branchName, setBranchName] = useState("");
 
 
 useEffect(() => {
@@ -142,6 +143,7 @@ setFixNotes("");
 setCommitLink("");
 setResolutionNote("");
 setResolutionMode("");
+setBranchName("");
 
 // 🔥 Refresh list
 window.location.reload();
@@ -426,6 +428,13 @@ if (sortBy === "Priority") {
         placeholder="abc123def or Git URL"
       />
 
+      <label>Branch Name</label>
+<input
+  value={branchName}
+  onChange={e => setBranchName(e.target.value)}
+  placeholder="fix/login-validation"
+/>
+
       <label>Resolution Reason (if Won't Fix)</label>
       <textarea
         rows="3"
@@ -440,6 +449,7 @@ if (sortBy === "Priority") {
             updateStatus(selectedBug, resolutionMode, {
               fixNotes,
               commitLink,
+              branchName,
               resolutionNote
             })
           }
@@ -454,6 +464,7 @@ if (sortBy === "Priority") {
             setFixNotes("");
             setCommitLink("");
             setResolutionNote("");
+            setBranchName("");
           }}
         >
           Cancel

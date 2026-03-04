@@ -71,6 +71,8 @@ import MilestoneDashboard from "./Projects/MilestoneDashboard";
 import GlobalSearch from "./Search/GlobalSearch";
 import OAuthSuccess from "./OAuthSuccess";
 import NotificationSettings from "./Notification/NotificationSettings";
+import ScheduleReport from "./Reports/ScheduleReport";
+import ReportsDashboard from "./Reports/ReportsDashboard";
 
 
 import "./styles.css";
@@ -113,8 +115,7 @@ function App() {
 />
   
    
- 
-  
+
   
 
 
@@ -163,9 +164,8 @@ function App() {
 
 <Route path="testcases" element={<AdminTestCases />} />
 
- 
-  
-
+ <Route path="reports" element={<ReportsDashboard />} />
+<Route path="reports/schedule" element={<ScheduleReport />} />
  <Route
   path="testruns/:id"
   element={<RunProgressDashboard />}
@@ -180,6 +180,12 @@ function App() {
 <Route path="modules" element={<ProjectModules />} />
 <Route path="environments" element={<ProjectEnvironments />} />
 <Route path="milestones" element={<ProjectMilestones />} />
+
+<Route
+  path="/admin/dashboard/milestones-progress"
+  element={<MilestoneDashboard />}
+/>
+
 </Route>
 
 

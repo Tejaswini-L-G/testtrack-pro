@@ -2,11 +2,57 @@
 
 .widget-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 22px;
-  padding: 18px;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+  padding: 20px;
 }
 
+.widget-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  min-height: 220px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+/* width levels */
+
+.widget-width-1 {
+  grid-column: span 3;
+}
+
+.widget-width-2 {
+  grid-column: span 6;
+}
+
+.widget-width-3 {
+  grid-column: span 12;
+}
+
+.widget-card {
+  grid-column: span 4;
+}
+.widget-resize {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.widget-resize:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+.widget-card.large {
+  grid-column: span 8;
+}
+
+.widget-card.small {
+  grid-column: span 3;
+}
 /* ===== CARD ===== */
 
 .widget-card {
@@ -160,4 +206,407 @@
 
 .widget-list::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+.widget-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.status-Passed {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.status-Failed {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.status-InProgress {
+  color: #d97706;
+  font-weight: 600;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.widget-toolbar {
+  padding: 10px 20px;
+}
+
+.add-widget-btn {
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all .2s ease;
+}
+
+.add-widget-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(37,99,235,.3);
+}
+
+
+
+.widget-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+/* base widget */
+
+.widget-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px;
+  min-height: 220px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+  transition: all .25s ease;
+}
+
+/* resize widths */
+
+.widget-width-1 {
+  grid-column: span 3;
+}
+
+.widget-width-2 {
+  grid-column: span 6;
+}
+
+.widget-width-3 {
+  grid-column: span 12;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.widget-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(4px);
+  display: flex;
+  z-index: 999;
+}
+
+/* sidebar */
+
+.widget-modal {
+  width: 300px;
+  background: white;
+  height: 100%;
+  padding: 24px;
+  box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+}
+
+.widget-modal h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+/* options */
+
+.widget-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.widget-options button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .2s ease;
+}
+
+.widget-options button:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+/* cancel button */
+
+.widget-close {
+  margin-top: auto;
+  background: #111827;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.add-widget-btn {
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.add-widget-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37,99,235,.3);
+}
+
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.widget-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.widget-resize,
+.widget-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: #9ca3af;
+}
+
+.widget-resize:hover {
+  color: #2563eb;
+}
+
+.widget-remove:hover {
+  color: #ef4444;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== OVERLAY ===== */
+
+/* ===== MODAL BACKDROP ===== */
+/* ===== MODAL OVERLAY ===== */
+
+.widget-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(3px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+/* ===== MODAL BOX (SMALLER) ===== */
+
+.widget-modal {
+  width: 360px;
+  max-width: 90%;
+
+  background: white;
+  border-radius: 14px;
+
+  padding: 20px 22px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  /* FIX HEIGHT */
+  max-height: 420px;
+
+  box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+}
+/* ===== TITLE ===== */
+
+.widget-modal h2 {
+  font-size: 18px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+/* ===== OPTIONS ===== */
+
+.widget-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.widget-options button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.widget-options button:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+/* ===== CANCEL BUTTON ===== */
+
+.widget-close {
+  margin-top: 6px;
+  border: none;
+
+  background: #0f172a;
+  color: white;
+
+  padding: 10px;
+  border-radius: 8px;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.widget-close:hover {
+  background: #1e293b;
+}
+
+.widget-options span {
+  font-size: 16px;
+}
+
+/* Toolbar container */
+.widget-toolbar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end; /* move button to right */
+  margin-bottom: 16px;
+}
+
+/* Add widget button */
+.add-widget-btn {
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+
+  transition: all .2s ease;
+}
+
+.add-widget-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(37,99,235,.3);
+}
+
+.widget-toolbar{
+  padding: 10px 20px;
+}
+
+.dashboard-widgets {
+  padding: 20px;
 }

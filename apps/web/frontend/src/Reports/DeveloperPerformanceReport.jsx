@@ -4,11 +4,20 @@ import "./Report.css";
 export default function DeveloperPerformanceReport() {
 
   const [data, setData] = useState(null);
+  const projectId = localStorage.getItem("projectId");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/reports/developer-performance")
-      .then(res => res.json())
-      .then(setData)
+    fetch(
+`http://localhost:5000/api/reports/developer-performance?projectId=${projectId}`
+)
+       .then(res => res.json())
+.then(data => {
+  if (Array.isArray(data)) {
+    setData(data);
+  } else {
+    setData([]);
+  }
+})
       .catch(() => setData([]));
   }, []);
 

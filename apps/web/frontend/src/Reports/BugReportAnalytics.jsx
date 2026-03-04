@@ -4,9 +4,10 @@ import "./Report.css";
 export default function BugReportAnalytics() {
 
   const [data, setData] = useState(null);
+  const projectId = localStorage.getItem("projectId");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/reports/bugs")
+    fetch(`http://localhost:5000/api/reports/bugs?projectId=${projectId}`)
       .then(res => res.json())
       .then(setData)
       .catch(() => setData({}));
