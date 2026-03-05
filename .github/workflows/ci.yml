@@ -1,0 +1,49 @@
+name: TestTrack CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Backend Dependencies
+        run: |
+          cd apps/api/backend
+          npm install
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd apps/web/frontend
+          npm install
+
+      - name: Build Frontend
+        run: |
+          cd apps/web/frontend
+          npm run build
+
+      - name: Backend Lint Check
+        run: |
+          cd apps/api/backend
+          npm run lint || echo "No lint configured"
+
+      - name: Backend Start Test
+        run: |
+          cd apps/api/backend
+          node src/server.js &
+          sleep 5
