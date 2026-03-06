@@ -1,9 +1,16 @@
 name: TestTrack CI
 
 on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/**
   pull_request:
     branches:
       - develop
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
