@@ -1649,3 +1649,318 @@
   margin-top: 12px;
   padding-right: 6px;
 }
+
+
+
+
+
+
+
+
+
+
+/* PAGE */
+/* PAGE */
+
+.suite-report-page {
+  padding: 25px 35px;
+  background: #f5f7fb;
+  min-height: 100vh;
+  font-family: "Segoe UI", sans-serif;
+}
+
+
+/* HEADER ROW */
+
+.report-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+
+/* BACK BUTTON */
+
+.back-btn {
+  background: #e5e7eb;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.back-btn:hover {
+  background: #d1d5db;
+}
+
+
+/* ACTION BUTTONS */
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.export-btn {
+  background: #2563eb;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.export-btn:hover {
+  background: #1d4ed8;
+}
+
+
+/* SUMMARY */
+
+.report-summary {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0 25px 0;
+}
+
+.summary-card {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.summary-card.total {
+  background: #f3f4f6;
+}
+
+.summary-card.passed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.summary-card.failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.summary-card.blocked {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.summary-card.skipped {
+  background: #e5e7eb;
+}
+
+
+/* REPORT CARD */
+
+.report-card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+
+/* HEADER */
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.report-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+
+/* STATUS BADGE */
+
+.status {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.status.passed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status.failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status.blocked {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status.skipped {
+  background: #e5e7eb;
+}
+
+
+/* EXECUTION DETAILS */
+
+.report-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 20px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.report-details strong {
+  color: #111827;
+}
+
+
+/* PRINT */
+
+@media print {
+  .report-actions,
+  .back-btn {
+    display: none;
+  }
+
+  .suite-report-page {
+    background: white;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* TOP HEADER */
+
+.report-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+
+/* EXPORT BUTTON GROUP */
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.export-btn {
+  background: #2563eb;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.export-btn:hover {
+  background: #1d4ed8;
+}
+
+
+/* SUMMARY */
+
+.report-summary {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0 25px 0;
+}
+
+.summary-card {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* REPORT CARD */
+
+.report-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+
+/* CARD HEADER */
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.report-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* STATUS */
+
+.status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.status.passed {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status.failed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+
+/* EXECUTION DETAILS */
+
+.report-details {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 6px 40px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.report-details strong {
+  color: #111827;
+}

@@ -137,25 +137,17 @@ if (!projectId) {
   ← Back
 </button>
 
-      <h2>Suite Execution Report</h2>
+      <div className="report-top">
 
-      {/* EXPORT BUTTONS */}
+  <h2>Suite Execution Report</h2>
 
-      <div className="report-actions">
+  <div className="report-actions">
+    <button onClick={exportCSV} className="export-btn">Export CSV</button>
+    <button onClick={exportJSON} className="export-btn">Export JSON</button>
+    <button onClick={printReport} className="export-btn">Print / PDF</button>
+  </div>
 
-        <button onClick={exportCSV} className="export-btn">
-          Export CSV
-        </button>
-
-        <button onClick={exportJSON} className="export-btn">
-          Export JSON
-        </button>
-
-        <button onClick={printReport} className="export-btn">
-          Print / PDF
-        </button>
-
-      </div>
+</div>
 
       {/* SUMMARY */}
 
@@ -203,28 +195,27 @@ if (!projectId) {
 
           </div>
 
-          <p>
-            <strong>Tester:</strong>{" "}
-            {exec.executedBy?.name || "Unknown"}
-          </p>
+          <div className="report-details">
 
-          <p>
-            <strong>Started:</strong>{" "}
-            {new Date(exec.startedAt).toLocaleString()}
-          </p>
+  <div>
+    <strong>Tester:</strong> {exec.executedBy?.name || "Unknown"}
+  </div>
 
-          <p>
-            <strong>Completed:</strong>{" "}
-            {exec.completedAt
-              ? new Date(exec.completedAt).toLocaleString()
-              : "In Progress"}
-          </p>
+  <div>
+    <strong>Started:</strong> {new Date(exec.startedAt).toLocaleString()}
+  </div>
 
-          <p>
-            <strong>Time Taken:</strong>{" "}
-            {getDuration(exec.startedAt, exec.completedAt)}
-          </p>
+  <div>
+    <strong>Completed:</strong> {exec.completedAt
+      ? new Date(exec.completedAt).toLocaleString()
+      : "In Progress"}
+  </div>
 
+  <div>
+    <strong>Time:</strong> {getDuration(exec.startedAt, exec.completedAt)}
+  </div>
+
+</div>
         </div>
 
       ))}
