@@ -38,6 +38,7 @@ function ImportTestCases() {
 
   // 🔹 Confirm import
  const handleConfirm = async () => {
+
   const res = await fetch(
     "http://localhost:5000/testcases/import/confirm",
     {
@@ -46,7 +47,10 @@ function ImportTestCases() {
         "Content-Type": "application/json",
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
-      body: JSON.stringify({ testCases: preview }),
+      body: JSON.stringify({
+        testCases: preview,
+        projectId: localStorage.getItem("projectId") // ⭐ FIX
+      }),
     }
   );
 
@@ -59,10 +63,8 @@ function ImportTestCases() {
 
   alert(data.message || "Import successful");
 
-  // ⭐ Redirect to Test Cases page
-  navigate("/testcases");
+  navigate("/dashboard/testcases");
 };
-
   // 🔹 File selection handler
   const handleFileSelect = async (e) => {
     const selectedFile = e.target.files[0];

@@ -1,70 +1,294 @@
-# Getting Started with Create React App
+# TestTrack Pro
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+TestTrack Pro is a **test case management and bug tracking platform** designed to help software teams manage testing workflows efficiently.
+It enables teams to create and execute test cases, track bugs, collaborate between testers and developers, and generate reports for project insights.
 
-## Available Scripts
+The platform integrates testing, bug tracking, reporting, and developer workflows into a **single centralized system**.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+# Key Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Test Case Management
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+* Create and manage test cases
+* Organize test cases into modules and suites
+* Assign priority and severity levels
+* Track test case lifecycle
 
-### `npm test`
+## Test Execution
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+* Execute test cases
+* Record results as **Pass / Fail**
+* Track execution runs
+* Generate execution reports
 
-### `npm run build`
+## Bug Tracking
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+* Report bugs directly from failed test cases
+* Assign bugs to developers
+* Track bug lifecycle (Open → In Progress → Fixed → Verified → Closed)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Developer Workflow
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* Developers manage assigned bugs
+* Attach **commit links** to bug fixes
+* Provide fix notes
+* Mark bugs as resolved
 
-### `npm run eject`
+## Bug Verification
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+* Testers verify fixes
+* Reopen bugs if issues persist
+* Close bugs after successful verification
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Reports and Analytics
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+* Bug report analytics
+* Developer performance reports
+* Test execution reports
+* Export reports in **PDF or Excel**
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Integrations
 
-## Learn More
+* Git commit linking for bug fixes
+* Webhooks for external integrations
+* REST API access
+* API key authentication
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Technology Stack
 
-### Code Splitting
+## Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+* React
+* React Router
+* CSS
 
-### Analyzing the Bundle Size
+## Backend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+* Node.js
+* Express.js
+* Prisma ORM
+* JWT Authentication
+* Swagger API Documentation
 
-### Making a Progressive Web App
+## Database
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+* PostgreSQL
 
-### Advanced Configuration
+## Infrastructure
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+* GitHub for version control
+* GitHub Actions for CI pipeline
+* Docker Compose for container setup
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+# Project Architecture
 
-### `npm run build` fails to minify
+TestTrack Pro follows a **monorepo architecture** where frontend and backend applications are maintained within a single repository.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
+testtrack-pro
+│
+├── apps
+│   ├── api/backend
+│   │   ├── src
+│   │   ├── prisma
+│   │   └── package.json
+│   │
+│   └── web/frontend
+│       ├── src
+│       ├── public
+│       └── package.json
+│
+├── docs
+│   ├── architecture
+│   ├── setup
+│   └── user
+│
+├── .github
+│   └── workflows
+│       └── ci.yml
+│
+├── docker-compose.yml
+├── .env.example
+└── README.md
+```
+
+---
+
+# Getting Started
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/Tejaswini-L-G/testtrack-pro.git
+cd testtrack-pro
+```
+
+---
+
+## 2. Install Dependencies
+
+### Backend
+
+```bash
+cd apps/api/backend
+npm install
+```
+
+### Frontend
+
+```bash
+cd apps/web/frontend
+npm install
+```
+
+---
+
+## 3. Configure Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Update values such as:
+
+```
+DATABASE_URL
+JWT_SECRET
+PORT
+```
+
+---
+
+## 4. Run Database Migration
+
+```bash
+npx prisma migrate dev
+```
+
+---
+
+## 5. Start Backend Server
+
+```bash
+npm start
+```
+
+Backend runs at:
+
+```
+http://localhost:5000
+```
+
+---
+
+## 6. Start Frontend Application
+
+```bash
+cd apps/web/frontend
+npm start
+```
+
+Frontend runs at:
+
+```
+http://localhost:3000
+```
+
+---
+
+# API Documentation
+
+The backend includes **Swagger API documentation**.
+
+Access the documentation at:
+
+```
+http://localhost:5000/api-docs
+```
+
+The API documentation includes:
+
+* Endpoint descriptions
+* Request parameters
+* Response examples
+* Error responses
+
+---
+
+# CI Pipeline
+
+The project includes a **GitHub Actions CI pipeline**.
+
+The CI pipeline automatically runs on Pull Requests and performs:
+
+1. Code checkout
+2. Node.js setup
+3. Dependency installation
+4. Frontend build verification
+
+This ensures the project builds successfully before merging changes.
+
+---
+
+# Documentation
+
+Additional documentation is available in the **docs folder**.
+
+```
+docs/
+├── architecture
+│   └── system-design.md
+│
+├── setup
+│   └── installation.md
+│
+├── user
+│   └── faq.md
+│
+└── contributing.md
+```
+
+Documentation includes:
+
+* Architecture overview
+* Setup guides
+* User documentation
+* Developer contribution guidelines
+
+---
+
+# Contributing
+
+Contributions are welcome.
+
+Please follow the guidelines in:
+
+```
+docs/contributing.md
+```
+
+Development workflow:
+
+1. Create a feature branch
+2. Implement changes
+3. Push the branch
+4. Create a Pull Request
+5. CI pipeline must pass before merging
+
+---
+
+
+# Author
+
+**Tejaswini L G**
+
+GitHub:
+https://github.com/Tejaswini-L-G

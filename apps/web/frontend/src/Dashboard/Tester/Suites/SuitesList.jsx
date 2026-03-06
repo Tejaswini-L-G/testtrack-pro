@@ -43,17 +43,31 @@ const toggleArchived = () => {
 
   if (!projectId) return;
 
-  const res = await fetch(
-    `http://localhost:5000/suites?projectId=${projectId}&archived=${showArchived}`,
-    {
-      headers: {
-        Authorization: "Bearer " + localStorage.getItem("token"),
-      },
-      cache: "no-store"
-    }
-  );
+  try {
 
-  setSuites(await res.json());
+    const res = await fetch(
+      `http://localhost:5000/suites?projectId=${projectId}&archived=${showArchived}`,
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token"),
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    if (Array.isArray(data)) {
+      setSuites(data);
+    } else {
+      console.error("Invalid suites response:", data);
+      setSuites([]);
+    }
+
+  } catch (err) {
+    console.error("Failed to fetch suites:", err);
+    setSuites([]);
+  }
+
 };
 
   const fetchTestCases = async () => {
@@ -249,7 +263,7 @@ const saveOrder = async () => {
         name: editName,
         description,
         module: editModule,
-        parentSuiteId: editParentSuite || null
+        parentId: editParentSuite || null
       }),
     }
   );
@@ -341,6 +355,7 @@ const confirmExecute = async () => {
 };
 
   const deleteTestCaseInsideSuite = async (id) => {
+
   if (!window.confirm("Delete this test case permanently?")) return;
 
   await fetch(`http://localhost:5000/testcases/${id}`, {
@@ -349,6 +364,8 @@ const confirmExecute = async () => {
       Authorization: "Bearer " + localStorage.getItem("token"),
     },
   });
+
+  setSuiteCases(prev => prev.filter(tc => tc.id !== id)); // ⭐ important
 
   fetchTestCases();
   fetchSuites();
@@ -393,7 +410,7 @@ if (!projectId) {
 >
   <option value="">Parent Suite (optional)</option>
 
-  {suites.map((s) => (
+  {Array.isArray(suites) && suites.map((s) => (
     <option key={s.id} value={s.id}>
       {s.name}
     </option>
@@ -464,8 +481,8 @@ if (!projectId) {
 
   {/* TOTAL TEST CASES */}
   <td>
-    {testCases.filter(tc => tc.suiteId === s.id).length}
-  </td>
+  {s._count?.testCases || 0}
+</td>
 
   {/* ACTIONS */}
   <td>
@@ -486,7 +503,7 @@ if (!projectId) {
     setEditName(s.name);
     setDescription(s.description || "");
     setEditModule(s.module || "");
-    setEditParentSuite(s.parentSuiteId || "");
+   setEditParentSuite(s.parentId || "");
   }}
   className="btn-edit"
 >
@@ -508,20 +525,39 @@ if (!projectId) {
   className="btn-clone"
   onClick={async () => {
 
-    if (!window.confirm("Clone this suite?")) return;
+  if (!window.confirm("Clone this suite?")) return;
+
+  try {
 
     const res = await fetch(
       `http://localhost:5000/api/suites/${s.id}/clone`,
-      { method: "POST" }
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("token")
+        }
+      }
     );
 
     const data = await res.json();
 
-    alert("Suite cloned successfully ✅");
+    if (!res.ok) {
+      alert(data.message || "Clone failed ❌");
+      return;
+    }
 
-    fetchSuites(); // refresh list
+    alert(data.message || "Suite cloned successfully ✅");
 
-  }}
+    // wait for DB commit
+   
+    await fetchSuites();
+setViewSuiteId(null);
+  } catch (err) {
+    console.error(err);
+    alert("Clone failed ❌");
+  }
+
+}}
 >
   Clone
 </button>

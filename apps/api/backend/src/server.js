@@ -329,23 +329,25 @@ const authenticate = (req, res, next) => {
 };
 
 async function generateTestCaseId() {
+
   const year = new Date().getFullYear();
 
   const last = await prisma.testCase.findFirst({
     where: {
       testCaseId: {
-        startsWith: `TC-${year}-`,
-      },
+        startsWith: `TC-${year}-`
+      }
     },
     orderBy: {
-      createdAt: "desc",
-    },
+      testCaseId: "desc"
+    }
   });
 
   let next = 1;
 
   if (last) {
-    next = parseInt(last.testCaseId.split("-")[2], 10) + 1;
+    const parts = last.testCaseId.split("-");
+    next = parseInt(parts[2]) + 1;
   }
 
   return `TC-${year}-${String(next).padStart(5, "0")}`;
@@ -1674,7 +1676,9 @@ app.post("/testcases/:id/clone", authenticate, async (req, res) => {
         type: original.type,
         status: "Draft",
 
-        createdById: req.user.id,
+        createdBy: {
+  connect: { id: req.user.id }
+},
 
         steps: {
           create: original.steps.map((s) => ({
@@ -1800,9 +1804,7 @@ app.get("/testcases", authenticate, async (req, res) => {
       }
     }
   },
-  orderBy: {
-    createdAt: "desc"
-  }
+  orderBy: { testCaseId: "desc" }
 });
 
 
@@ -2041,7 +2043,9 @@ app.post("/templates/:id/create-testcase", authenticate, async (req, res) => {
         severity: template.severity,
         type: template.type,
         status: "Draft",
-        createdById: req.user.id,
+        createdBy: {
+  connect: { id: req.user.id }
+},
 
         steps: {
           create: template.steps.map(step => ({
@@ -2129,6 +2133,13 @@ app.post(
 app.post("/testcases/import/confirm", authenticate, async (req, res) => {
   try {
     const { testCases } = req.body;
+   const {  projectId } = req.body;
+
+if (!projectId) {
+  return res.status(400).json({
+    message: "Project ID is required for import"
+  });
+}
 
     if (!Array.isArray(testCases) || testCases.length === 0) {
       return res.status(400).json({
@@ -2160,8 +2171,13 @@ app.post("/testcases/import/confirm", authenticate, async (req, res) => {
           severity: tc.severity || "Major",
           type: tc.type || "Functional",
           status: tc.status || "Draft",
-
-          createdById: req.user.id,
+project: {
+      connect: { id: projectId }
+    },
+         
+    createdBy: {
+  connect: { id: req.user.id }
+},
 
           // ⭐ SAFE STEP CREATION
           steps: {
@@ -2313,7 +2329,9 @@ app.put("/suites/:id", authenticate, async (req, res) => {
         name,
         description,
         module,
-        parentId,
+        parent: parentId
+    ? { connect: { id: parentId } }
+    : { disconnect: true }
       },
     });
 
@@ -3437,7 +3455,9 @@ app.get("/api/suites/:suiteId/testcases", async (req, res) => {
   try {
 
     const cases = await prisma.testCase.findMany({
-      where: { suiteId },
+     where: {
+  suiteId: suiteId
+},
       orderBy: { order: "asc" }   // ⭐ ADD HERE
     });
 
@@ -3451,8 +3471,10 @@ app.get("/api/suites/:suiteId/testcases", async (req, res) => {
 });
 
 
-app.post("/api/suites/:suiteId/clone", async (req, res) => {
 
+
+
+app.post("/api/suites/:suiteId/clone", authenticate, async (req, res) => {
   const { suiteId } = req.params;
 
   try {
@@ -3462,71 +3484,82 @@ app.post("/api/suites/:suiteId/clone", async (req, res) => {
       where: { id: suiteId }
     });
 
-    if (!original)
-      return res.status(404).json({ message: "Suite not found" });
+    if (!original) {
+      throw new Error("Suite not found");
+    }
 
-    // 2️⃣ Create new suite
-    const newSuite = await prisma.testSuite.create({
-      data: {
-        name: original.name + " (Copy)",
-        description: original.description,
-        module: original.module,
-        parentId: original.parentId,
-        createdById: original.createdById
-      }
-    });
-
-    // 3️⃣ Get original test cases
+    // 2️⃣ Get original test cases
     const cases = await prisma.testCase.findMany({
       where: { suiteId },
       include: { steps: true },
       orderBy: { order: "asc" }
     });
 
-    // 4️⃣ Duplicate test cases + steps
-    for (const tc of cases) {
+    const result = await prisma.$transaction(async (tx) => {
 
-      const newCase = await prisma.testCase.create({
+      // 3️⃣ Create cloned suite
+      const newSuite = await tx.testSuite.create({
         data: {
-          testCaseId: tc.testCaseId + "-COPY",
-          title: tc.title,
-          description: tc.description,
-          module: tc.module,
-          priority: tc.priority,
-          severity: tc.severity,
-          type: tc.type,
-          status: tc.status,
-          preconditions: tc.preconditions,
-          suiteId: newSuite.id,
-          createdById: tc.createdById,
-          order: tc.order
+          name: original.name + " (Copy)",
+          description: original.description,
+          module: original.module,
+          parentId: original.parentId,
+          projectId: original.projectId,
+          createdById: req.user.id
         }
       });
 
-      // copy steps
-      if (tc.steps?.length) {
-        await prisma.testStep.createMany({
-          data: tc.steps.map(step => ({
-            testCaseId: newCase.id,
-            stepNumber: step.stepNumber,
-            action: step.action,
-            expected: step.expected,
-            testData: step.testData
-          }))
+      for (const tc of cases) {
+
+        // 🔹 Generate unique testCaseId without DB lookup
+        const newTestCaseId =
+          "TC-" + Date.now() + "-" + Math.floor(Math.random() * 10000);
+
+        const newCase = await tx.testCase.create({
+          data: {
+            testCaseId: newTestCaseId,
+            title: tc.title,
+            description: tc.description,
+            module: tc.module,
+            priority: tc.priority,
+            severity: tc.severity,
+            type: tc.type,
+            status: tc.status,
+            preconditions: tc.preconditions,
+            suiteId: newSuite.id,
+            projectId: original.projectId,
+            createdById: tc.createdById || req.user.id,
+            order: tc.order
+          }
         });
+
+        if (tc.steps && tc.steps.length > 0) {
+          await tx.testStep.createMany({
+            data: tc.steps.map(step => ({
+              testCaseId: newCase.id,
+              stepNumber: step.stepNumber,
+              action: step.action,
+              expected: step.expected,
+              testData: step.testData
+            }))
+          });
+        }
+
       }
-    }
+
+      return newSuite;
+
+    });
 
     res.json({
       message: "Suite cloned successfully",
-      newSuite
+      suite: result
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("CLONE ERROR:", err);
     res.status(500).json({ message: "Clone failed" });
   }
-
 });
 
 app.put("/api/suites/:suiteId/archive", async (req, res) => {
@@ -3572,26 +3605,43 @@ app.put("/api/suites/:suiteId/restore", async (req, res) => {
 app.get("/suites", authenticate, async (req, res) => {
   try {
 
-    const archived =
-      req.query.archived === "true";
+    const archived = req.query.archived === "true";
+    const { projectId } = req.query;
 
     const suites = await prisma.testSuite.findMany({
       where: {
+        projectId,
         isArchived: archived,
         isDeleted: false
       },
       include: {
-        parent: true,
-        _count: {
-          select: { testCases: true }
-        }
+        parent: true
       },
       orderBy: {
         createdAt: "desc"
       }
     });
 
-    res.json(suites);
+    // 🔥 manually count testcases
+    const suitesWithCount = await Promise.all(
+      suites.map(async (suite) => {
+
+        const count = await prisma.testCase.count({
+          where: {
+            suiteId: suite.id,
+            isDeleted: false
+          }
+        });
+
+        return {
+          ...suite,
+          _count: { testCases: count }
+        };
+
+      })
+    );
+
+    res.json(suitesWithCount);
 
   } catch (err) {
     console.error("FETCH SUITES ERROR:", err);
